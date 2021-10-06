@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  repositoryName:
+    Type: String
+  functionName:
+    Type: String
+
+Resources:
+  LambdaECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+        RepositoryName: !Ref repositoryName
+
+  LambdaExecutor:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: 
+                - 'sts:AssumeRole'
+              
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref functionName
+      Code: !GetAtt LambdaECR.RepositoryUri
+      PackageType: Image
+

@@ -1,0 +1,1 @@
+A sweet collection of **CloudFormation** templates.
