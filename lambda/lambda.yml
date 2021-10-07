@@ -84,6 +84,9 @@ Resources:
     DependsOn: 
       - LambdaExectuor
       - LambdaECR
+    VpcConfig:
+      SecurityGroupIds: # todo: resolve from ssm
+      SubnetIds: # todo: resolve from ssm
   
   LambdaFunctionDevelopment:
     Type: AWS::Lambda::Function
@@ -95,6 +98,9 @@ Resources:
     DependsOn: 
       - LambdaExectuor
       - LambdaECR
+    VpcConfig:
+      SecurityGroupIds: # todo: resolve from ssm
+      SubnetIds: # todo: resolve from ssm
   
   LambdaFunctionTest:
     Type: AWS::Lambda::Function
@@ -106,6 +112,9 @@ Resources:
     DependsOn: 
       - LambdaExectuor
       - LambdaECR
+    VpcConfig:
+      SecurityGroupIds: # todo: resolve from ssm
+      SubnetIds: # todo: resolve from ssm
 
   PipelineLambdaPolicy:
     Type: AWS::IAM::Policy
