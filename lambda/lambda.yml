@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Parameters:
+  components:
+    Type: String
+  environments:
+    Type: String
+
   repositoryName:
     Type: String
   functionName:
@@ -13,6 +18,17 @@ Resources:
       ImageScanningConfiguration: 
         ScanOnPush: true
         RepositoryName: !Ref repositoryName
+    RepositoryPolicyText:
+      Version: "2012-10-17"
+      Statement:
+          - Sid: ECRLambdaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+              Action:
+                - "ecr:BatchGetImage"
+                - "ecr:GetDownloadUrlForLayer"
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -25,7 +41,7 @@ Resources:
                 Service:
                   - lambda.amazonaws.com
               Action: 
-                - 'sts:AssumeRole'
+                - "sts:AssumeRole"
               
   LambdaFunction:
     Type: AWS::Lambda::Function
