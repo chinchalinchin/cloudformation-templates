@@ -7,6 +7,7 @@ Parameters:
 Resources:
   LambdaECR:
     Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda function
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
@@ -22,6 +23,11 @@ Resources:
               Action:
                 - "ecr:BatchGetImage"
                 - "ecr:GetDownloadUrlForLayer"
+                - "dynamodb:DescribeStream"
+                - "dynamodb:GetRecords"
+                - "dynamodb:GetShardIterator"
+                - "dynamodb:ListStreams"
+                - "dynamodb:ListShards"
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -61,4 +67,10 @@ Resources:
       FunctionName: !Sub lambda-${component}_test
       Code: !Sub ${LambdaECR.RepositoryUri}:test
       Role: !GetAtt LambdaExecutor.Arn
+
+  
+  PipelineUser:
+    Type: AWS::IAM::User
+    Description: User account for pipeline to perform all the necessary actions
+    Username: 
 
