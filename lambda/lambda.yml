@@ -77,6 +77,8 @@ Resources:
       - LambdaExectuor
       - LambdaECR
 
+  # todo: pipeline policies specifically for ECR and lambda functions and then output!
+  
 Outputs:
   PolicyArns:
     # todo
