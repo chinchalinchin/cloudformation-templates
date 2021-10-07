@@ -3,8 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   component:
     Type: String
-  dynamoStack:
-    Type: String
 
 Resources:
   LambdaECR:
@@ -45,7 +43,7 @@ Resources:
               
   LambdaFunctionProduction:
     Type: AWS::Lambda::Function
-    Description: Lambda function deployed into Production
+    Description: Lambda function deployed into Production environment
     Properties:
       FunctionName: !Sub lambda-${component}_master
       Code: !Sub ${LambdaECR.RepositoryUri}:master
@@ -57,7 +55,7 @@ Resources:
   
   LambdaFunctionDevelopment:
     Type: AWS::Lambda::Function
-    Description: Lambda function deployed into Development
+    Description: Lambda function deployed into Development environment
     Properties:
       FunctionName: !Sub lambda-${component}_development
       Code: !Sub ${LambdaECR.RepositoryUri}:development
@@ -68,7 +66,7 @@ Resources:
   
   LambdaFunctionTest:
     Type: AWS::Lambda::Function
-    Description: Lambda function deployed into Development
+    Description: Lambda function deployed into Test environment
     Properties:
       FunctionName: !Sub lambda-${component}_test
       Code: !Sub ${LambdaECR.RepositoryUri}:test
@@ -78,7 +76,7 @@ Resources:
       - LambdaECR
 
   # todo: pipeline policies specifically for ECR and lambda functions and then output!
-  
+
 Outputs:
   PolicyArns:
     # todo
