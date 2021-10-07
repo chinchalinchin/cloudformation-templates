@@ -1,14 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Parameters:
-  components:
-    Type: String
-  environments:
-    Type: String
-
-  repositoryName:
-    Type: String
-  functionName:
+  component:
     Type: String
 
 Resources:
@@ -17,7 +10,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-        RepositoryName: !Ref repositoryName
+        RepositoryName: !Sub lambda-${component}
     RepositoryPolicyText:
       Version: "2012-10-17"
       Statement:
@@ -32,6 +25,7 @@ Resources:
 
   LambdaExecutor:
     Type: AWS::IAM::Role
+    Description: Allows Lambda to access other AWS Services
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -43,10 +37,28 @@ Resources:
               Action: 
                 - "sts:AssumeRole"
               
-  LambdaFunction:
+  LambdaFunctionProduction:
     Type: AWS::Lambda::Function
+    Description: Lambda function deployed into Production
     Properties:
-      FunctionName: !Ref functionName
-      Code: !GetAtt LambdaECR.RepositoryUri
+      FunctionName: !Sub lambda-${component}_master
+      Code: !Sub ${LambdaECR.RepositoryUri}:master
       PackageType: Image
+      Role: !GetAtt LambdaExecutor.Arn
+  
+  LambdaFunctionDevelopment:
+    Type: AWS::Lambda::Function
+    Description: Lambda function deployed into Development
+    Properties:
+      FunctionName: !Sub lambda-${component}_development
+      Code: !Sub ${LambdaECR.RepositoryUri}:development
+      Role: !GetAtt LambdaExecutor.Arn
+  
+  LambdaFunctionTest:
+    Type: AWS::Lambda::Function
+    Description: Lambda function deployed into Development
+    Properties:
+      FunctionName: !Sub lambda-${component}_test
+      Code: !Sub ${LambdaECR.RepositoryUri}:test
+      Role: !GetAtt LambdaExecutor.Arn
 
