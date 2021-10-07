@@ -51,6 +51,9 @@ Resources:
       Code: !Sub ${LambdaECR.RepositoryUri}:master
       PackageType: Image
       Role: !GetAtt LambdaExecutor.Arn
+    DependsOn: 
+      - LambdaExectuor
+      - LambdaECR
   
   LambdaFunctionDevelopment:
     Type: AWS::Lambda::Function
@@ -59,6 +62,9 @@ Resources:
       FunctionName: !Sub lambda-${component}_development
       Code: !Sub ${LambdaECR.RepositoryUri}:development
       Role: !GetAtt LambdaExecutor.Arn
+    DependsOn: 
+      - LambdaExectuor
+      - LambdaECR
   
   LambdaFunctionTest:
     Type: AWS::Lambda::Function
@@ -67,8 +73,9 @@ Resources:
       FunctionName: !Sub lambda-${component}_test
       Code: !Sub ${LambdaECR.RepositoryUri}:test
       Role: !GetAtt LambdaExecutor.Arn
-
-  
+    DependsOn: 
+      - LambdaExectuor
+      - LambdaECR
 
 Outputs:
   PolicyArns:
