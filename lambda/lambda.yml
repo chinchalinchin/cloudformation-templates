@@ -3,6 +3,8 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   component:
     Type: String
+  dynamoStack:
+    Type: String
 
 Resources:
   LambdaECR:
@@ -15,19 +17,14 @@ Resources:
     RepositoryPolicyText:
       Version: "2012-10-17"
       Statement:
-          - Sid: ECRLambdaPolicy
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-              Action:
-                - "ecr:BatchGetImage"
-                - "ecr:GetDownloadUrlForLayer"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:ListStreams"
-                - "dynamodb:ListShards"
+        - Sid: ECRLambdaPolicy
+          Effect: Allow
+          Principal:
+            Service:
+              - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -36,12 +33,15 @@ Resources:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - lambda.amazonaws.com
-              Action: 
-                - "sts:AssumeRole"
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               
   LambdaFunctionProduction:
     Type: AWS::Lambda::Function
@@ -69,8 +69,8 @@ Resources:
       Role: !GetAtt LambdaExecutor.Arn
 
   
-  PipelineUser:
-    Type: AWS::IAM::User
-    Description: User account for pipeline to perform all the necessary actions
-    Username: 
+
+Outputs:
+  PolicyArns:
+    # todo
 
