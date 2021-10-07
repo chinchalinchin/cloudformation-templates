@@ -2,5 +2,7 @@ PipelineUser:
     Type: AWS::IAM::User
     Description: User account for pipeline to perform all the necessary actions
     Username: bitbucket-pipeline
-    Policies: 
-      # todo: import policies from lambda-stack
+
+Outputs:
+  PipelineUserArn:
+    Value: !GetAtt PipelineUser.Arn
