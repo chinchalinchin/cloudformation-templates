@@ -114,6 +114,13 @@ Resources:
     PolicyDocument:
       Version: "2012-10-17"
       Statement:
-        - Sid: 
+        - Sid: UpdateLambdaFunction
+          Effect: Allow
+          Action: 
+            - "lambda:UpdateFunctionCode"
+          Resource:
+            - !Ref LambdaFunctionTest.Arn
+            - !Ref LambdaFunctionDevelopment.Arn
+            - !Ref LambdaFunctionProduction.Arn
     Users: 
       - !Ref pipelineUserArn
