@@ -55,7 +55,7 @@ Resources:
             - "ecr:PutImage"
           Resource: !GetAtt LambdaECR.Arn
     Users:
-      - !ImportVaue ${userStack.UserArn}
+      - !ImportValue ${userStack.UserArn}
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -133,4 +133,4 @@ Resources:
             - !Ref LambdaFunctionDevelopment.Arn
             - !Ref LambdaFunctionProduction.Arn
     Users: 
-      - !ImportVaue ${userStack.UserArn}
+      - !ImportValue ${userStack.UserArn}
