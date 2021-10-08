@@ -3,8 +3,9 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   componentName:
     Type: String
-  pipelineUserArn:
+  userStack:
     Type: String
+    Default: PipelineUserStack
 
 Resources:
   LambdaECR:
@@ -54,7 +55,7 @@ Resources:
             - "ecr:PutImage"
           Resource: !GetAtt LambdaECR.Arn
     Users:
-      - !Ref pipelineUserArn
+      - !ImportVaue ${userStack.UserArn}
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -132,4 +133,4 @@ Resources:
             - !Ref LambdaFunctionDevelopment.Arn
             - !Ref LambdaFunctionProduction.Arn
     Users: 
-      - !Ref pipelineUserArn
+      - !ImportVaue ${userStack.UserArn}

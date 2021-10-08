@@ -1,8 +1,10 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
 PipelineUser:
     Type: AWS::IAM::User
     Description: User account for pipeline to perform all the necessary actions
     Username: bitbucket-pipeline
 
 Outputs:
-  PipelineUserArn:
+  UserArn:
     Value: !GetAtt PipelineUser.Arn
