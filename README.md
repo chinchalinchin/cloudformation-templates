@@ -7,6 +7,19 @@ aws cloudformation create-stack
     --template-body <body>
     --parameters ParameterKey=<key>,ParameterValue=<value> ParameterKey=<key>,ParameterValue=<value>
 ```
+# Steps
+
+```
+cp .sample.env .env
+source .env
+./scripts/users-stack
+# VPC stack goes here 
+# DB stack goes here
+./scripts/lambda-stack --component alpha
+./scripts/lambda-stack --component beta
+# API Gateway stack goes here
+```
+
 # Notes
 
 1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
