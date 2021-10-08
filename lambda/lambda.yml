@@ -36,10 +36,6 @@ Resources:
       Statement:
         - Sid: RepositoryPermissions
           Effect: Allow
-          Action: 
-            - "ecr:ListImages"
-        - Sid: GeneralPermissions
-          Effect: Allow
           Action:
             - "ecr:GetAuthorizationToken"
             - "ecr:BatchCheckLayerAvailability"
