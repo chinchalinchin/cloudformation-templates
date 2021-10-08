@@ -36,6 +36,7 @@ cp $PROJECT_DIR/iam/users.yml ./users.yml
 
 aws cloudformation create-stack \
     --stack-name "$USER_STACK" \
-    --template-body file://users.yml
+    --template-body file://users.yml \
+    --capabilities CAPABILITY_NAMED_IAM
     
 rm ./users.yml

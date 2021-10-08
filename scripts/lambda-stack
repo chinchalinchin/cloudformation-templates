@@ -37,7 +37,11 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
+cp $PROJECT_DIR/lambda/lambda.yml ./lambda.yml
+
 aws cloudformation create-stack \
     --stack-name "${LAMBDA_STACK}-$component" \
     --template-body $PROJECT_DIR/lambda/lambda.yml
     --parameters ParameterKey=componentName,ParameterValue=$component
+
+rm ./lambda.yml

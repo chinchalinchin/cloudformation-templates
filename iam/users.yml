@@ -4,7 +4,8 @@ Resources:
   PipelineUser:
     Type: AWS::IAM::User
     Description: User account for pipeline to perform all the necessary actions
-    UserName: ccc-pipeline
+    Properties:
+      UserName: ccc-pipeline
 
 Outputs:
   UserArn:
