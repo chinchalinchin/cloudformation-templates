@@ -5,7 +5,7 @@ Parameters:
     Type: String
   userStack:
     Type: String
-    Default: PipelineUserStack
+    Default: UserStack
 
 Resources:
   LambdaECR:

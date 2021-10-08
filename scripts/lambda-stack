@@ -38,6 +38,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 aws cloudformation create-stack \
-    --stack-name $LAMBDA_STACK \
+    --stack-name "${LAMBDA_STACK}-$component" \
     --template-body $PROJECT_DIR/lambda/lambda.yml
     --parameters ParameterKey=componentName,ParameterValue=$component
