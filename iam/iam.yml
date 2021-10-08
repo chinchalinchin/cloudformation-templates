@@ -4,6 +4,12 @@ Description: 'creates roles for managed instance(systems manager), and automatio
 
 
 Resources:
+  PipelineUser:
+    Type: AWS::IAM::User
+    Description: User account for pipeline to perform all the necessary actions
+    Properties:
+      UserName: ccc-pipeline
+
   ManagedInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -20,6 +26,7 @@ Resources:
       - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
       - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
       Path: "/"
+
   ManagedInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -27,6 +34,7 @@ Resources:
       Roles:
       - !Ref ManagedInstanceRole
       InstanceProfileName: ManagedInstanceProfile
+
   AutomationServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -53,3 +61,7 @@ Resources:
             - iam:PassRole
             Resource:
             - !GetAtt ManagedInstanceRole.Arn
+
+Outputs:
+  UserArn:
+    Value: !GetAtt PipelineUser.Arn
