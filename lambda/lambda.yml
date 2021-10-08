@@ -50,6 +50,8 @@ Resources:
             - "ecr:CompleteLayerUpload"
             - "ecr:PutImage"
           Resource: !GetAtt LambdaECR.Arn
+    DependsOn:
+      - LambdaECR
     Users:
       - !ImportValue ${userStack.UserArn}
 
@@ -128,5 +130,9 @@ Resources:
             - !Ref LambdaFunctionTest.Arn
             - !Ref LambdaFunctionDevelopment.Arn
             - !Ref LambdaFunctionProduction.Arn
+    DependsOn:
+      - LambdaFunctionTest
+      - LambdaFunctionDevelopment
+      - LambdaFunctionProduction
     Users: 
       - !ImportValue ${userStack.UserArn}
