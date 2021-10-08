@@ -100,8 +100,8 @@ Resources:
       - LambdaExectuor
       - LambdaECR
     VpcConfig:
-      SecurityGroupIds: '{{resolve:ssm:security_group_id:prod}}'
-      SubnetIds: '{{resolve:ssm:subnet_ids:prod}}'
+      SecurityGroupIds: '{{resolve:ssm:security_group_id:dev}}'
+      SubnetIds: '{{resolve:ssm:subnet_ids:dev}}'
   
   LambdaFunctionTest:
     Type: AWS::Lambda::Function
@@ -114,8 +114,8 @@ Resources:
       - LambdaExectuor
       - LambdaECR
     VpcConfig:
-      SecurityGroupIds: '{{resolve:ssm:security_group_id:prod}}'
-      SubnetIds: '{{resolve:ssm:subnet_ids:prod}}'
+      SecurityGroupIds: '{{resolve:ssm:security_group_id:test}}'
+      SubnetIds: '{{resolve:ssm:subnet_ids:test}}'
 
   PipelineLambdaPolicy:
     Type: AWS::IAM::Policy
