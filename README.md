@@ -13,11 +13,10 @@ aws cloudformation create-stack
 cp .sample.env .env
 source .env
 ./scripts/users-stack
-./scripts/vpc-stack --environment Dev
+./scripts/vpc-stack --environment <Dev | Prod | Test>
 # DB stack goes 
-./scripts/ecr-stack --component alpha
-./scripts/lambda-stack --component alpha --environemnt Dev
-./scripts/lambda-stack --component beta --environment Dev
+./scripts/ecr-stack --components <one | two | three | four >
+./scripts/lambda-stack --component <one | two | three | four> --environment <Dev | Prod | Test>
 # API Gateway stack goes here
 ```
 

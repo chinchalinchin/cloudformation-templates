@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     ecr-stack --component alpha
+# >$     ecr-stack --components one | two | three | four
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -21,8 +21,8 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-              --component)
-                     COMPONENT="$2"
+              --components)
+                     COMPONENTS="$2"
                      shift
                      shift
                      ;;
@@ -40,9 +40,9 @@ done
 cp $PROJECT_DIR/ecr/ecr.yml ./ecr.yml
 
 aws cloudformation create-stack \
-    --stack-name "${ECR_STACK}-$COMPONENT" \
+    --stack-name "${ECR_STACK}" \
     --template-body file://ecr.yml
-    --parameters ParameterKey=componentName,ParameterValue=$COMPONENT
+    --parameters ParameterKey=components,ParameterValue=$COMPONENTS
     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
     --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
 
