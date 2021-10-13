@@ -1,20 +1,55 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Parameters:
-  componentName:
+  components:
     Type: String
+    AllowedValues:
+      - one
+      - two
+      - three
+      - four
   userStack:
     Type: String
     Default: CCC-UserStack
 
+Conditions:
+  CreateOneComponent: !Equals
+      - !Ref components
+      - one
+  CreateTwoComponents: !Equals
+      - !Ref components
+      - two
+  CreateThreeComponents: !Equals
+      - !Ref components
+      - three
+  CreateFourComponents: !Equals
+      - !Ref components
+      - four
+  
+  CreateAlphaComponent: !Or
+    - !Condition CreateOneComponent
+    - !Condition CreateTwoComponents
+    - !Condition CreateThreeComponents
+    - !Condition CreateFourComponents
+
+  CreateBetaComponent: !Or
+    - !Condition CreateTwoComponents
+    - !Condition CreateThreeComponents
+    - !Condition CreateFourComponents
+
+  CreateGammaComponent: !Or
+    - !Condition CreateThreeComponents
+    - !Condition CreateFourComponents
+
 Resources:
-  LambdaECR:
+  LambdaAlphaECR:
     Type: AWS::ECR::Repository
+    Condition: CreateAlphaComponent
     Description: ECR to hold image of Lambda function
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-        RepositoryName: !Sub lambda-${componentName}
+        RepositoryName: lambda-alpha
     RepositoryPolicyText:
       Version: "2012-10-17"
       Statement:
@@ -27,30 +62,11 @@ Resources:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
 
-  PipelineLambdaPolicy:
+  PipelineLambdaAlphaECRPolicy:
     Type: AWS::IAM::Policy
-    Description: Policy to allow pipeline to update Lambda functions
-    PolicyName: !Sub pipeline-${componentName}-lambda-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: UpdateLambdaFunction
-          Effect: Allow
-          Action: 
-            - "lambda:UpdateFunctionCode"
-          Resource:
-            - !Ref LambdaFunction.Arn
-    DependsOn:
-      - LambdaFunctionTest
-      - LambdaFunctionDevelopment
-      - LambdaFunctionProduction
-    Users: 
-      - !ImportValue ${userStack.PipelineUserArn}
-
-  PipelineECRPolicy:
-    Type: AWS::IAM::Policy
+    Condition: CreateAlphaComponent
     Description: Policy to allow pipeline to push and pull from ECR
-    PolicyName: !Sub pipeline-${componentName}-ecr-policy
+    PolicyName: !Sub pipeline-alpha-ecr-policy
     PolicyDocument:
       Version: "2012-10-17"
       Statement:
@@ -69,12 +85,161 @@ Resources:
             - "ecr:UploadLayerPart"
             - "ecr:CompleteLayerUpload"
             - "ecr:PutImage"
-          Resource: !GetAtt LambdaECR.Arn
+          Resource: !GetAtt LambdaAlphaECR.Arn
     DependsOn:
-      - LambdaECR
+      - LambdaAlphaECR
     Users:
-      - !ImportValue ${userStack.PipelineUserArn}
+      - !Sub ${PipelineUser.Arn}
+
+  LambdaBetaECR:
+    Type: AWS::ECR::Repository
+    Condition: CreateBetaComponent
+    Description: ECR to hold image of Lambda beta function
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+        RepositoryName: lambda-beta
+    RepositoryPolicyText:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: ECRLambdaBetaPolicy
+          Effect: Allow
+          Principal:
+            Service:
+              - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+
+  PipelineLambdaBetaECRPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateBetaComponent
+    Description: Policy to allow pipeline to push and pull from beta ECR
+    PolicyName: pipeline-beta-ecr-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: BetaRepositoryPermissions
+          Effect: Allow
+          Action:
+            - "ecr:GetAuthorizationToken"
+            - "ecr:BatchCheckLayerAvailability"
+            - "ecr:GetDownloadUrlForLayer"
+            - "ecr:GetRepositoryPolicy"
+            - "ecr:DescribeRepositories"
+            - "ecr:ListImages"
+            - "ecr:DescribeImages"
+            - "ecr:BatchGetImage"
+            - "ecr:InitiateLayerUpload"
+            - "ecr:UploadLayerPart"
+            - "ecr:CompleteLayerUpload"
+            - "ecr:PutImage"
+          Resource: !GetAtt LambdaBetaECR.Arn
+    DependsOn:
+      - LambdaBetaECR
+    Users:
+      - !Sub ${PipelineUser.Arn}
+  
+  LambdaGammaECR:
+    Type: AWS::ECR::Repository
+    Condition: CreateAlphaComponent
+    Description: ECR to hold image of Lambda gamma function
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+        RepositoryName: lambda-gamma
+    RepositoryPolicyText:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: ECRLambdaGammaPolicy
+          Effect: Allow
+          Principal:
+            Service:
+              - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+
+  PipelineLambdaGammaECRPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateGammaComponent
+    Description: Policy to allow pipeline to push and pull from gamma ECR
+    PolicyName: pipeline-gamma-ecr-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: GammaRepositoryPermissions
+          Effect: Allow
+          Action:
+            - "ecr:GetAuthorizationToken"
+            - "ecr:BatchCheckLayerAvailability"
+            - "ecr:GetDownloadUrlForLayer"
+            - "ecr:GetRepositoryPolicy"
+            - "ecr:DescribeRepositories"
+            - "ecr:ListImages"
+            - "ecr:DescribeImages"
+            - "ecr:BatchGetImage"
+            - "ecr:InitiateLayerUpload"
+            - "ecr:UploadLayerPart"
+            - "ecr:CompleteLayerUpload"
+            - "ecr:PutImage"
+          Resource: !GetAtt LambdaGammaECR.Arn
+    DependsOn:
+      - LambdaGammaECR
+    Users:
+      - !Sub ${PipelineUser.Arn}
+
+  LambdaDeltaECR:
+    Type: AWS::ECR::Repository
+    Condition: CreateDeltaComponent
+    Description: ECR to hold image of Lambda Delta function
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+        RepositoryName: lambda-delta
+    RepositoryPolicyText:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: ECRLambdaDeltaPolicy
+          Effect: Allow
+          Principal:
+            Service:
+              - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+
+  PipelineLambdaDeltaECRPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateDeltaComponent
+    Description: Policy to allow pipeline to push and pull from delta ECR
+    PolicyName: pipeline-delta-ecr-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: DeltaECRRepositoryPermissions
+          Effect: Allow
+          Action:
+            - "ecr:GetAuthorizationToken"
+            - "ecr:BatchCheckLayerAvailability"
+            - "ecr:GetDownloadUrlForLayer"
+            - "ecr:GetRepositoryPolicy"
+            - "ecr:DescribeRepositories"
+            - "ecr:ListImages"
+            - "ecr:DescribeImages"
+            - "ecr:BatchGetImage"
+            - "ecr:InitiateLayerUpload"
+            - "ecr:UploadLayerPart"
+            - "ecr:CompleteLayerUpload"
+            - "ecr:PutImage"
+          Resource: !GetAtt LambdaDeltaECR.Arn
+    DependsOn:
+      - LambdaDeltaECR
+    Users:
+      - !Sub ${PipelineUser.Arn}
+
+
 
 Outputs:
-  LambdaImageRepository:
-    Value: !Ref ${LambdaECR.RepositoryUri}
+  LambdaAlphaImageRepository:
+    Value: !Ref ${LambdaAlphaECR.RepositoryUri}

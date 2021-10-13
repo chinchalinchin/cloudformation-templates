@@ -25,6 +25,26 @@ Resources:
       ManagedPolicies:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+  
+  PipelineLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Description: Policy to allow pipeline to update Lambda functions
+    PolicyName: !Sub pipeline-lambda-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: UpdateLambdaFunction
+          Effect: Allow
+          Action: 
+            - "lambda:UpdateFunctionCode"
+          Resource:
+            - !Ref LambdaFunction.Arn
+    DependsOn:
+      - LambdaFunctionTest
+      - LambdaFunctionDevelopment
+      - LambdaFunctionProduction
+    Users: 
+      - !Sub ${PipelineUser.Arn}
 
 Outputs:
   PipelineUserArn:

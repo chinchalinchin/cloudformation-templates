@@ -1,8 +1,13 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Parameters:
-  componentName:
+  components:
     Type: String
+    AllowedValues:
+      - one
+      - two
+      - three
+      - four
   environmentName:
     Type: String
     Default: Dev
@@ -16,38 +21,167 @@ Parameters:
     Type: String
     Default: CCC-ECRStack
 
+Conditions:
+  CreateOneComponent: !Equals
+      - !Ref components
+      - one
+  CreateTwoComponents: !Equals
+      - !Ref components
+      - two
+  CreateThreeComponents: !Equals
+      - !Ref components
+      - three
+  CreateFourComponents: !Equals
+      - !Ref components
+      - four
+  
+  CreateAlphaComponent: !Or
+    - !Condition CreateOneComponent
+    - !Condition CreateTwoComponents
+    - !Condition CreateThreeComponents
+    - !Condition CreateFourComponents
+
+  CreateBetaComponent: !Or
+    - !Condition CreateTwoComponents
+    - !Condition CreateThreeComponents
+    - !Condition CreateFourComponents
+
+  CreateGammaComponent: !Or
+    - !Condition CreateThreeComponents
+    - !Condition CreateFourComponents
+
+  CreateDeltaComponent: !Or
+    - !Condition CreateFourComponents
+
 Resources:
-  LambdaECR:
-    Type: AWS::ECR::Repository
-    Description: ECR to hold image of Lambda function
-    Properties:
-      ImageScanningConfiguration: 
-        ScanOnPush: true
-        RepositoryName: !Sub lambda-${componentName}
-    RepositoryPolicyText:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: ECRLambdaPolicy
-          Effect: Allow
-          Principal:
-            Service:
-              - lambda.amazonaws.com
-            Action:
-              - "ecr:BatchGetImage"
-              - "ecr:GetDownloadUrlForLayer"
-              
-  LambdaFunction:
+  LambdaAlpha:
     Type: AWS::Lambda::Function
-    Description: Lambda function deployed into Production environment
+    Condition: CreateAlphaComponent
+    Description: Lambda function alpha
     Properties:
-      FunctionName: !Sub lambda-${componentName}-${environmentName}
-      Code: !Sub ${LambdaECR.RepositoryUri}:${environmentName}
+      FunctionName: !Sub lambda-alpha-${environmentName}
+      Code: !Sub ${ecrStack.LambdaAlphaECR.RepositoryUri}:${environmentName}
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
-    DependsOn: 
-      - LambdaExectuor
-      - LambdaECR
     VpcConfig:
       SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
       SubnetIds: 
         - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+
+  PipelineLambdaAlphaPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateAlphaComponent
+    Description: Policy to allow pipeline to update Lambda functions
+    PolicyName: pipeline-lambda-alpha-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: UpdateLambdaFunction
+          Effect: Allow
+          Action: 
+            - "lambda:UpdateFunctionCode"
+          Resource:
+            - !Ref LambdaAlpha.Arn
+    DependsOn:
+      - LambdaAlpha
+    Users: 
+      - !ImportValue ${userStack.PipelineUser.Arn}
+
+  LambdaBeta:
+    Type: AWS::Lambda::Function
+    Condition: CreateBetaComponent
+    Description: Lambda beta function
+    Properties:
+      FunctionName: !Sub lambda-beta-${environmentName}
+      Code: !Sub ${ecrStack.LambdaBetaECR.RepositoryUri}:${environmentName}
+      PackageType: Image
+      Role: !ImportValue ${userStack.LambdaExecutorArn}
+    VpcConfig:
+      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SubnetIds: 
+        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+
+  PipelineLambdaBetaPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateBetaComponent
+    Description: Policy to allow pipeline to update Lambda beta function
+    PolicyName: pipeline-lambda-beta-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: UpdateLambdaFunction
+          Effect: Allow
+          Action: 
+            - "lambda:UpdateFunctionCode"
+          Resource:
+            - !Ref LambdaBeta.Arn
+    DependsOn:
+      - LambdaBeta
+    Users: 
+      - !ImportValue ${userStack.PipelineUser.Arn}
+
+  LambdaGamma:
+    Type: AWS::Lambda::Function
+    Condition: CreateGammaComponent
+    Description: Lambda gamma function
+    Properties:
+      FunctionName: !Sub lambda-beta-${environmentName}
+      Code: !Sub ${ecrStack.LambdaGammaECR.RepositoryUri}:${environmentName}
+      PackageType: Image
+      Role: !ImportValue ${userStack.LambdaExecutorArn}
+    VpcConfig:
+      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SubnetIds: 
+        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+
+  PipelineLambdaGammaPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateGammmaComponent
+    Description: Policy to allow pipeline to update Lambda gamma function
+    PolicyName: pipeline-lambda-gamma-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: UpdateLambdaFunction
+          Effect: Allow
+          Action: 
+            - "lambda:UpdateFunctionCode"
+          Resource:
+            - !Ref LambdaGamma.Arn
+    DependsOn:
+      - LambdaGamma
+    Users: 
+      - !ImportValue ${userStack.PipelineUser.Arn}
+
+  LambdaDelta:
+    Type: AWS::Lambda::Function
+    Condition: CreateDeltaComponent
+    Description: Lambda Delta function
+    Properties:
+      FunctionName: !Sub lambda-delta-${environmentName}
+      Code: !Sub ${ecrStack.LambdaDeltaECR.RepositoryUri}:${environmentName}
+      PackageType: Image
+      Role: !ImportValue ${userStack.LambdaExecutorArn}
+    VpcConfig:
+      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SubnetIds: 
+        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+
+  PipelineLambdaDeltaPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateDeltaComponent
+    Description: Policy to allow pipeline to update Lambda delta function
+    PolicyName: pipeline-lambda-delta-policy
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Sid: UpdateLambdaFunction
+          Effect: Allow
+          Action: 
+            - "lambda:UpdateFunctionCode"
+          Resource:
+            - !Ref LambdaDelta.Arn
+    DependsOn:
+      - LambdaDelta
+    Users: 
+      - !ImportValue ${userStack.PipelineUser.Arn}
