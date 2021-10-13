@@ -1,0 +1,47 @@
+Parameters:
+  username:
+    Type: String
+  password: 
+    Type: String
+  vpcStack:
+    Type: String
+    Default: CCC-VPCStack
+
+Resources:
+  RDSDBInstance:
+    Type: "AWS::RDS::DBInstance"
+    Properties:
+      DBInstanceIdentifier: "cch-dev-rds"
+      AllocatedStorage: 20
+      DBInstanceClass: "db.t3.micro"
+      Engine: "postgres"
+      MasterUsername: "makpar2021"
+      MasterUserPassword: "REPLACEME"
+      PreferredBackupWindow: "03:12-03:42"
+      BackupRetentionPeriod: 7
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      PreferredMaintenanceWindow: "thu:09:26-thu:09:56"
+      MultiAZ: false
+      EngineVersion: "13.3"
+      AutoMinorVersionUpgrade: true
+      LicenseModel: "postgresql-license"
+      PubliclyAccessible: false
+      StorageType: "gp2"
+      Port: 5432
+      StorageEncrypted: true
+      KmsKeyId: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0e8a8f01-dd11-4022-87ee-bae01dddb034"
+      CopyTagsToSnapshot: true
+      MonitoringInterval: 60
+      EnableIAMDatabaseAuthentication: false
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0e8a8f01-dd11-4022-87ee-bae01dddb034"
+      PerformanceInsightsRetentionPeriod: 7
+      DeletionProtection: false
+      DBSubnetGroupName: "default-vpc-0e6ed9cab1ac09967"
+      VPCSecurityGroups: 
+      - !ImportValue ${vpcStack.DatabaseSecurityGroup} # todo
+      MaxAllocatedStorage: 1000
+      DBParameterGroupName: "default.postgres13"
+      OptionGroupName: "default:postgres-13"
+      MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
+      CACertificateIdentifier: "rds-ca-2019"

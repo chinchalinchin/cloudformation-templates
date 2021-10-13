@@ -5,7 +5,10 @@ Parameters:
     Type: String
   userStack:
     Type: String
-    Default: UserStack
+    Default: CCC-UserStack
+  vpcStack:
+    Type: String
+    Default: CCC-VPCStack
 
 Resources:
   LambdaECR:

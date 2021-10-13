@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     lambda-stack --component alpha
+# >$     lambda-stack
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -21,11 +21,6 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-              --component)
-                     component="$2"
-                     shift
-                     shift
-                     ;;
               --help)
                      help
                      exit 0
@@ -37,13 +32,10 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/lambda/lambda.yml ./lambda.yml
+cp $PROJECT_DIR/vpc/vpc.yml ./vpc.yml
 
 aws cloudformation create-stack \
-    --stack-name "${LAMBDA_STACK}-$component" \
-    --template-body $PROJECT_DIR/lambda/lambda.yml
-    --parameters ParameterKey=componentName,ParameterValue=$component
-    --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
-    --parameters ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+    --stack-name "${VPC_STACK}" \
+    --template-body $PROJECT_DIR/vpc/vpc.yml
 
-rm ./lambda.yml
+rm ./vpc.yml
