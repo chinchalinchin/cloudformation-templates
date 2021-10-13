@@ -41,6 +41,9 @@ Conditions:
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
 
+  CreateDeltaComponent: !Or
+    - !Condition CreateFourComponents
+
 Resources:
   LambdaAlphaECR:
     Type: AWS::ECR::Repository
