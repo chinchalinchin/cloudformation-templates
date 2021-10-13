@@ -238,8 +238,12 @@ Resources:
     Users:
       - !Sub ${PipelineUser.Arn}
 
-
-
 Outputs:
   LambdaAlphaImageRepository:
     Value: !Ref ${LambdaAlphaECR.RepositoryUri}
+  LambdaBetaImageRepository:
+    Value: !Ref ${LambdaBetaECR.RepositoryUri}
+  LambdaGammaImageRepository:
+    Value: !Red ${LambdaGammaECR.RepositoryUri}
+  LambdaDeltaImageRepositry:
+    Value: !Ref ${LambdaDeltaECR.RepositoryUri}
