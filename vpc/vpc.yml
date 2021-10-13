@@ -208,9 +208,16 @@ Resources:
         FromPort: '0'
         ToPort: '65535'
         CidrIp: 0.0.0.0/0
-  # TODO:
-  # DatabaseSecurityGroup:
-    # Type: AWS::EC2::SecurityGroup
+
+  DatabaseSecurityGroup:
+    Type: AWS::ECS::SecurityGroup
+    Properties: 
+      GroupName: !Sub DatabaseSecurityGroup-${AWS::StackName}
+      GroupDescription: A security group for the lambdas to talk to the RDS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: -1
+        CidrIp: 0.0.0.0/0
 
   NATInstance:
     Type: AWS::EC2::Instance
@@ -275,5 +282,7 @@ Outputs:
     Value: !Ref PrivateSubnetB
     Export:
       Name: !Sub ${AWS::StackName}-PrivateSubnetB
-  #DatabaseSecurityGroupId:
-    # Value: !Ref DatabaseSecurityGroup
+  DatabaseSecurityGroupId:
+    Value: !Ref DatabaseSecurityGroup
+    Export: 
+      Name: !Sub ${AWS::StackName}-DatabaseSecurityGroup

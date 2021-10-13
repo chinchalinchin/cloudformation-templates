@@ -3,6 +3,9 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   componentName:
     Type: String
+  environmentName:
+    Type: String
+    Default: Dev
   userStack:
     Type: String
     Default: CCC-UserStack
@@ -56,7 +59,7 @@ Resources:
     DependsOn:
       - LambdaECR
     Users:
-      - !ImportValue ${userStack.UserArn}
+      - !ImportValue ${userStack.PipelineUserArn}
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -75,49 +78,22 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               
-  LambdaFunctionProduction:
+  LambdaFunction:
     Type: AWS::Lambda::Function
     Description: Lambda function deployed into Production environment
     Properties:
-      FunctionName: !Sub lambda-${componentName}_master
-      Code: !Sub ${LambdaECR.RepositoryUri}:master
+      FunctionName: !Sub lambda-${componentName}-${environmentName}
+      Code: !Sub ${LambdaECR.RepositoryUri}:${environmentName}
       PackageType: Image
       Role: !GetAtt LambdaExecutor.Arn
     DependsOn: 
       - LambdaExectuor
       - LambdaECR
     VpcConfig:
-      SecurityGroupIds: '{{resolve:ssm:security_group_id:prod}}'
-      SubnetIds: '{{resolve:ssm:subnet_ids:prod}}'
+      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SubnetIds: 
+        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
   
-  LambdaFunctionDevelopment:
-    Type: AWS::Lambda::Function
-    Description: Lambda function deployed into Development environment
-    Properties:
-      FunctionName: !Sub lambda-${componentName}_development
-      Code: !Sub ${LambdaECR.RepositoryUri}:development
-      Role: !GetAtt LambdaExecutor.Arn
-    DependsOn: 
-      - LambdaExectuor
-      - LambdaECR
-    VpcConfig:
-      SecurityGroupIds: '{{resolve:ssm:security_group_id:dev}}'
-      SubnetIds: '{{resolve:ssm:subnet_ids:dev}}'
-  
-  LambdaFunctionTest:
-    Type: AWS::Lambda::Function
-    Description: Lambda function deployed into Test environment
-    Properties:
-      FunctionName: !Sub lambda-${componentName}_test
-      Code: !Sub ${LambdaECR.RepositoryUri}:test
-      Role: !GetAtt LambdaExecutor.Arn
-    DependsOn: 
-      - LambdaExectuor
-      - LambdaECR
-    VpcConfig:
-      SecurityGroupIds: '{{resolve:ssm:security_group_id:test}}'
-      SubnetIds: '{{resolve:ssm:subnet_ids:test}}'
-
   PipelineLambdaPolicy:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to update Lambda functions
@@ -130,12 +106,10 @@ Resources:
           Action: 
             - "lambda:UpdateFunctionCode"
           Resource:
-            - !Ref LambdaFunctionTest.Arn
-            - !Ref LambdaFunctionDevelopment.Arn
-            - !Ref LambdaFunctionProduction.Arn
+            - !Ref LambdaFunction.Arn
     DependsOn:
       - LambdaFunctionTest
       - LambdaFunctionDevelopment
       - LambdaFunctionProduction
     Users: 
-      - !ImportValue ${userStack.UserArn}
+      - !ImportValue ${userStack.PipelineUserArn}
