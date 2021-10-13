@@ -25,6 +25,7 @@ source .env
 
 1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
 
+2. `VPCStack` and `UserStack` have no dependencies on other stacks. `ECRStack` has a dependency on `UserStack` through the pipeline user. `LambdaComponentStack` has a dependency on `UserStack` through the lambda executor role, `VPCStack` through the database security group and `ECRStack` through the **ECR** that holds the lambda image.
 ```
 aws cloudformation create-stack
     --stack-name UserStack
