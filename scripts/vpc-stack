@@ -21,14 +21,19 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-              --help)
-                     help
-                     exit 0
-                     ;;
-              *)
-                     log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                     exit 1
-                     ;;
+                --help)
+                    help
+                    exit 0
+                    ;;
+                --environment)
+                    ENVIRONMENT="$2"
+                    shift
+                    shift
+                    ;;
+                *)
+                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+                    exit 1
+                    ;;
        esac
 done
 
@@ -36,6 +41,7 @@ cp $PROJECT_DIR/vpc/vpc.yml ./vpc.yml
 
 aws cloudformation create-stack \
     --stack-name "${VPC_STACK}" \
-    --template-body $PROJECT_DIR/vpc/vpc.yml
+    --template-body file://vpc.yml \
+    --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
 
 rm ./vpc.yml

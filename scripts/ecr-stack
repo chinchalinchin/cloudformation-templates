@@ -1,13 +1,13 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="lambda-stack"
+SCRIPT_NAME="lecr-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     lambda-stack --component alpha --environment Dev
+# >$     ecr-stack --component alpha
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -26,11 +26,6 @@ while [[ $# -gt 0 ]]; do
                      shift
                      shift
                      ;;
-              --environment)
-                     ENVIRONMENT="$2"
-                     shift
-                     shift
-                     ;;
               --help)
                      help
                      exit 0
@@ -42,14 +37,13 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/lambda/lambda.yml ./lambda.yml
+cp $PROJECT_DIR/ecr/ecr.yml ./ecr.yml
 
 aws cloudformation create-stack \
-    --stack-name "${LAMBDA_STACK}-$COMPONENT" \
-    --template-body file://lambda.yml \
-    --parameters ParameterKey=componentName,ParameterValue=$COMPONENT \
-    --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-    --parameters ParameterKey=userStack,ParameterValue=$USER_STACK \
-    --parameters ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+    --stack-name "${ECR_STACK}-$COMPONENT" \
+    --template-body file://ecr.yml
+    --parameters ParameterKey=componentName,ParameterValue=$COMPONENT
+    --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
+    --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
 
-rm ./lambda.yml
+rm ./ecr.yml
