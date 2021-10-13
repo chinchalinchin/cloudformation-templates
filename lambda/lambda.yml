@@ -12,6 +12,9 @@ Parameters:
   vpcStack:
     Type: String
     Default: CCC-VPCStack
+  ecrStack:
+    Type: String
+    Default: CCC-ECRStack
 
 Resources:
   LambdaECR:
@@ -32,51 +35,6 @@ Resources:
             Action:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
-  
-  PipelineECRPolicy:
-    Type: AWS::IAM::Policy
-    Description: Policy to allow pipeline to push and pull from ECR
-    PolicyName: !Sub pipeline-${componentName}-ecr-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: RepositoryPermissions
-          Effect: Allow
-          Action:
-            - "ecr:GetAuthorizationToken"
-            - "ecr:BatchCheckLayerAvailability"
-            - "ecr:GetDownloadUrlForLayer"
-            - "ecr:GetRepositoryPolicy"
-            - "ecr:DescribeRepositories"
-            - "ecr:ListImages"
-            - "ecr:DescribeImages"
-            - "ecr:BatchGetImage"
-            - "ecr:InitiateLayerUpload"
-            - "ecr:UploadLayerPart"
-            - "ecr:CompleteLayerUpload"
-            - "ecr:PutImage"
-          Resource: !GetAtt LambdaECR.Arn
-    DependsOn:
-      - LambdaECR
-    Users:
-      - !ImportValue ${userStack.PipelineUserArn}
-
-  LambdaExecutor:
-    Type: AWS::IAM::Role
-    Description: Allows Lambda to access other AWS Services
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action: 
-              - "sts:AssumeRole"
-      ManagedPolicies:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               
   LambdaFunction:
     Type: AWS::Lambda::Function
@@ -85,7 +43,7 @@ Resources:
       FunctionName: !Sub lambda-${componentName}-${environmentName}
       Code: !Sub ${LambdaECR.RepositoryUri}:${environmentName}
       PackageType: Image
-      Role: !GetAtt LambdaExecutor.Arn
+      Role: !ImportValue ${userStack.LambdaExecutorArn}
     DependsOn: 
       - LambdaExectuor
       - LambdaECR
@@ -93,23 +51,3 @@ Resources:
       SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
       SubnetIds: 
         - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
-  
-  PipelineLambdaPolicy:
-    Type: AWS::IAM::Policy
-    Description: Policy to allow pipeline to update Lambda functions
-    PolicyName: !Sub pipeline-${componentName}-lambda-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: UpdateLambdaFunction
-          Effect: Allow
-          Action: 
-            - "lambda:UpdateFunctionCode"
-          Resource:
-            - !Ref LambdaFunction.Arn
-    DependsOn:
-      - LambdaFunctionTest
-      - LambdaFunctionDevelopment
-      - LambdaFunctionProduction
-    Users: 
-      - !ImportValue ${userStack.PipelineUserArn}

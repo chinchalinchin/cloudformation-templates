@@ -9,58 +9,25 @@ Resources:
     Properties:
       UserName: ccc-pipeline
 
-  ManagedInstanceRole:
+  LambdaExecutor:
     Type: AWS::IAM::Role
+    Description: Allows Lambda to access other AWS Services
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ssm.amazonaws.com
-            - ec2.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-      - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-      Path: "/"
-
-  ManagedInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: "/"
-      Roles:
-      - !Ref ManagedInstanceRole
-      InstanceProfileName: ManagedInstanceProfile
-
-  AutomationServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ssm.amazonaws.com
-            - ec2.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
-      Path: "/"
-      RoleName: AutomationServiceRole
-      Policies:
-      - PolicyName: passrole
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
           - Effect: Allow
-            Action:
-            - iam:PassRole
-            Resource:
-            - !GetAtt ManagedInstanceRole.Arn
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
 Outputs:
   PipelineUserArn:
-    Value: !GetAtt PipelineUser.Arn
+    Value: !GetAtt ${PipelineUser.Arn}
+  LambdaExecutorArn:
+    Value: !GetAtt ${LambdaExecutor.Arn}

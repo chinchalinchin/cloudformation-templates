@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Creates a VPC with Nat Instance"
 
 Parameters:
-  EnvironmentName:
+  environmentName:
     Description: An environment name that is prefixed to resource names
     Type: String
     Default: Dev
@@ -81,7 +81,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-VPC
-        Environment: !Ref EnvironmentName
+        Environment: !Ref environmentName
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     DependsOn: VPC
@@ -101,7 +101,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-Public-A
-        Environment: !Ref EnvironmentName
+        Environment: !Ref environmentName
   PublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -111,7 +111,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-Public-B
-        Environment: !Ref EnvironmentName
+        Environment: !Ref environmentName
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -121,7 +121,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-Private-A
-      Environment: !Ref EnvironmentName
+      Environment: !Ref environmentName
   PrivateSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -131,7 +131,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-Private-B
-        Environment: !Ref EnvironmentName
+        Environment: !Ref environmentName
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -139,7 +139,7 @@ Resources:
       Tags:
       - Key: Name
         Value: Public
-        Environment: !Ref EnvironmentName
+        Environment: !Ref environmentName
   PublicRoute1:   # Public route table has direct routing to IGW:
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
@@ -154,7 +154,7 @@ Resources:
       Tags:
       - Key: Name
         Value: Private
-        Environment: !Ref EnvironmentName
+        Environment: !Ref environmentName
   PrivateRoute1:            # Private route table can access web via NAT (created below)
     Type: AWS::EC2::Route
     Properties:
@@ -234,7 +234,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub NAT-${AWS::StackName}
-        Environment: !Ref EnvironmentName
+        Environment: !Ref environmentName
       UserData:      #  This code is NAT code.  Look at how the last line signals the wait condition:
         Fn::Base64: !Sub |
           #!/bin/bash

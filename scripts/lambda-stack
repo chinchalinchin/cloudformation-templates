@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     lambda-stack --component alpha
+# >$     lambda-stack --component alpha --environment Dev
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -22,7 +22,12 @@ while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
               --component)
-                     component="$2"
+                     COMPONENT="$2"
+                     shift
+                     shift
+                     ;;
+              --environment)
+                     ENVIRONMENT="$2"
                      shift
                      shift
                      ;;
@@ -40,9 +45,10 @@ done
 cp $PROJECT_DIR/lambda/lambda.yml ./lambda.yml
 
 aws cloudformation create-stack \
-    --stack-name "${LAMBDA_STACK}-$component" \
+    --stack-name "${LAMBDA_STACK}-$COMPONENT" \
     --template-body $PROJECT_DIR/lambda/lambda.yml
-    --parameters ParameterKey=componentName,ParameterValue=$component
+    --parameters ParameterKey=componentName,ParameterValue=$COMPONENT
+    --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
     --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
     --parameters ParameterKey=vpcStack,ParameterValue=$VPC_STACK
 
