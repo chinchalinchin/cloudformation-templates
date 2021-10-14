@@ -229,7 +229,7 @@ Resources:
       - DeviceIndex: '0'
         SubnetId: !Ref PublicSubnetA                                  # Any public subnet is fine
         AssociatePublicIpAddress: true                                # We will definitely need a public IP address
-        GroupSet: [!Ref NATSecurityGroup]                             # Plug in the security group
+        GroupSet: [!Ref NATSecurityGroup, !Ref DatabaseSecurityGroup]                             # Plug in the security group
       SourceDestCheck: false                                          # NATs don't work if EC2 tries the match source addresses with destinations.
       Tags:
       - Key: Name
