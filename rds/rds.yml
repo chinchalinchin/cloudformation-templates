@@ -1,47 +1,102 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create a DB subnet group and postgres Database"
+
 Parameters:
-  username:
-    Type: String
-  password: 
-    Type: String
-  vpcStack:
-    Type: String
-    Default: CCC-VPCStack
+  VPC:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: The VPC to create the cluster
+    Default: vpc-ID
+
+  PrivateSubnet01:
+  
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: The subnet for the DB cluster
+    Default: subnet-006a8cf586f5f7c63
+
+  PrivateSubnet02:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: The subnet for the DB cluster
+    Default: subnet-ID
+
+  MasterUsername:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: The username for our database.
+  
+  MasterUserPassword:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: The password for the database.
+    "NoEcho": true
 
 Resources:
-  RDSDBInstance:
-    Type: "AWS::RDS::DBInstance"
-    Properties:
-      DBInstanceIdentifier: "cch-dev-rds"
-      AllocatedStorage: 20
-      DBInstanceClass: "db.t3.micro"
-      Engine: "postgres"
-      MasterUsername: !Ref username
-      MasterUserPassword: !Ref password
-      PreferredBackupWindow: "03:12-03:42"
-      BackupRetentionPeriod: 7
-      AvailabilityZone: !Sub "${AWS::Region}c"
-      PreferredMaintenanceWindow: "thu:09:26-thu:09:56"
-      MultiAZ: false
-      EngineVersion: "13.3"
-      AutoMinorVersionUpgrade: true
-      LicenseModel: "postgresql-license"
-      PubliclyAccessible: false
-      StorageType: "gp2"
-      Port: 5432
-      StorageEncrypted: true
-      KmsKeyId: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0e8a8f01-dd11-4022-87ee-bae01dddb034"
-      CopyTagsToSnapshot: true
-      MonitoringInterval: 60
-      EnableIAMDatabaseAuthentication: false
-      EnablePerformanceInsights: true
-      PerformanceInsightsKMSKeyId: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0e8a8f01-dd11-4022-87ee-bae01dddb034"
-      PerformanceInsightsRetentionPeriod: 7
-      DeletionProtection: false
-      DBSubnetGroupName: "default-vpc-0e6ed9cab1ac09967"
-      VPCSecurityGroups: 
-      - !ImportValue DatabaseSecurityGroup
-      MaxAllocatedStorage: 1000
-      DBParameterGroupName: "default.postgres13"
-      OptionGroupName: "default:postgres-13"
-      MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
-      CACertificateIdentifier: "rds-ca-2019"
+    EC2SecurityGroup:
+        Type: "AWS::EC2::SecurityGroup"
+
+        Properties:
+            GroupDescription: "Database instances security group"
+            VpcId: !Ref VPC
+            SecurityGroupIngress: 
+              - 
+                CidrIp: "*.*.*.*/32"
+                FromPort: 5432
+                IpProtocol: "tcp"
+                ToPort: 5432
+            SecurityGroupEgress: 
+              - 
+                CidrIp: "0.0.0.0/0"
+                IpProtocol: "-1"
+
+    RDSDBSubnetGroup:
+        Type: "AWS::RDS::DBSubnetGroup"
+        Properties:
+            DBSubnetGroupDescription: "Subnet Group for database"
+            DBSubnetGroupName: !Sub "${AWS::Region}-aws-dxl-database-subnet-group"
+            SubnetIds: 
+              - !Ref PrivateSubnet01
+              - !Ref PrivateSubnet02
+            Tags: 
+              - Key: Environment
+                Value: dev
+
+    RDSDBInstance:
+        Type: AWS::RDS::DBInstance
+        Properties:
+            DBInstanceIdentifier: aws-dxl-database-1
+            AllocatedStorage: 100
+            DBInstanceClass: db.t3.micro
+            Engine: "postgres"
+            MasterUsername: !Ref MasterUsername
+            MasterUserPassword: !Ref MasterUserPassword
+            BackupRetentionPeriod: 7
+            MultiAZ: true
+            EngineVersion: 8.0.20
+            AutoMinorVersionUpgrade: true
+            Iops: 1000
+            PubliclyAccessible: false
+            StorageType: io1
+            Port: 3306
+            StorageEncrypted: true
+            CopyTagsToSnapshot: true
+            MonitoringInterval: 60
+            EnableIAMDatabaseAuthentication: false
+            EnablePerformanceInsights: true
+            PerformanceInsightsRetentionPeriod: 7
+            DeletionProtection: true
+            DBSubnetGroupName: !Ref RDSDBSubnetGroup
+            VPCSecurityGroups: 
+              - !Ref EC2SecurityGroup
+            MaxAllocatedStorage: 1000
+            DBParameterGroupName: !Ref ParameterGroup
+            MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
+            Tags: 
+              - Key: Environment
+                Value: dev
+
+Outputs:
+  JDBCConnectionString:
+    Description: JDBC connection string for the database
+    Value: !Join ['', ['jdbc:postgresql://', !GetAtt [MyDB, Endpoint.Address], ':', !GetAtt [
+          MyDB, Endpoint.Port], /, !Ref 'DBName']]
+
+  SubnetGroup:
+    Description: The db subnet group name 
+    Value: !Ref RDSDBSubnetGroup
