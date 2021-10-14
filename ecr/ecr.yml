@@ -72,39 +72,6 @@ Resources:
         Value: !Sub ${AWS::StackName}-LambdaAlphaECR
         Environment: !Ref environmentName
 
-  PipelineLambdaAlphaECRPolicy:
-    Type: AWS::IAM::Policy
-    Condition: CreateAlphaComponent
-    Description: Policy to allow pipeline to push and pull from ECR
-    PolicyName: !Sub pipeline-alpha-ecr-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: RepositoryPermissions
-          Effect: Allow
-          Action:
-            - "ecr:GetAuthorizationToken"
-            - "ecr:BatchCheckLayerAvailability"
-            - "ecr:GetDownloadUrlForLayer"
-            - "ecr:GetRepositoryPolicy"
-            - "ecr:DescribeRepositories"
-            - "ecr:ListImages"
-            - "ecr:DescribeImages"
-            - "ecr:BatchGetImage"
-            - "ecr:InitiateLayerUpload"
-            - "ecr:UploadLayerPart"
-            - "ecr:CompleteLayerUpload"
-            - "ecr:PutImage"
-          Resource: !GetAtt LambdaAlphaECR.Arn
-    DependsOn:
-      - LambdaAlphaECR
-    Users:
-      - !Sub ${PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaAlphaECRPolicy
-        Environment: !Ref environmentName
-
   LambdaBetaECR:
     Type: AWS::ECR::Repository
     Condition: CreateBetaComponent
@@ -127,39 +94,6 @@ Resources:
     Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-LambdaBetaECR
-        Environment: !Ref environmentName
-
-  PipelineLambdaBetaECRPolicy:
-    Type: AWS::IAM::Policy
-    Condition: CreateBetaComponent
-    Description: Policy to allow pipeline to push and pull from beta ECR
-    PolicyName: pipeline-beta-ecr-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: BetaRepositoryPermissions
-          Effect: Allow
-          Action:
-            - "ecr:GetAuthorizationToken"
-            - "ecr:BatchCheckLayerAvailability"
-            - "ecr:GetDownloadUrlForLayer"
-            - "ecr:GetRepositoryPolicy"
-            - "ecr:DescribeRepositories"
-            - "ecr:ListImages"
-            - "ecr:DescribeImages"
-            - "ecr:BatchGetImage"
-            - "ecr:InitiateLayerUpload"
-            - "ecr:UploadLayerPart"
-            - "ecr:CompleteLayerUpload"
-            - "ecr:PutImage"
-          Resource: !GetAtt LambdaBetaECR.Arn
-    DependsOn:
-      - LambdaBetaECR
-    Users:
-      - !Sub ${PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaBetaPolicy
         Environment: !Ref environmentName
   
   LambdaGammaECR:
@@ -185,39 +119,6 @@ Resources:
       - Key: Name
         Value: !Sub ${AWS::StackName}-LambdaGammaECR
         Environment: !Ref 
-        
-  PipelineLambdaGammaECRPolicy:
-    Type: AWS::IAM::Policy
-    Condition: CreateGammaComponent
-    Description: Policy to allow pipeline to push and pull from gamma ECR
-    PolicyName: pipeline-gamma-ecr-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: GammaRepositoryPermissions
-          Effect: Allow
-          Action:
-            - "ecr:GetAuthorizationToken"
-            - "ecr:BatchCheckLayerAvailability"
-            - "ecr:GetDownloadUrlForLayer"
-            - "ecr:GetRepositoryPolicy"
-            - "ecr:DescribeRepositories"
-            - "ecr:ListImages"
-            - "ecr:DescribeImages"
-            - "ecr:BatchGetImage"
-            - "ecr:InitiateLayerUpload"
-            - "ecr:UploadLayerPart"
-            - "ecr:CompleteLayerUpload"
-            - "ecr:PutImage"
-          Resource: !GetAtt LambdaGammaECR.Arn
-    DependsOn:
-      - LambdaGammaECR
-    Users:
-      - !Sub ${PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaGammaECRPolicy
-        Environment: !Ref environmentName
 
   LambdaDeltaECR:
     Type: AWS::ECR::Repository
@@ -243,15 +144,14 @@ Resources:
         Value: !Sub ${AWS::StackName}-LambdaDeltaECR
         Environment: !Ref environmentName
 
-  PipelineLambdaDeltaECRPolicy:
+  PipelineLambdaECRPolicy:
     Type: AWS::IAM::Policy
-    Condition: CreateDeltaComponent
-    Description: Policy to allow pipeline to push and pull from delta ECR
-    PolicyName: pipeline-delta-ecr-policy
+    Description: Policy to allow pipeline to push and pull from ECR
+    PolicyName: !Sub pipeline-alpha-ecr-policy
     PolicyDocument:
       Version: "2012-10-17"
       Statement:
-        - Sid: DeltaECRRepositoryPermissions
+        - Sid: RepositoryPermissions
           Effect: Allow
           Action:
             - "ecr:GetAuthorizationToken"
@@ -266,14 +166,21 @@ Resources:
             - "ecr:UploadLayerPart"
             - "ecr:CompleteLayerUpload"
             - "ecr:PutImage"
-          Resource: !GetAtt LambdaDeltaECR.Arn
+          Resource: 
+            - !GetAtt LambdaAlphaECR.Arn
+            - !GetAtt LambdaBetaECR.Arn
+            - !GetAtt LambdaDeltaECR.Arn
+            - !GetAtt LambdaGammaECR.Arn
     DependsOn:
+      - LambdaAlphaECR
+      - LambdaBetaECR
       - LambdaDeltaECR
+      - LambdaGammaECR
     Users:
       - !Sub ${PipelineUser.Arn}
     Tags:
       - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaDeltaECRPolicy
+        Value: !Sub ${AWS::StackName}-PipelineECRPolicy
         Environment: !Ref environmentName
 
 Outputs:

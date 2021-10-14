@@ -72,29 +72,6 @@ Resources:
         Value: !Sub ${AWS::StackName}-LambdaAlpha
         Environment: !Ref environmentName
 
-  PipelineLambdaAlphaPolicy:
-    Type: AWS::IAM::Policy
-    Condition: CreateAlphaComponent
-    Description: Policy to allow pipeline to update Lambda functions
-    PolicyName: pipeline-lambda-alpha-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: UpdateLambdaFunction
-          Effect: Allow
-          Action: 
-            - "lambda:UpdateFunctionCode"
-          Resource:
-            - !Ref LambdaAlpha.Arn
-    DependsOn:
-      - LambdaAlpha
-    Users: 
-      - !ImportValue ${userStack.PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaAlphaPolicy
-        Environment: !Ref environmentName
-
   LambdaBeta:
     Type: AWS::Lambda::Function
     Condition: CreateBetaComponent
@@ -111,29 +88,6 @@ Resources:
     Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-LambdaBeta
-        Environment: !Ref environmentName
-
-  PipelineLambdaBetaPolicy:
-    Type: AWS::IAM::Policy
-    Condition: CreateBetaComponent
-    Description: Policy to allow pipeline to update Lambda beta function
-    PolicyName: pipeline-lambda-beta-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: UpdateLambdaFunction
-          Effect: Allow
-          Action: 
-            - "lambda:UpdateFunctionCode"
-          Resource:
-            - !Ref LambdaBeta.Arn
-    DependsOn:
-      - LambdaBeta
-    Users: 
-      - !ImportValue ${userStack.PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaBetaPolicy
         Environment: !Ref environmentName
 
   LambdaGamma:
@@ -154,29 +108,6 @@ Resources:
         Value: !Sub ${AWS::StackName}-LambdaGamma
         Environment: !Ref environmentName
 
-  PipelineLambdaGammaPolicy:
-    Type: AWS::IAM::Policy
-    Condition: CreateGammmaComponent
-    Description: Policy to allow pipeline to update Lambda gamma function
-    PolicyName: pipeline-lambda-gamma-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: UpdateLambdaFunction
-          Effect: Allow
-          Action: 
-            - "lambda:UpdateFunctionCode"
-          Resource:
-            - !Ref LambdaGamma.Arn
-    DependsOn:
-      - LambdaGamma
-    Users: 
-      - !ImportValue ${userStack.PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaGammaPolicy
-        Environment: !Ref environmentName
-
   LambdaDelta:
     Type: AWS::Lambda::Function
     Condition: CreateDeltaComponent
@@ -195,11 +126,10 @@ Resources:
         Value: !Sub ${AWS::StackName}-LambdaDelta
         Environment: !Ref environmentName
 
-  PipelineLambdaDeltaPolicy:
+  PipelineLambdaPolicy:
     Type: AWS::IAM::Policy
-    Condition: CreateDeltaComponent
-    Description: Policy to allow pipeline to update Lambda delta function
-    PolicyName: pipeline-lambda-delta-policy
+    Description: Policy to allow pipeline to update Lambda functions
+    PolicyName: pipeline-lambda-policy
     PolicyDocument:
       Version: "2012-10-17"
       Statement:
@@ -208,12 +138,18 @@ Resources:
           Action: 
             - "lambda:UpdateFunctionCode"
           Resource:
+            - !Ref LambdaGamma.Arn
             - !Ref LambdaDelta.Arn
+            - !Ref LambdaBeta.Arn
+            - !Red LambdaAlpha.Arn
     DependsOn:
+      - LambdaGamma
       - LambdaDelta
+      - LambdaBeta
+      - LambdaAlpha
     Users: 
       - !ImportValue ${userStack.PipelineUser.Arn}
     Tags:
       - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaDeltaPolciy
+        Value: !Sub ${AWS::StackName}-PipelineLambdaPolicy
         Environment: !Ref environmentName

@@ -3,11 +3,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'creates dummy account for pipeline and roles for managed instance(systems manager) and automation service'
 
 Resources:
-  # PipelineUser:
-    # Type: AWS::IAM::User
-    # Description: User account for pipeline to perform all the necessary actions
-    # Properties:
-      # UserName: ccc-pipeline
+  PipelineUser:
+    Type: AWS::IAM::User
+    Description: User account for pipeline to perform all the necessary actions
+    Properties:
+      UserName: ccc-pipeline
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -25,26 +25,6 @@ Resources:
       ManagedPolicies:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-  
-  PipelineLambdaPolicy:
-    Type: AWS::IAM::Policy
-    Description: Policy to allow pipeline to update Lambda functions
-    PolicyName: !Sub pipeline-lambda-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: UpdateLambdaFunction
-          Effect: Allow
-          Action: 
-            - "lambda:UpdateFunctionCode"
-          Resource:
-            - !Ref LambdaFunction.Arn
-    DependsOn:
-      - LambdaFunctionTest
-      - LambdaFunctionDevelopment
-      - LambdaFunctionProduction
-    Users: 
-      - !Sub ${PipelineUser.Arn}
 
 Outputs:
   PipelineUserArn:
