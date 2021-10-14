@@ -90,13 +90,30 @@ Resources:
             Tags: 
               - Key: Environment
                 Value: dev
+    
+    dbusername:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: command
+      Type: String
+      Value: !Ref MasterUsername
+      Description: SSM Parameter for running date command.
+      AllowedPattern: "^[a-zA-Z]{1,10}$"
+      Tags:
+        Environment: !Ref EnvironmentName
+  
+    dbpassword:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: command
+        Type: String
+        Value: !Ref MasterPassword
+        Description: SSM Parameter for running date command.
+        AllowedPattern: "^[a-zA-Z]{1,10}$"
+        Tags:
+          Environment: !Ref EnvironmentName
 
 Outputs:
-  JDBCConnectionString:
-    Description: JDBC connection string for the database
-    Value: !Join ['', ['jdbc:postgresql://', !GetAtt [MyDB, Endpoint.Address], ':', !GetAtt [
-          MyDB, Endpoint.Port], /, !Ref 'DBName']]
-
   SubnetGroup:
     Description: The db subnet group name 
     Value: !Ref RDSDBSubnetGroup
