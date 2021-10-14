@@ -145,7 +145,7 @@ Resources:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to push and pull from ECR
     Properties:
-      PolicyName: !Sub pipeline-alpha-ecr-policy
+      PolicyName: !Sub pipeline-ecr-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -181,16 +181,16 @@ Outputs:
   LambdaAlphaImageRepository:
     Value: !GetAtt LambdaAlphaECR.RepositoryUri
     Export:
-      Name: LambdaAlphaImageRepository
+      Name: !Sub ${AWS::StackName}-LambdaAlphaImageRepository
   LambdaBetaImageRepository:
     Value: !GetAtt LambdaBetaECR.RepositoryUri
     Export:
-      Name: LambdaBetaImageRepository
+      Name: !Sub ${AWS::StackName}-LambdaBetaImageRepository
   LambdaGammaImageRepository:
     Value: !GetAtt LambdaGammaECR.RepositoryUri
     Export:
-      Name: LambdaGammaImageRepository
+      Name: !Sub ${AWS::StackName}-LambdaGammaImageRepository
   LambdaDeltaImageRepositry:
     Value: !GetAtt LambdaDeltaECR.RepositoryUri
     Export: 
-      Name: LambdaDeltaImageRepository
+      Name: !Sub ${AWS::StackName}-LambdaDeltaImageRepository
