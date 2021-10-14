@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+Description: 'Conditionally provisions a series of Lambda functions, gives them an execution role for the VPC from CCC-VPCStack and attaches policies to update the function code to the pipeline user from the CCC-UserStack'
+
 Parameters:
   components:
     Type: String
@@ -17,7 +19,7 @@ Parameters:
     Default: CCC-UserStack
   vpcStack:
     Type: String
-    Default: CCC-VPCStack
+    Default: CCC-VPCStack-Dev
   ecrStack:
     Type: String
     Default: CCC-ECRStack
@@ -51,8 +53,7 @@ Conditions:
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
 
-  CreateDeltaComponent: !Or
-    - !Condition CreateFourComponents
+  CreateDeltaComponent: !Condition CreateFourComponents
 
 Resources:
   LambdaAlpha:
@@ -61,17 +62,24 @@ Resources:
     Description: Lambda function alpha
     Properties:
       FunctionName: !Sub lambda-alpha-${environmentName}
-      Code: !Sub ${ecrStack.LambdaAlphaImageRepository}:${environmentName}
+      Code: 
+        ImageUri: !Sub
+          - "${ecrRepo}:${environment}"
+          - ecrRepo: 
+              Fn::ImportValue: !Sub ${ecrStack}-LambdaAlphaImageRepository
+            environment: !Ref environmentName
       PackageType: Image
-      Role: !ImportValue ${userStack.LambdaExecutorArn}
-    VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
-      SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaAlpha
-        Environment: !Ref environmentName
+      Role: 
+        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+      VpcConfig:
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaAlpha
 
   LambdaBeta:
     Type: AWS::Lambda::Function
@@ -79,35 +87,49 @@ Resources:
     Description: Lambda beta function
     Properties:
       FunctionName: !Sub lambda-beta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaBetaImageRepository}:${environmentName}
+      Code: 
+        ImageUri: !Sub
+          - "${ecrRepo}:${environment}"
+          - ecrRepo: 
+              Fn::ImportValue: !Sub ${ecrStack}-LambdaBetaImageRepository
+            environment: !Ref environmentName
       PackageType: Image
-      Role: !ImportValue ${userStack.LambdaExecutorArn}
-    VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
-      SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaBeta
-        Environment: !Ref environmentName
+      Role: 
+        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+      VpcConfig:
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+        SubnetIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaBeta
 
   LambdaGamma:
     Type: AWS::Lambda::Function
     Condition: CreateGammaComponent
     Description: Lambda gamma function
     Properties:
-      FunctionName: !Sub lambda-beta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaGammaImageRepository}:${environmentName}
+      FunctionName: !Sub lambda-gamma-${environmentName}
+      Code: 
+        ImageUri: !Sub
+          - "${ecrRepo}:${environment}"
+          - ecrRepo: 
+              Fn::ImportValue: !Sub ${ecrStack}-LambdaGammaImageRepository
+            environment: !Ref environmentName
       PackageType: Image
-      Role: !ImportValue ${userStack.LambdaExecutorArn}
-    VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
-      SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaGamma
-        Environment: !Ref environmentName
+      Role: 
+        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+      VpcConfig:
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+        SubnetIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaGamma
 
   LambdaDelta:
     Type: AWS::Lambda::Function
@@ -115,45 +137,49 @@ Resources:
     Description: Lambda Delta function
     Properties:
       FunctionName: !Sub lambda-delta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaDeltaImageRepository}:${environmentName}
+      Code: 
+        ImageUri: !Sub
+          - "${ecrRepo}:${environment}"
+          - ecrRepo: 
+              Fn::ImportValue: !Sub ${ecrStack}-LambdaDeltaImageRepository
+            environment: !Ref environmentName
       PackageType: Image
-      Role: !ImportValue ${userStack.LambdaExecutorArn}
-    VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
-      SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaDelta
-        Environment: !Ref environmentName
+      Role: 
+        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+      VpcConfig:
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+        SubnetIds: 
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaDelta
 
   PipelineLambdaPolicy:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to update Lambda functions
-    PolicyName: pipeline-lambda-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: UpdateLambdaFunction
-          Effect: Allow
-          Action: 
-            - "lambda:UpdateFunctionCode"
-          Resource:
-            - !Ref LambdaGamma.Arn
-            - !Ref LambdaDelta.Arn
-            - !Ref LambdaBeta.Arn
-            - !Red LambdaAlpha.Arn
+    Properties:
+      PolicyName: pipeline-lambda-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: UpdateLambdaFunction
+            Effect: Allow
+            Action: 
+              - "lambda:UpdateFunctionCode"
+            Resource:
+              - !GetAtt LambdaGamma.Arn
+              - !GetAtt LambdaDelta.Arn
+              - !GetAtt LambdaBeta.Arn
+              - !GetAtt LambdaAlpha.Arn
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
     DependsOn:
       - LambdaGamma
       - LambdaDelta
       - LambdaBeta
       - LambdaAlpha
-    Users: 
-      - !ImportValue ${userStack.PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineLambdaPolicy
-        Environment: !Ref environmentName
 
 Outputs:
   LambdaAlphaArn:
@@ -161,14 +187,14 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-LambdaAlphaArn
   LambdaBetaArn:
-    Value: !GetAtt LambdaBetaECR.Arn
+    Value: !GetAtt LambdaBeta.Arn
     Export:
       Name: !Sub ${AWS::StackName}-LambdaBetaArn
   LambdaGamma:
-    Value: !GetAtt LambdaGammaECR.Arn
+    Value: !GetAtt LambdaGamma.Arn
     Export:
       Name: !Sub ${AWS::StackName}-LambdaGammaArn
   LambdaDeltaImageRepositry:
-    Value: !GetAtt LambdaDeltaECR.Arn
+    Value: !GetAtt LambdaDelta.Arn
     Export: 
       Name: !Sub ${AWS::StackName}-LambdaDeltaArn

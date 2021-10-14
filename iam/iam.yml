@@ -34,13 +34,16 @@ Resources:
 Outputs:
   PipelineUserArn:
     Value: !GetAtt PipelineUser.Arn
+    Description: ARN for BitBucket Pipeline User
     Export:
-      Name: PipelineUserArn
+      Name: !Sub ${AWS::StackName}-PipelineUserArn
   PipelineUserName:
     Value: !Ref pipelineUser
+    Description: Username for BitBucket Pipeline User
     Export:
-      Name: PipelineUserName
+      Name: !Sub ${AWS::StackName}-PipelineUserName
   LambdaExecutorArn:
     Value: !GetAtt LambdaExecutor.Arn
+    Description: ARN for Lambda Execution Role
     Export:
-      Name: LambdaExecutorArn
+      Name: !Sub ${AWS::StackName}-LambdaExecutorArn

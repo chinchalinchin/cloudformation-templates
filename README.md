@@ -1,6 +1,5 @@
 A sweet collection of **CloudFormation** templates.
 
-
 ```
 aws cloudformation create-stack
     --stack-name <name>
@@ -16,8 +15,8 @@ source .env
 ./scripts/vpc-stack --environment <Dev | Prod | Test>
 # DB stack goes 
 ./scripts/ecr-stack --components <one | two | three | four >
-# Build images and push to ECR
-./scripts/lambda-stack --component <one | two | three | four> --environment <Dev | Prod | Test>
+# Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
+./scripts/lambda-stack --components <one | two | three | four> --environment <Dev | Prod | Test>
 # API Gateway stack goes here
 ```
 
@@ -34,7 +33,7 @@ aws cloudformation create-stack
 
 2. `VPCStack-{environment}` and `UserStack` have no dependencies on other stacks. `ECRStack-{component}` has a dependency on `UserStack` through the pipeline user. `LambdaComponentStack-{component}-{environment}` has a dependency on `UserStack` through the lambda executor role, `VPCStack-${environment}` through the database security group and `ECRStack-{component}` through the **ECR** that holds the lambda image.
 
-3. In betweens tanding up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
+3. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
 
 4. the **ECR** stack and the **User** stack are independent of the environment being provisioned. The differences in the environment images is managed through tags in the **ECR** repo, while users and roles are global resources available in all environments.
 
