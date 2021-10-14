@@ -169,8 +169,8 @@ Resources:
               - !GetAtt LambdaBetaECR.Arn
               - !GetAtt LambdaDeltaECR.Arn
               - !GetAtt LambdaGammaECR.Arn
-      Users: Fn::ImportValue:
-          !Sub ${userStack}-PipelineUserName
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
     DependsOn:
       - LambdaAlphaECR
       - LambdaBetaECR
