@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'Creates dummy account for pipeline, execution role for Lambda, and other IAM resources'
+Description: 'A stack containing a dummy account for pipeline, execution role for Lambda, and other IAM resources needed for the comet-code-challenge'
 
 Parameters:
   pipelineUser:
@@ -10,13 +10,13 @@ Parameters:
 Resources:
   PipelineUser:
     Type: AWS::IAM::User
-    Description: User account for pipeline to perform all the necessary actions
+    Description: User account for CCC pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
 
   LambdaExecutor:
     Type: AWS::IAM::Role
-    Description: Allows Lambda to access other AWS Services
+    Description: Role to allow CCC Lambdas to access other AWS Services
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -34,5 +34,13 @@ Resources:
 Outputs:
   PipelineUserArn:
     Value: !GetAtt PipelineUser.Arn
+    Export:
+      Name: PipelineUserArn
+  PipelineUserName:
+    Value: !Ref pipelineUser
+    Export:
+      Name: PipelineUserName
   LambdaExecutorArn:
     Value: !GetAtt LambdaExecutor.Arn
+    Export:
+      Name: LambdaExecutorArn

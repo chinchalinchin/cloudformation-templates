@@ -29,6 +29,7 @@ source .env
 
 3. In betweens tanding up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
 
+4. the **ECR** stack and the **User** stack are independent of the environment being provisioned. The differences in the environment images is managed through tags in the **ECR** repo, while users and roles are global resources available in all environments.
 ```
 aws cloudformation create-stack
     --stack-name UserStack

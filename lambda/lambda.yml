@@ -8,6 +8,7 @@ Parameters:
       - two
       - three
       - four
+    Default: four
   environmentName:
     Type: String
     Default: Dev

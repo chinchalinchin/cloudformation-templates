@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+Description: "Conditionally provisions ECRS to hold images for Lambda functions and attaches policies to pull and push to these ECRs to the PipelineUser from the CCC-UserStack."
 Parameters:
   components:
     Type: String
@@ -8,6 +9,7 @@ Parameters:
       - two
       - three
       - four
+    Default: four
   environmentName:
     Type: String
     Default: Dev
@@ -44,8 +46,7 @@ Conditions:
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
 
-  CreateDeltaComponent: !Or
-    - !Condition CreateFourComponents
+  CreateDeltaComponent: !Condition CreateFourComponents
 
 Resources:
   LambdaAlphaECR:
@@ -55,22 +56,21 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-        RepositoryName: lambda-alpha
-    RepositoryPolicyText:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: ECRLambdaPolicy
-          Effect: Allow
-          Principal:
-            Service:
-              - lambda.amazonaws.com
+      RepositoryName: lambda-alpha
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
             Action:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaAlphaECR
-        Environment: !Ref environmentName
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaAlphaECR
 
   LambdaBetaECR:
     Type: AWS::ECR::Repository
@@ -79,22 +79,21 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-        RepositoryName: lambda-beta
-    RepositoryPolicyText:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: ECRLambdaBetaPolicy
-          Effect: Allow
-          Principal:
-            Service:
-              - lambda.amazonaws.com
+      RepositoryName: lambda-beta
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaBetaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
             Action:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaBetaECR
-        Environment: !Ref environmentName
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaBetaECR
   
   LambdaGammaECR:
     Type: AWS::ECR::Repository
@@ -103,22 +102,21 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-        RepositoryName: lambda-gamma
-    RepositoryPolicyText:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: ECRLambdaGammaPolicy
-          Effect: Allow
-          Principal:
-            Service:
-              - lambda.amazonaws.com
+      RepositoryName: lambda-gamma
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaGammaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
             Action:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaGammaECR
-        Environment: !Ref 
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaGammaECR
 
   LambdaDeltaECR:
     Type: AWS::ECR::Repository
@@ -127,68 +125,72 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-        RepositoryName: lambda-delta
-    RepositoryPolicyText:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: ECRLambdaDeltaPolicy
-          Effect: Allow
-          Principal:
-            Service:
-              - lambda.amazonaws.com
+      RepositoryName: lambda-delta
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaDeltaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
             Action:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaDeltaECR
-        Environment: !Ref environmentName
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaDeltaECR
 
   PipelineLambdaECRPolicy:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to push and pull from ECR
-    PolicyName: !Sub pipeline-alpha-ecr-policy
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Sid: RepositoryPermissions
-          Effect: Allow
-          Action:
-            - "ecr:GetAuthorizationToken"
-            - "ecr:BatchCheckLayerAvailability"
-            - "ecr:GetDownloadUrlForLayer"
-            - "ecr:GetRepositoryPolicy"
-            - "ecr:DescribeRepositories"
-            - "ecr:ListImages"
-            - "ecr:DescribeImages"
-            - "ecr:BatchGetImage"
-            - "ecr:InitiateLayerUpload"
-            - "ecr:UploadLayerPart"
-            - "ecr:CompleteLayerUpload"
-            - "ecr:PutImage"
-          Resource: 
-            - !GetAtt LambdaAlphaECR.Arn
-            - !GetAtt LambdaBetaECR.Arn
-            - !GetAtt LambdaDeltaECR.Arn
-            - !GetAtt LambdaGammaECR.Arn
+    Properties:
+      PolicyName: !Sub pipeline-alpha-ecr-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: RepositoryPermissions
+            Effect: Allow
+            Action:
+              - "ecr:GetAuthorizationToken"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:GetRepositoryPolicy"
+              - "ecr:DescribeRepositories"
+              - "ecr:ListImages"
+              - "ecr:DescribeImages"
+              - "ecr:BatchGetImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
+              - "ecr:PutImage"
+            Resource: 
+              - !GetAtt LambdaAlphaECR.Arn
+              - !GetAtt LambdaBetaECR.Arn
+              - !GetAtt LambdaDeltaECR.Arn
+              - !GetAtt LambdaGammaECR.Arn
+      Users:
+          - !ImportValue PipelineUserName
     DependsOn:
       - LambdaAlphaECR
       - LambdaBetaECR
       - LambdaDeltaECR
       - LambdaGammaECR
-    Users:
-      - !Sub ${PipelineUser.Arn}
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PipelineECRPolicy
-        Environment: !Ref environmentName
 
 Outputs:
   LambdaAlphaImageRepository:
-    Value: !Ref ${LambdaAlphaECR.RepositoryUri}
+    Value: !GetAtt LambdaAlphaECR.RepositoryUri
+    Export:
+      Name: LambdaAlphaImageRepository
   LambdaBetaImageRepository:
-    Value: !Ref ${LambdaBetaECR.RepositoryUri}
+    Value: !GetAtt LambdaBetaECR.RepositoryUri
+    Export:
+      Name: LambdaBetaImageRepository
   LambdaGammaImageRepository:
-    Value: !Red ${LambdaGammaECR.RepositoryUri}
+    Value: !GetAtt LambdaGammaECR.RepositoryUri
+    Export:
+      Name: LambdaGammaImageRepository
   LambdaDeltaImageRepositry:
-    Value: !Ref ${LambdaDeltaECR.RepositoryUri}
+    Value: !GetAtt LambdaDeltaECR.RepositoryUri
+    Export: 
+      Name: LambdaDeltaImageRepository

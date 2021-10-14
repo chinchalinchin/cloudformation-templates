@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "Creates a VPC with Nat Instance"
+Description: "Creates a VPC with private and public subnets, allocates CIDR blocks, configures route tables and security groups. In particular, a proxy is deployed into the public subnet that acts as a stand in for a NAT Gateway."
 
 Parameters:
   environmentName:
@@ -81,7 +81,6 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-VPC
-        Environment: !Ref environmentName
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     DependsOn: VPC
@@ -100,8 +99,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list        
       Tags:
       - Key: Name
-        Value: !Sub ${AWS::StackName}-Public-A
-        Environment: !Ref environmentName
+        Value: !Sub ${AWS::StackName}-PublicSubnetA
   PublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -110,8 +108,7 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the second AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub ${AWS::StackName}-Public-B
-        Environment: !Ref environmentName
+        Value: !Sub ${AWS::StackName}-PublicSubnetB
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -120,8 +117,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub ${AWS::StackName}-Private-A
-      Environment: !Ref environmentName
+        Value: !Sub ${AWS::StackName}-PrivateSubnetA
   PrivateSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -130,9 +126,8 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the second AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub ${AWS::StackName}-Private-B
-        Environment: !Ref environmentName
-        
+        Value: !Sub ${AWS::StackName}-PrivateSubnetB
+
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -140,7 +135,6 @@ Resources:
       Tags:
       - Key: Name
         Value: Public
-        Environment: !Ref environmentName
   PublicRoute1:   # Public route table has direct routing to IGW:
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
@@ -155,7 +149,6 @@ Resources:
       Tags:
       - Key: Name
         Value: Private
-        Environment: !Ref environmentName
   PrivateRoute1:            # Private route table can access web via NAT (created below)
     Type: AWS::EC2::Route
     Properties:
@@ -211,7 +204,7 @@ Resources:
         CidrIp: 0.0.0.0/0
 
   DatabaseSecurityGroup:
-    Type: AWS::ECS::SecurityGroup
+    Type: AWS::EC2::SecurityGroup
     Properties: 
       GroupName: !Sub DatabaseSecurityGroup-${AWS::StackName}
       GroupDescription: A security group for the lambdas to talk to the RDS
@@ -235,7 +228,6 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub NAT-${AWS::StackName}
-        Environment: !Ref environmentName
       UserData:      #  This code is NAT code.  Look at how the last line signals the wait condition:
         Fn::Base64: !Sub |
           #!/bin/bash
