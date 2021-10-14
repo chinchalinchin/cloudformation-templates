@@ -33,7 +33,7 @@ Resources:
 
         Properties:
             GroupDescription: "Database instances security group"
-            VpcId: !Ref VPC
+            VpcId: !Sub ${vpcStack}
             SecurityGroupIngress: 
               - 
                 CidrIp: "*.*.*.*/32"
@@ -51,11 +51,11 @@ Resources:
             DBSubnetGroupDescription: "Subnet Group for database"
             DBSubnetGroupName: !Sub "${AWS::Region}-aws-dxl-database-subnet-group"
             SubnetIds: 
-              - !Ref PrivateSubnet01
-              - !Ref PrivateSubnet02
+              - !Sub ${vpcStack}-PrivateSubnetA
+              - !Sub ${vpcStack}-PrivateSubnetB
             Tags: 
               - Key: Environment
-                Value: dev
+                Value: !Sub ${environmentName}
 
     RDSDBInstance:
         Type: AWS::RDS::DBInstance
@@ -111,7 +111,7 @@ Resources:
         Description: SSM Parameter for running date command.
         AllowedPattern: "^[a-zA-Z]{1,10}$"
         Tags:
-          Environment: !Ref EnvironmentName
+          Environment: !Sub ${environmentName}
 
 Outputs:
   SubnetGroup:
