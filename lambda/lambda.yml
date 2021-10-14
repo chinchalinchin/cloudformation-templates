@@ -60,13 +60,17 @@ Resources:
     Description: Lambda function alpha
     Properties:
       FunctionName: !Sub lambda-alpha-${environmentName}
-      Code: !Sub ${ecrStack.LambdaAlphaECR.RepositoryUri}:${environmentName}
+      Code: !Sub ${ecrStack.LambdaAlphaImageRepository}:${environmentName}
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
       SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
       SubnetIds: 
         - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-LambdaAlpha
+        Environment: !Ref environmentName
 
   PipelineLambdaAlphaPolicy:
     Type: AWS::IAM::Policy
@@ -86,6 +90,10 @@ Resources:
       - LambdaAlpha
     Users: 
       - !ImportValue ${userStack.PipelineUser.Arn}
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-PipelineLambdaAlphaPolicy
+        Environment: !Ref environmentName
 
   LambdaBeta:
     Type: AWS::Lambda::Function
@@ -93,13 +101,17 @@ Resources:
     Description: Lambda beta function
     Properties:
       FunctionName: !Sub lambda-beta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaBetaECR.RepositoryUri}:${environmentName}
+      Code: !Sub ${ecrStack.LambdaBetaImageRepository}:${environmentName}
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
       SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
       SubnetIds: 
         - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-LambdaBeta
+        Environment: !Ref environmentName
 
   PipelineLambdaBetaPolicy:
     Type: AWS::IAM::Policy
@@ -119,6 +131,10 @@ Resources:
       - LambdaBeta
     Users: 
       - !ImportValue ${userStack.PipelineUser.Arn}
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-PipelineLambdaBetaPolicy
+        Environment: !Ref environmentName
 
   LambdaGamma:
     Type: AWS::Lambda::Function
@@ -126,13 +142,17 @@ Resources:
     Description: Lambda gamma function
     Properties:
       FunctionName: !Sub lambda-beta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaGammaECR.RepositoryUri}:${environmentName}
+      Code: !Sub ${ecrStack.LambdaGammaImageRepository}:${environmentName}
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
       SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
       SubnetIds: 
         - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-LambdaGamma
+        Environment: !Ref environmentName
 
   PipelineLambdaGammaPolicy:
     Type: AWS::IAM::Policy
@@ -152,6 +172,10 @@ Resources:
       - LambdaGamma
     Users: 
       - !ImportValue ${userStack.PipelineUser.Arn}
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-PipelineLambdaGammaPolicy
+        Environment: !Ref environmentName
 
   LambdaDelta:
     Type: AWS::Lambda::Function
@@ -159,13 +183,17 @@ Resources:
     Description: Lambda Delta function
     Properties:
       FunctionName: !Sub lambda-delta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaDeltaECR.RepositoryUri}:${environmentName}
+      Code: !Sub ${ecrStack.LambdaDeltaImageRepository}:${environmentName}
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
       SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
       SubnetIds: 
         - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-LambdaDelta
+        Environment: !Ref environmentName
 
   PipelineLambdaDeltaPolicy:
     Type: AWS::IAM::Policy
@@ -185,3 +213,7 @@ Resources:
       - LambdaDelta
     Users: 
       - !ImportValue ${userStack.PipelineUser.Arn}
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-PipelineLambdaDeltaPolciy
+        Environment: !Ref environmentName

@@ -132,6 +132,7 @@ Resources:
       - Key: Name
         Value: !Sub ${AWS::StackName}-Private-B
         Environment: !Ref environmentName
+        
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:

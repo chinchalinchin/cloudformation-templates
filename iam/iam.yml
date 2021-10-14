@@ -3,11 +3,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'creates dummy account for pipeline and roles for managed instance(systems manager) and automation service'
 
 Resources:
-  PipelineUser:
-    Type: AWS::IAM::User
-    Description: User account for pipeline to perform all the necessary actions
-    Properties:
-      UserName: ccc-pipeline
+  # PipelineUser:
+    # Type: AWS::IAM::User
+    # Description: User account for pipeline to perform all the necessary actions
+    # Properties:
+      # UserName: ccc-pipeline
 
   LambdaExecutor:
     Type: AWS::IAM::Role
