@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Conditionally provisions a series of Lambda functions and attaches policies to update the function code to the pipeline user from the CCC-UserStack'
+Description: 'Conditionally provisions a series of Lambda functions, gives them an execution role for the VPC from CCC-VPCStack and attaches policies to update the function code to the pipeline user from the CCC-UserStack'
 
 Parameters:
   components:
