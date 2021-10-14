@@ -154,3 +154,21 @@ Resources:
       - Key: Name
         Value: !Sub ${AWS::StackName}-PipelineLambdaPolicy
         Environment: !Ref environmentName
+
+Outputs:
+  LambdaAlphaArn:
+    Value: !GetAtt LambdaAlpha.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaAlphaArn
+  LambdaBetaArn:
+    Value: !GetAtt LambdaBetaECR.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaBetaArn
+  LambdaGamma:
+    Value: !GetAtt LambdaGammaECR.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaGammaArn
+  LambdaDeltaImageRepositry:
+    Value: !GetAtt LambdaDeltaECR.Arn
+    Export: 
+      Name: !Sub ${AWS::StackName}-LambdaDeltaArn
