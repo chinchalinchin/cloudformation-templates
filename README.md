@@ -25,17 +25,18 @@ source .env
 
 1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
 
-2. `VPCStack-{environment}` and `UserStack` have no dependencies on other stacks. `ECRStack-{component}` has a dependency on `UserStack` through the pipeline user. `LambdaComponentStack-{component}-{environment}` has a dependency on `UserStack` through the lambda executor role, `VPCStack-${environment}` through the database security group and `ECRStack-{component}` through the **ECR** that holds the lambda image.
-
-3. In betweens tanding up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
-
-4. the **ECR** stack and the **User** stack are independent of the environment being provisioned. The differences in the environment images is managed through tags in the **ECR** repo, while users and roles are global resources available in all environments.
 ```
 aws cloudformation create-stack
     --stack-name UserStack
     --template-body file://path/to/template.yml
     --capabilities CAPABILITY_NAMED_IAM
 ```
+
+2. `VPCStack-{environment}` and `UserStack` have no dependencies on other stacks. `ECRStack-{component}` has a dependency on `UserStack` through the pipeline user. `LambdaComponentStack-{component}-{environment}` has a dependency on `UserStack` through the lambda executor role, `VPCStack-${environment}` through the database security group and `ECRStack-{component}` through the **ECR** that holds the lambda image.
+
+3. In betweens tanding up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
+
+4. the **ECR** stack and the **User** stack are independent of the environment being provisioned. The differences in the environment images is managed through tags in the **ECR** repo, while users and roles are global resources available in all environments.
 
 # Documentation
 ## CloudFormation
