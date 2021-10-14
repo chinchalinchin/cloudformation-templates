@@ -1,13 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'creates dummy account for pipeline and roles for managed instance(systems manager) and automation service'
+Description: 'Creates dummy account for pipeline, execution role for Lambda, and other IAM resources'
+
+Parameters:
+  pipelineUser:
+    Type: String
+    Default: ccc-pipeline
 
 Resources:
   PipelineUser:
     Type: AWS::IAM::User
     Description: User account for pipeline to perform all the necessary actions
     Properties:
-      UserName: ccc-pipeline
+      UserName: !Ref pipelineUser
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -22,12 +27,12 @@ Resources:
                 - lambda.amazonaws.com
             Action: 
               - "sts:AssumeRole"
-      ManagedPolicies:
+      ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
 Outputs:
   PipelineUserArn:
-    Value: !GetAtt ${PipelineUser.Arn}
+    Value: !GetAtt PipelineUser.Arn
   LambdaExecutorArn:
-    Value: !GetAtt ${LambdaExecutor.Arn}
+    Value: !GetAtt LambdaExecutor.Arn
