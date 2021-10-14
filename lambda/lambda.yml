@@ -17,7 +17,7 @@ Parameters:
     Default: CCC-UserStack
   vpcStack:
     Type: String
-    Default: CCC-VPCStack
+    Default: CCC-VPCStack-Dev
   ecrStack:
     Type: String
     Default: CCC-ECRStack
@@ -61,13 +61,23 @@ Resources:
     Description: Lambda function alpha
     Properties:
       FunctionName: !Sub lambda-alpha-${environmentName}
-      Code: !Sub ${ecrStack.LambdaAlphaImageRepository}:${environmentName}
+      Code: !Sub:
+        - "{ecrRepo}:{environment}"
+        - ecrRepo: Fn::ImportValue:
+            !Sub ${ecrStack}-LambdaBetaImageRepository
+        - environment: !Ref environmentName
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SecurityGroupIds: Fn::ImportValue:
+         !Sub ${vpcStack}-DatabaseSecurityGroupId
       SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+        - !Join:
+          - ""
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetB
     Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-LambdaAlpha
@@ -79,13 +89,23 @@ Resources:
     Description: Lambda beta function
     Properties:
       FunctionName: !Sub lambda-beta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaBetaImageRepository}:${environmentName}
+      Code: !Sub:
+        - "{ecrRepo}:{environment}"
+        - ecrRepo: Fn::ImportValue:
+            !Sub ${ecrStack}-LambdaBetaImageRepository
+        - environment: !Ref environmentName
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SecurityGroupIds: Fn::ImportValue:
+         !Sub ${vpcStack}-DatabaseSecurityGroupId
       SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+        - !Join:
+          - ""
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetB
     Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-LambdaBeta
@@ -97,13 +117,23 @@ Resources:
     Description: Lambda gamma function
     Properties:
       FunctionName: !Sub lambda-beta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaGammaImageRepository}:${environmentName}
+      Code: !Sub:
+        - "{ecrRepo}:{environment}"
+        - ecrRepo: Fn::ImportValue:
+            !Sub ${ecrStack}-LambdaBetaImageRepository
+        - environment: !Ref environmentName
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SecurityGroupIds: Fn::ImportValue:
+         !Sub ${vpcStack}-DatabaseSecurityGroupId
       SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
+        - !Join:
+          - ""
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetB
     Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-LambdaGamma
@@ -115,14 +145,23 @@ Resources:
     Description: Lambda Delta function
     Properties:
       FunctionName: !Sub lambda-delta-${environmentName}
-      Code: !Sub ${ecrStack.LambdaDeltaImageRepository}:${environmentName}
+      Code: !Sub:
+        - "{ecrRepo}:{environment}"
+        - ecrRepo: Fn::ImportValue:
+            !Sub ${ecrStack}-LambdaBetaImageRepository
+        - environment: !Ref environmentName
       PackageType: Image
       Role: !ImportValue ${userStack.LambdaExecutorArn}
     VpcConfig:
-      SecurityGroupIds: !ImportValue ${vpcStack.DatabaseSecurityGroupId}
+      SecurityGroupIds: Fn::ImportValue:
+         !Sub ${vpcStack}-DatabaseSecurityGroupId
       SubnetIds: 
-        - !Join ["", [!ImportValue ${vpcStack.PrivateSubnetA}, !ImportValue ${vpcStack.PrivateSubnetB} ]]
-    Tags:
+        - !Join:
+          - ""
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue:
+              !Sub ${vpcStack}-PrivateSubnetB
       - Key: Name
         Value: !Sub ${AWS::StackName}-LambdaDelta
         Environment: !Ref environmentName

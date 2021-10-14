@@ -35,12 +35,12 @@ Outputs:
   PipelineUserArn:
     Value: !GetAtt PipelineUser.Arn
     Export:
-      Name: PipelineUserArn
+      Name: !Sub ${AWS::StackName}-PipelineUserArn
   PipelineUserName:
     Value: !Ref pipelineUser
     Export:
-      Name: PipelineUserName
+      Name: !Sub ${AWS::StackName}-PipelineUserName
   LambdaExecutorArn:
     Value: !GetAtt LambdaExecutor.Arn
     Export:
-      Name: LambdaExecutorArn
+      Name: !Sub ${AWS::StackName}-LambdaExecutorArn
