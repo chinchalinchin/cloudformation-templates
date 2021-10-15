@@ -20,19 +20,29 @@ Parameters:
     Default: Dev
 
 Resources:
-    RDSDBSubnetGroup:
-        Type: "AWS::RDS::DBSubnetGroup"
-        Properties:
-            DBSubnetGroupDescription: "Subnet Group for database"
-            DBSubnetGroupName: !Sub "${AWS::Region}-aws-dxl-database-subnet-group"
-            SubnetIds: 
-              - Fn::ImportValue:  !Sub ${vpcStack}-PrivateSubnetA
-              - Fn::!Sub ${vpcStack}-PrivateSubnetB
-            Tags: 
-              - Key: Environment
-                Value: !Sub ${environmentName}
+    dbusername:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: command
+        Type: String
+        Value: !Ref MasterUsername
+        Description: SSM Parameter for running date command.
+        AllowedPattern: "^[a-zA-Z]{1,10}$"
+        Tags:
+          Environment: !Ref environmentName
+  
+    dbpassword:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: command
+        Type: String
+        Value: !Ref MasterPassword
+        Description: SSM Parameter for running date command.
+        AllowedPattern: "^[a-zA-Z]{1,10}$"
+        Tags:
+          Environment: !Ref environmentName
 
-    RDSDBInstance:
+    PostgresRDS:
         Type: AWS::RDS::DBInstance
         Properties:
             DBInstanceIdentifier: aws-dxl-database-1
@@ -68,25 +78,3 @@ Resources:
         DependsOn:
           - dbusername 
           - dbpassword
-
-    dbusername:
-      Type: AWS::SSM::Parameter
-      Properties:
-        Name: command
-        Type: String
-        Value: !Ref MasterUsername
-        Description: SSM Parameter for running date command.
-        AllowedPattern: "^[a-zA-Z]{1,10}$"
-        Tags:
-          Environment: !Ref EnvironmentName
-  
-    dbpassword:
-      Type: AWS::SSM::Parameter
-      Properties:
-        Name: command
-        Type: String
-        Value: !Ref MasterPassword
-        Description: SSM Parameter for running date command.
-        AllowedPattern: "^[a-zA-Z]{1,10}$"
-        Tags:
-          Environment: !Sub ${environmentName}
