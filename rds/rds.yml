@@ -70,7 +70,6 @@ Resources:
             VPCSecurityGroups: 
               - Fn::ImportValue:: !Sub ${vpcStack}-DatabaseSecurityGroup
             MaxAllocatedStorage: 1000
-            DBParameterGroupName: !Ref ParameterGroup
             MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
             Tags: 
               - Key: Environment
