@@ -14,7 +14,7 @@ cp .sample.env .env
 source .env
 ./scripts/users-stack
 ./scripts/vpc-stack --environment <Dev | Prod | Test>
-./scripts/rds-stack --environemtn <Dev | Prod | Test>
+./scripts/rds-stack --environment <Dev | Prod | Test>
 ./scripts/ecr-stack --components <one | two | three | four >
 # Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
 ./scripts/lambda-stack --components <one | two | three | four> --environment <Dev | Prod | Test>

@@ -186,11 +186,14 @@ Resources:
         DBSubnetGroupDescription: "Subnet Group for database"
         DBSubnetGroupName: !Sub "${AWS::Region}-aws-dxl-database-subnet-group"
         SubnetIds: 
-          - !Sub ${AWS::StackName}-PrivateSubnetA
-          - !Sub ${AWS::StackName}-PrivateSubnetB
+          - !Ref PrivateSubnetA
+          - !Ref PrivateSubnetB
         Tags: 
           - Key: Environment
-            Value: !Sub ${environmentName}
+            Value: !Ref environmentName
+    DependsOn:
+      - PrivateSubnetA
+      - PrivateSubnetB
 
   # A security group for our NAT.  Ingress from the VPC IPs only.  Egress is TCP & UDP only:
   NATSecurityGroup:
