@@ -2,22 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Create a DB subnet group and postgres Database"
 
 Parameters:
-  VPC:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: The VPC to create the cluster
-    Default: vpc-ID
-
-  PrivateSubnet01:
-  
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: The subnet for the DB cluster
-    Default: subnet-006a8cf586f5f7c63
-
-  PrivateSubnet02:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: The subnet for the DB cluster
-    Default: subnet-ID
-
   MasterUsername:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: The username for our database.
@@ -27,32 +11,23 @@ Parameters:
     Description: The password for the database.
     "NoEcho": true
 
+  vpcStack:
+    Type: String
+    Default: CCC-VPCStack-Dev
+
+  environmentName:
+    Type: String
+    Default: Dev
+
 Resources:
-    EC2SecurityGroup:
-        Type: "AWS::EC2::SecurityGroup"
-
-        Properties:
-            GroupDescription: "Database instances security group"
-            VpcId: !Sub ${vpcStack}
-            SecurityGroupIngress: 
-              - 
-                CidrIp: "*.*.*.*/32"
-                FromPort: 5432
-                IpProtocol: "tcp"
-                ToPort: 5432
-            SecurityGroupEgress: 
-              - 
-                CidrIp: "0.0.0.0/0"
-                IpProtocol: "-1"
-
     RDSDBSubnetGroup:
         Type: "AWS::RDS::DBSubnetGroup"
         Properties:
             DBSubnetGroupDescription: "Subnet Group for database"
             DBSubnetGroupName: !Sub "${AWS::Region}-aws-dxl-database-subnet-group"
             SubnetIds: 
-              - !Sub ${vpcStack}-PrivateSubnetA
-              - !Sub ${vpcStack}-PrivateSubnetB
+              - Fn::ImportValue:  !Sub ${vpcStack}-PrivateSubnetA
+              - Fn::!Sub ${vpcStack}-PrivateSubnetB
             Tags: 
               - Key: Environment
                 Value: !Sub ${environmentName}
@@ -81,26 +56,29 @@ Resources:
             EnablePerformanceInsights: true
             PerformanceInsightsRetentionPeriod: 7
             DeletionProtection: true
-            DBSubnetGroupName: !Ref RDSDBSubnetGroup
+            DBSubnetGroupName: Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
             VPCSecurityGroups: 
-              - !Ref EC2SecurityGroup
+              - Fn::ImportValue:: !Sub ${vpcStack}-DatabaseSecurityGroup
             MaxAllocatedStorage: 1000
             DBParameterGroupName: !Ref ParameterGroup
             MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
             Tags: 
               - Key: Environment
-                Value: dev
-    
+                Value: !Ref Dev
+        DependsOn:
+          - dbusername 
+          - dbpassword
+
     dbusername:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: command
-      Type: String
-      Value: !Ref MasterUsername
-      Description: SSM Parameter for running date command.
-      AllowedPattern: "^[a-zA-Z]{1,10}$"
-      Tags:
-        Environment: !Ref EnvironmentName
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: command
+        Type: String
+        Value: !Ref MasterUsername
+        Description: SSM Parameter for running date command.
+        AllowedPattern: "^[a-zA-Z]{1,10}$"
+        Tags:
+          Environment: !Ref EnvironmentName
   
     dbpassword:
       Type: AWS::SSM::Parameter
@@ -112,8 +90,3 @@ Resources:
         AllowedPattern: "^[a-zA-Z]{1,10}$"
         Tags:
           Environment: !Sub ${environmentName}
-
-Outputs:
-  SubnetGroup:
-    Description: The db subnet group name 
-    Value: !Ref RDSDBSubnetGroup

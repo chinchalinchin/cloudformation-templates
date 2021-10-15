@@ -180,6 +180,18 @@ Resources:
       SubnetId: !Ref PrivateSubnetB
       RouteTableId: !Ref PrivateRouteTable
 
+  RDSDBSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+        DBSubnetGroupDescription: "Subnet Group for database"
+        DBSubnetGroupName: !Sub "${AWS::Region}-aws-dxl-database-subnet-group"
+        SubnetIds: 
+          - !Sub ${AWS::StackName}-PrivateSubnetA
+          - !Sub ${AWS::StackName}-PrivateSubnetB
+        Tags: 
+          - Key: Environment
+            Value: !Sub ${environmentName}
+
   # A security group for our NAT.  Ingress from the VPC IPs only.  Egress is TCP & UDP only:
   NATSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -279,3 +291,7 @@ Outputs:
     Value: !Ref DatabaseSecurityGroup
     Export: 
       Name: !Sub ${AWS::StackName}-DatabaseSecurityGroup
+  DatabaseSubnetGroup:
+    Value: !Ref RDSDBSubnetGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-DatabaseSubnetGroup
