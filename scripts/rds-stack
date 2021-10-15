@@ -1,0 +1,48 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_NAME="vpc-stack"
+SCRIPT_DES=$''
+PROJECT_DIR=$SCRIPT_DIR/..
+source $PROJECT_DIR/.env
+
+# Example Usage:
+# >$     rds-stack --environment Dev
+
+function log(){
+    echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
+}
+
+function help(){
+    echo -e "\n\e[4m$SCRIPT_NAME\e[0m\n\n\t$SCRIPT_DES" 
+}
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+       key="$1"
+       case $key in
+                --help)
+                    help
+                    exit 0
+                    ;;
+                --environment)
+                    ENVIRONMENT="$2"
+                    shift
+                    shift
+                    ;;
+                *)
+                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+                    exit 1
+                    ;;
+       esac
+done
+
+cp $PROJECT_DIR/rds/rds.yml ./rds.yml
+
+aws cloudformation create-stack \
+    --stack-name "${RDS_STACK}" \
+    --template-body file://rds.yml \
+    --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+    --parameters ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+
+rm ./vpc.yml
