@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Create a DB subnet group and postgres Database"
+Description: "Provisions a DB instances with credentials resolved from the SSM parameter store. Note: the credentials must exist in the parameter store before this template is inputted into CloudFormation"
 
 Parameters:
   vpcStack:
