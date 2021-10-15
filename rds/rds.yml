@@ -2,15 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Create a DB subnet group and postgres Database"
 
 Parameters:
-  MasterUsername:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: The username for our database.
-  
-  MasterUserPassword:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: The password for the database.
-    "NoEcho": true
-
   vpcStack:
     Type: String
     Default: CCC-VPCStack-Dev
@@ -25,7 +16,7 @@ Resources:
       Properties:
         Name: command
         Type: String
-        Value: !Ref MasterUsername
+        Value: !Sub "{{resolve:ssm-secure:/credentials/${environmentName}/dbUsername:1}}"
         Description: SSM Parameter for running date command.
         AllowedPattern: "^[a-zA-Z]{1,10}$"
         Tags:
@@ -36,7 +27,7 @@ Resources:
       Properties:
         Name: command
         Type: String
-        Value: !Ref MasterPassword
+        Value: !Sub "{{resolve:ssm-secure:/credentials/${environmentName}/dbPassword:1}}"
         Description: SSM Parameter for running date command.
         AllowedPattern: "^[a-zA-Z]{1,10}$"
         Tags:
