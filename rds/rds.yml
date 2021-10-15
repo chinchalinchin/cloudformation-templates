@@ -68,7 +68,7 @@ Resources:
             DeletionProtection: true
             DBSubnetGroupName: Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
             VPCSecurityGroups: 
-              - Fn::ImportValue:: !Sub ${vpcStack}-DatabaseSecurityGroup
+              - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
             MaxAllocatedStorage: 1000
             MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
             Tags: 
