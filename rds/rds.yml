@@ -11,28 +11,6 @@ Parameters:
     Default: Dev
 
 Resources:
-    dbusername:
-      Type: AWS::SSM::Parameter
-      Properties:
-        Name: command
-        Type: String
-        Value: !Sub "{{resolve:ssm-secure:/credentials/${environmentName}/dbUsername:1}}"
-        Description: SSM Parameter for running date command.
-        AllowedPattern: "^[a-zA-Z]{1,10}$"
-        Tags:
-          Environment: !Ref environmentName
-  
-    dbpassword:
-      Type: AWS::SSM::Parameter
-      Properties:
-        Name: command
-        Type: String
-        Value: !Sub "{{resolve:ssm-secure:/credentials/${environmentName}/dbPassword:1}}"
-        Description: SSM Parameter for running date command.
-        AllowedPattern: "^[a-zA-Z]{1,10}$"
-        Tags:
-          Environment: !Ref environmentName
-
     PostgresRDS:
         Type: AWS::RDS::DBInstance
         Properties:
@@ -40,8 +18,8 @@ Resources:
             AllocatedStorage: 100
             DBInstanceClass: db.t3.micro
             Engine: "postgres"
-            MasterUsername: !Ref MasterUsername
-            MasterUserPassword: !Ref MasterUserPassword
+            MasterUsername: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbUsername:1}}"
+            MasterUserPassword: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbPassword:1}}"
             BackupRetentionPeriod: 7
             MultiAZ: true
             EngineVersion: 8.0.20
