@@ -18,16 +18,15 @@ Resources:
             AllocatedStorage: 100
             DBInstanceClass: db.t3.micro
             Engine: "postgres"
-            MasterUsername: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbUsername:1}}"
+            MasterUsername: "ALLsortsofproblems"
             MasterUserPassword: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbPassword:1}}"
             BackupRetentionPeriod: 7
             MultiAZ: true
-            EngineVersion: 8.0.20
             AutoMinorVersionUpgrade: true
             Iops: 1000
             PubliclyAccessible: false
             StorageType: io1
-            Port: 3306
+            Port: 5432
             StorageEncrypted: true
             CopyTagsToSnapshot: true
             MonitoringInterval: 60
@@ -35,14 +34,12 @@ Resources:
             EnablePerformanceInsights: true
             PerformanceInsightsRetentionPeriod: 7
             DeletionProtection: true
-            DBSubnetGroupName: Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
+            DBSubnetGroupName: 
+              Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
             VPCSecurityGroups: 
               - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
             MaxAllocatedStorage: 1000
             MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
             Tags: 
               - Key: Environment
-                Value: !Ref Dev
-        DependsOn:
-          - dbusername 
-          - dbpassword
+                Value: !Ref environmentName
