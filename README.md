@@ -32,7 +32,7 @@ aws cloudformation create-stack
     --capabilities CAPABILITY_NAMED_IAM
 ```
 
-2. `VPCStack-{environment}` and `UserStack` have no dependencies on other stacks. `ECRStack-{component}` has a dependency on `UserStack` through the pipeline user. `LambdaComponentStack-{component}-{environment}` has a dependency on `UserStack` through the lambda executor role, `VPCStack-${environment}` through the database security group and `ECRStack-{component}` through the **ECR** that holds the lambda image.
+2. `VPCStack-{environment}` and `UserStack` have no dependencies on other stacks. `ECRStack-{component}` has a dependency on `UserStack` through the pipeline user. `LambdaComponentStack-{component}-{environment}` has a dependency on `UserStack` through the lambda executor role, `VPCStack-${environment}` through the database security group and `ECRStack-{component}` through the **ECR** that holds the lambda image. `RDSStack-${environment}` has a dependency on `VPCStack-${environment}` through the database security group and subnet group. 
 
 3. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
 
