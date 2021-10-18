@@ -10,9 +10,6 @@ Parameters:
       - three
       - four
     Default: four
-  environmentName:
-    Type: String
-    Default: Dev
   userStack:
     Type: String
     Default: CCC-UserStack

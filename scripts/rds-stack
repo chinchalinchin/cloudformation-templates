@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="vpc-stack"
+SCRIPT_NAME="rds-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
@@ -45,10 +45,8 @@ PASSWORD_PARAMETER="/CCC/credentials/${ENVIRONMENT}/dbPassword"
 # aws ssm put-parameter --name $NAME_PARAMETER --value $RDS_USERNAME --type SecureString
 # aws ssm put-parameter --name $PASSWORD_PARAMETER --value $RDS_PASSWORD --type SecureString
 
-# aws ssm put-parameter --cli-input-json "{\"Name\": \"$NAME_PARAMETER\", \"Value\": \"$RDS_USERNAME\", \"Type\": \"SecureString\"}"
-# aws ssm put-parameter --cli-input-json "{\"Name\": \"$PASSWORD_PARAMETER\", \"Value\": \"$RDS_PASSWORD\", \"Type\": \"SecureString\"}"
-
-echo "$ENVIRONMENT"
+aws ssm put-parameter --cli-input-json "{\"Name\": \"$NAME_PARAMETER\", \"Value\": \"$RDS_USERNAME\", \"Type\": \"SecureString\"}"
+aws ssm put-parameter --cli-input-json "{\"Name\": \"$PASSWORD_PARAMETER\", \"Value\": \"$RDS_PASSWORD\", \"Type\": \"SecureString\"}"
 
 aws cloudformation create-stack \
     --stack-name "${RDS_STACK}" \

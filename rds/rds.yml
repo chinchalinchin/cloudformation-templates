@@ -12,34 +12,34 @@ Parameters:
 
 Resources:
     PostgresRDS:
-        Type: AWS::RDS::DBInstance
-        Properties:
-            DBInstanceIdentifier: aws-dxl-database-1
-            AllocatedStorage: 100
-            DBInstanceClass: db.t3.micro
-            Engine: "postgres"
-            MasterUsername: "ALLsortsofproblems"
-            MasterUserPassword: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbPassword:1}}"
-            BackupRetentionPeriod: 7
-            MultiAZ: true
-            AutoMinorVersionUpgrade: true
-            Iops: 1000
-            PubliclyAccessible: false
-            StorageType: io1
-            Port: 5432
-            StorageEncrypted: true
-            CopyTagsToSnapshot: true
-            MonitoringInterval: 60
-            EnableIAMDatabaseAuthentication: false
-            EnablePerformanceInsights: true
-            PerformanceInsightsRetentionPeriod: 7
-            DeletionProtection: true
-            DBSubnetGroupName: 
-              Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
-            VPCSecurityGroups: 
-              - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
-            MaxAllocatedStorage: 1000
-            MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
-            Tags: 
-              - Key: Environment
-                Value: !Ref environmentName
+      Type: AWS::RDS::DBInstance
+      Properties:
+          DBInstanceIdentifier: !Sub CCC-Database-${environmentName}
+          AllocatedStorage: 100
+          DBInstanceClass: db.t3.micro
+          Engine: "postgres"
+          MasterUsername: "ALLsortsofproblems"
+          MasterUserPassword: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbPassword:1}}"
+          BackupRetentionPeriod: 7
+          MultiAZ: true
+          AutoMinorVersionUpgrade: true
+          Iops: 1000
+          PubliclyAccessible: false
+          StorageType: io1
+          Port: 5432
+          StorageEncrypted: true
+          CopyTagsToSnapshot: true
+          MonitoringInterval: 60
+          EnableIAMDatabaseAuthentication: false
+          EnablePerformanceInsights: true
+          PerformanceInsightsRetentionPeriod: 7
+          DeletionProtection: false
+          DBSubnetGroupName: 
+            Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
+          VPCSecurityGroups: 
+            - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+          MaxAllocatedStorage: 1000
+          MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
+          Tags: 
+            - Key: Environment
+              Value: !Ref environmentName

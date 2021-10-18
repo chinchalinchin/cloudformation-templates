@@ -45,8 +45,7 @@ aws cloudformation create-stack \
        --stack-name "${ECR_STACK}" \
        --template-body file://ecr.yml \
        --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-       --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-       --parameters ParameterKey=userStack,ParameterValue=$USER_STACK \
+                     ParameterKey=userStack,ParameterValue=$USER_STACK \
        --capabilities CAPABILITY_NAMED_IAM
 
 rm ./ecr.yml

@@ -160,7 +160,7 @@ Resources:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to update Lambda functions
     Properties:
-      PolicyName: pipeline-lambda-policy
+      PolicyName: !Sub pipeline-lambda-${environmentName}-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -194,7 +194,7 @@ Outputs:
     Value: !GetAtt LambdaGamma.Arn
     Export:
       Name: !Sub ${AWS::StackName}-LambdaGammaArn
-  LambdaDeltaImageRepositry:
+  LambdaDelta:
     Value: !GetAtt LambdaDelta.Arn
     Export: 
       Name: !Sub ${AWS::StackName}-LambdaDeltaArn
