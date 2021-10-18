@@ -37,8 +37,6 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-echo "components $COMPONENTS"
-
 cp $PROJECT_DIR/ecr/ecr.yml ./ecr.yml
 
 aws cloudformation create-stack \

@@ -39,8 +39,6 @@ done
 
 cp $PROJECT_DIR/vpc/vpc.yml ./vpc.yml
 
-echo "$ENVIRONMENT"
-
 aws cloudformation create-stack \
     --stack-name "${VPC_STACK}" \
     --template-body file://vpc.yml \
