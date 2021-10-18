@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Default: CCC-VPCStack-Dev
 
+  dbUsername:
+    Type: String
+    Default: WilliamFaulkner
+
   environmentName:
     Type: String
     Default: Dev
@@ -18,7 +22,7 @@ Resources:
           AllocatedStorage: 100
           DBInstanceClass: db.t3.micro
           Engine: "postgres"
-          MasterUsername: "ALLsortsofproblems"
+          MasterUsername: !Ref dbUsername
           MasterUserPassword: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbPassword:1}}"
           BackupRetentionPeriod: 7
           MultiAZ: true

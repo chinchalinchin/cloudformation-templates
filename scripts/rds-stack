@@ -52,6 +52,7 @@ aws cloudformation create-stack \
     --stack-name "${RDS_STACK}" \
     --template-body file://rds.yml \
     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                 ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+                 ParameterKey=vpcStack,ParameterValue=$VPC_STACK \
+                 ParameterKey,dbUsername,ParameterValue=$RDS_USERNAME
 
 rm ./rds.yml
