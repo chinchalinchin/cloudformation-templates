@@ -80,7 +80,7 @@ Resources:
       Environment:
         Variables:
           POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUserName"
+          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
           POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
       Tags:
         - Key: Name
@@ -110,7 +110,7 @@ Resources:
       Environment:
         Variables:
           POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUserName"
+          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
           POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
       Tags:
         - Key: Name
@@ -140,7 +140,7 @@ Resources:
       Environment:
         Variables:
           POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUserName"
+          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
           POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
       Tags:
         - Key: Name
@@ -170,7 +170,7 @@ Resources:
       Environment:
         Variables:
           POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUserName"
+          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
           POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
       Tags:
         - Key: Name
