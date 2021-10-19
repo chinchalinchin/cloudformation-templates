@@ -64,9 +64,3 @@ aws cloudformation create-stack \
                  ParameterKey=dbUsername,ParameterValue=$RDS_USERNAME
 
 rm ./rds.yml
-
-RDS_HOST=$(aws cloudformation describe-stacks | jq ".Stacks[] | select(.StackName==\"$RDS_STACK-$ENVIRONMENT\")" | jq '.Outputs[0].OutputValue')
-
-aws secretsmanager create-secret --name "${ENVIRONMENT}-dbHost" \
-                                 --description "Database Host Secret for ${ENVIRONMENT} environment" \
-                                 --secret-string $RDS_HOST
