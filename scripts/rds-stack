@@ -45,8 +45,16 @@ PASSWORD_PARAMETER="/CCC/credentials/${ENVIRONMENT}/dbPassword"
 # aws ssm put-parameter --name $NAME_PARAMETER --value $RDS_USERNAME --type SecureString
 # aws ssm put-parameter --name $PASSWORD_PARAMETER --value $RDS_PASSWORD --type SecureString
 
-aws ssm put-parameter --cli-input-json "{\"Name\": \"$NAME_PARAMETER\", \"Value\": \"$RDS_USERNAME\", \"Type\": \"SecureString\"}"
-aws ssm put-parameter --cli-input-json "{\"Name\": \"$PASSWORD_PARAMETER\", \"Value\": \"$RDS_PASSWORD\", \"Type\": \"SecureString\"}"
+# aws ssm put-parameter --cli-input-json "{\"Name\": \"$NAME_PARAMETER\", \"Value\": \"$RDS_USERNAME\", \"Type\": \"SecureString\"}"
+# aws ssm put-parameter --cli-input-json "{\"Name\": \"$PASSWORD_PARAMETER\", \"Value\": \"$RDS_PASSWORD\", \"Type\": \"SecureString\"}"
+
+aws secretsmanager create-secret --name "${ENVIRONMENT}-dbUsername" \
+                                 --description "Database Username Secret for ${ENVIRONMENT} environment" \
+                                 --secret-string $RDS_USERNAME
+
+aws secretsmanager create-secret --name "${ENVIRONMENT}-dbPassword" \
+                                 --description "Database Password Secret for ${ENVIRONMENT} environment" \
+                                 --secret-string $RDS_PASSWORD
 
 aws cloudformation create-stack \
     --stack-name "${RDS_STACK}" \
@@ -56,3 +64,9 @@ aws cloudformation create-stack \
                  ParameterKey=dbUsername,ParameterValue=$RDS_USERNAME
 
 rm ./rds.yml
+
+RDS_HOST=$(aws cloudformation describe-stacks | jq ".Stacks[] | select(.StackName==\"$RDS_STACK-$ENVIRONMENT\")" | jq '.Outputs[0].OutputValue')
+
+aws secretsmanager create-secret --name "${ENVIRONMENT}-dbHost" \
+                                 --description "Database Host Secret for ${ENVIRONMENT} environment" \
+                                 --secret-string $RDS_HOST

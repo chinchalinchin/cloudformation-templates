@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Provisions a DB instances with credentials resolved from the SSM parameter store. Note: the credentials must exist in the parameter store before this template is inputted into CloudFormation. The template will provision an additional parameter store for the DB host url once the RDS instance has been created."
+Description: "Provisions a DB instances with credentials resolved from the SSM parameter store and deploys it into a private subnet in the CCC-VPCStack-${environmentName}. Note: the credentials must exist in the parameter store before this template is inputted into CloudFormation. The template will provision an additional parameter store for the DB host url once the RDS instance has been created."
 
 # # Credential Name Convention
 #   /CCC/credentials/${environmentName}/dbUsername
@@ -11,17 +11,17 @@ Description: "Provisions a DB instances with credentials resolved from the SSM p
 #   * this template will provision an additional SSM parameter store for the RDS host url. 
 
 Parameters:
-  vpcStack:
-    Type: String
-    Default: CCC-VPCStack-Dev
-
+  # Stack Parameters
   dbUsername:
     Type: String
     Default: WilliamFaulkner
-
   environmentName:
     Type: String
     Default: Dev
+  # Stack Dependencies
+  vpcStack:
+    Type: String
+    Default: CCC-VPCStack-Dev
 
 Resources:
     PostgresRDS:
@@ -31,8 +31,8 @@ Resources:
           AllocatedStorage: 100
           DBInstanceClass: db.t3.micro
           Engine: "postgres"
-          MasterUsername: !Ref dbUsername
-          MasterUserPassword: !Sub "{{resolve:ssm-secure:/CCC/credentials/${environmentName}/dbPassword:1}}"
+          MasterUsername: !Sub "{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}"
+          MasterUserPassword: !Sub "{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}"
           BackupRetentionPeriod: 7
           MultiAZ: true
           AutoMinorVersionUpgrade: true
@@ -57,14 +57,22 @@ Resources:
             - Key: Environment
               Value: !Ref environmentName
   
-  PostgresHostSSMParameters:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "CCC/credentials/${environmentName}/dbHost"
-      Type: String
-      Value: !GetAtt PostgresRDS.EndpointAddress
-      Tags:
-        - Key: Environment
-          Value: !Ref environmentName
-    DependsOn:
-      - PostgresRDS
+  # PostgresHostSSMParameters:
+    # Type: AWS::SSM::Parameter
+    # Properties:
+      # Name: 
+        # !Sub "/CCC/credentials/${environmentName}/dbHost"
+      # Type: String
+      # Value: 
+        # !GetAtt PostgresRDS.Endpoint.Address
+      # Tags:
+        # - Key: Environment
+          # Value: !Ref environmentName
+    # DependsOn:
+      # - PostgresRDS
+
+Outputs:
+  RDSEndpoint:
+    Value: !GetAtt PostgresRDS.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSEndpoint

@@ -1,8 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Conditionally provisions a series of Lambda functions, gives them an execution role for the VPC from CCC-VPCStack and attaches policies to update the function code to the pipeline user from the CCC-UserStack'
+Description: 'Conditionally provisions a series of Lambda functions, gives them an execution role for the VPC from CCC-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline user from the CCC-UserStack. The execution images for the Lambdas are pulled from the repositores in CCC-ECRStack.'
 
 Parameters:
+  # Stack Parameters
   components:
     Type: String
     AllowedValues:
@@ -14,15 +15,16 @@ Parameters:
   environmentName:
     Type: String
     Default: Dev
+  # Stack Dependencies
   userStack:
     Type: String
     Default: CCC-UserStack
-  vpcStack:
-    Type: String
-    Default: CCC-VPCStack-Dev
   ecrStack:
     Type: String
     Default: CCC-ECRStack
+  vpcStack:
+    Type: String
+    Default: CCC-VPCStack-Dev
 
 Conditions:
   CreateOneComponent: !Equals
@@ -56,7 +58,7 @@ Conditions:
   CreateDeltaComponent: !Condition CreateFourComponents
 
 Resources:
-  LambdaAlpha:
+  LambdaAlpha: # GET
     Type: AWS::Lambda::Function
     Condition: CreateAlphaComponent
     Description: Lambda function alpha
@@ -79,14 +81,14 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
-          POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
+          POSTGRES_HOST: !Sub "{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}"
+          POSTGRES_USER: !Sub "{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}"
+          POSTGRES_PASSWORD: !Sub "{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}"
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaAlpha
 
-  LambdaBeta:
+  LambdaBeta: # PUT
     Type: AWS::Lambda::Function
     Condition: CreateBetaComponent
     Description: Lambda beta function
@@ -109,14 +111,14 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
-          POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
+          POSTGRES_HOST: !Sub "{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}"
+          POSTGRES_USER: !Sub "{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}"
+          POSTGRES_PASSWORD: !Sub "{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}"
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaBeta
 
-  LambdaGamma:
+  LambdaGamma: # Trigger
     Type: AWS::Lambda::Function
     Condition: CreateGammaComponent
     Description: Lambda gamma function
@@ -139,14 +141,14 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
-          POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
+          POSTGRES_HOST: !Sub "{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}"
+          POSTGRES_USER: !Sub "{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}"
+          POSTGRES_PASSWORD: !Sub "{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}"
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaGamma
 
-  LambdaDelta:
+  LambdaDelta: # Trigger
     Type: AWS::Lambda::Function
     Condition: CreateDeltaComponent
     Description: Lambda Delta function
@@ -169,9 +171,9 @@ Resources:
             - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          POSTGRES_HOST: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbHost"
-          POSTGRES_USER: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbUsername"
-          POSTGRES_PASSWORD: !Sub "{{resolve:ssm:/CCC/credentials/${environmentName}/dbPassword"
+          POSTGRES_HOST: !Sub "{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}"
+          POSTGRES_USER: !Sub "{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}"
+          POSTGRES_PASSWORD: !Sub "{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}"
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaDelta
@@ -200,6 +202,9 @@ Resources:
       - LambdaDelta
       - LambdaBeta
       - LambdaAlpha
+
+    # RestProxy:
+      # Type: AWS::ApiGateway::RestApi
 
 Outputs:
   LambdaAlphaArn:
