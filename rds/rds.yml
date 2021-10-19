@@ -1,5 +1,14 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Provisions a DB instances with credentials resolved from the SSM parameter store. Note: the credentials must exist in the parameter store before this template is inputted into CloudFormation"
+Description: "Provisions a DB instances with credentials resolved from the SSM parameter store. Note: the credentials must exist in the parameter store before this template is inputted into CloudFormation. The template will provision an additional parameter store for the DB host url once the RDS instance has been created."
+
+# # Credential Name Convention
+#   /CCC/credentials/${environmentName}/dbUsername
+#   /CCC/credentials/${environmentName}/dbPassword
+#   /CCC/credentials/${environemtName}/dbHost
+
+# .. notes::
+#   * the script `./scripts/rds-stack --environment <environmentName>` will provision SSM parameter stores using the **RDS_USERNAME** and **RDS_PASSWORD** environment variables in the */env/.env* file before standing up this template. The username is passed into the template as a parameter, whereas the password is resolved from the SSM directly. Due to CloudFormation template limitations, you cannot resolve the username directly from the SSM store. Keep in mind, the **Lambdas** will be pulling the credentials from the parameter store, so these parameter stores must be initialized before this template will process without errors.
+#   * this template will provision an additional SSM parameter store for the RDS host url. 
 
 Parameters:
   vpcStack:
