@@ -47,3 +47,15 @@ Resources:
           Tags: 
             - Key: Environment
               Value: !Ref environmentName
+  
+  PostgresHostSSMParameters:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "CCC/credentials/${environmentName}/dbHost"
+      Type: String
+      Value: !GetAtt PostgresRDS.EndpointAddress
+      Tags:
+        - Key: Environment
+          Value: !Ref environmentName
+    DependsOn:
+      - PostgresRDS
