@@ -6,6 +6,19 @@ aws cloudformation create-stack
     --template-body <body>
     --parameters ParameterKey=<key>,ParameterValue=<value> ParameterKey=<key>,ParameterValue=<value>
 ```
+
+# Dependencies
+
+#
+
+| Stack  |  Dependency |
+| ------ | ----------- |
+| UsersStack | None |
+| VPCStack | None | 
+| ECRStack | UsersStack | 
+| RDSStack | VPCStack | 
+| LambdaStack | VPCStack, ECRStack |
+| GatewayStack | UsersStack, LambdaStack | 
 # Steps
 
 
