@@ -19,7 +19,7 @@ source .env
 ./scripts/ecr-stack --components <one | two | three | four >
 # Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
 ./scripts/lambda-stack --components <one | two | three | four> --environment <Dev | Prod | Test>
-# API Gateway stack goes here
+./scripts/gateway-stack --environment Dev
 ```
 
 # TODO
