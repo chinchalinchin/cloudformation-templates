@@ -50,6 +50,9 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub >-
-          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaStack}-LambdaBetaArn/invocations
+        Uri: !Join:
+          - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+          - !ImportValue ${lambdaStack}-LambdaAlphaArn
+          - /invocations
+
           
