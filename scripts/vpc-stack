@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/vpc/vpc.yml ./vpc.yml
+cp $PROJECT_DIR/templates/vpc/vpc.yml ./vpc.yml
 
 aws cloudformation create-stack \
     --stack-name "${VPC_STACK}-${ENVIRONMENT}" \

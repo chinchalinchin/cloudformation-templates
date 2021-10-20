@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/iam/iam.yml ./iam.yml
+cp $PROJECT_DIR/templates/iam/iam.yml ./iam.yml
 
 aws cloudformation create-stack \
     --stack-name "$USER_STACK" \

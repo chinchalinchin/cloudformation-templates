@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/ecr/ecr.yml ./ecr.yml
+cp $PROJECT_DIR/templates/ecr/ecr.yml ./ecr.yml
 
 aws cloudformation create-stack \
        --stack-name "${ECR_STACK}" \

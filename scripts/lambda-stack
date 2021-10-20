@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/lambda/lambda.yml ./lambda.yml
+cp $PROJECT_DIR/templates/lambda/lambda.yml ./lambda.yml
 
 aws cloudformation create-stack \
        --stack-name "${LAMBDA_STACK}-${ENVIRONMENT}" \

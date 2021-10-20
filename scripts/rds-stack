@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/rds/rds.yml ./rds.yml
+cp $PROJECT_DIR/templates/rds/rds.yml ./rds.yml
 
 NAME_PARAMETER="/CCC/credentials/${ENVIRONMENT}/dbUsername"
 PASSWORD_PARAMETER="/CCC/credentials/${ENVIRONMENT}/dbPassword"

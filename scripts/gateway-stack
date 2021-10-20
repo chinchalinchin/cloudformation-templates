@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-cp $PROJECT_DIR/gateway/gateway.yml ./gateway.yml
+cp $PROJECT_DIR/templates/gateway/gateway.yml ./gateway.yml
 
 aws cloudformation create-stack \
     --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
