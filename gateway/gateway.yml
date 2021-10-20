@@ -1,51 +1,55 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+Parameters:
+  lambdaStack:
+    Type: String
+    Default: CCC-LambdaStack-Dev
+
 Resources:
   RestProxy:
     Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: comet-challenge-api
 
-  ProxyResource:
+  GetResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestProxy
       ParentId: !GetAtt RestProxy.RootResourceId
-      PathPart: '/path'
+      PathPart: 'get'
       
-  ProxyDevelopmentResourceMethod:
+  ProxyGETResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestProxy
-      ResourceId: !Ref ProxyResource
+      ResourceId: !Ref GetResource
       HttpMethod: ANY
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub >-
-          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaComponentOutput.Arn}/function_name
+        IntegrationHttpMethod: GET
+        Uri: !Join:
+          - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+          - !ImportValue ${lambdaStack}-LambdaAlphaArn
+          - /invocations
 
-  ProxyTestResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
+  PostResource:
+    Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestProxy
-      ResourceId: !Ref ProxyResource
-      HttpMethod: ANY
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub >-
-          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Lambda-$Component-Output.Arn}/function_name
+      ParentId: !GetAtt RestProxy.RootResourceId
+      PathPart: 'post'
 
-  ProxyProductionResourceMethod:
+  ProxyPOSTResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestProxy
-      ResourceId: !Ref ProxyResource
+      ResourceId: !Ref PostResource
       HttpMethod: ANY
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub >-
-          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Lambda-$Component-Output.Arn}/function_name
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaStack}-LambdaBetaArn/invocations
+          
