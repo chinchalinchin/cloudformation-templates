@@ -45,12 +45,12 @@ done
 cp $PROJECT_DIR/lambda/lambda.yml ./lambda.yml
 
 aws cloudformation create-stack \
-       --stack-name "${LAMBDA_STACK}" \
+       --stack-name "${LAMBDA_STACK}-${ENVIRONMENT}" \
        --template-body file://lambda.yml \
        --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
                      ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=userStack,ParameterValue=$USER_STACK \
-                     ParameterKey=vpcStack,ParameterValue=$VPC_STACK \
+                     ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
        --capabilities CAPABILITY_NAMED_IAM
 
 rm ./lambda.yml

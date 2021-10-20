@@ -31,7 +31,7 @@ Resources:
         Uri: !Join
           - ''
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            - !ImportValue ${lambdaStack}-LambdaAlphaArn
+            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
             - /invocations
 
   PostResource:
@@ -54,7 +54,7 @@ Resources:
         Uri: !Join
           - ''
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            - !ImportValue ${lambdaStack}-LambdaBetaArn
+            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
             - /invocations
 
           

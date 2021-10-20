@@ -15,12 +15,17 @@ source .env
 ./scripts/users-stack
 ./scripts/vpc-stack --environment <Dev | Prod | Test>
 ./scripts/rds-stack --environment <Dev | Prod | Test>
+./scrips/rds-host-secret --environment <Dev | Prod | Test>
 ./scripts/ecr-stack --components <one | two | three | four >
 # Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
 ./scripts/lambda-stack --components <one | two | three | four> --environment <Dev | Prod | Test>
 # API Gateway stack goes here
 ```
 
+# TODO
+
+ can probably provision secrets directly in RDS template with a !Ref pointing the Endpoint.Address return value of the Postgres instance and the username/password passed into the script.
+ 
 # Notes
 
 1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,

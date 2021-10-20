@@ -40,7 +40,7 @@ done
 cp $PROJECT_DIR/vpc/vpc.yml ./vpc.yml
 
 aws cloudformation create-stack \
-    --stack-name "${VPC_STACK}" \
+    --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
     --template-body file://vpc.yml \
     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
 
