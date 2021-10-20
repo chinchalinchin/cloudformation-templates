@@ -15,15 +15,14 @@ Resources:
     Properties:
       Name: !Sub CCC-RestAPI-${environmentName}
 
-  lambdaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt lambdaFunction.Arn
-      Principal: apigateway.amazonaws.com
-      # note: if route *not* at API Gateway root, `SourceArn` would take the form of:
-      #               arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/PATH_PART
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/
+  # I think we need to create a deployment first? https://bl.ocks.org/magnetikonline/c314952045eee8e8375b82bc7ec68e88
+  # lambdaApiGatewayInvoke:
+    # Type: AWS::Lambda::Permission
+    # Properties:
+      # Action: lambda:InvokeFunction
+      # FunctionName: !GetAtt lambdaFunction.Arn
+      # Principal: apigateway.amazonaws.com
+      # SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/
 
   GetResource:
     Type: 'AWS::ApiGateway::Resource'
