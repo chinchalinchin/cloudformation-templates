@@ -18,7 +18,8 @@ aws cloudformation create-stack
 | ECRStack | UsersStack | 
 | RDSStack | VPCStack | 
 | LambdaStack | VPCStack, ECRStack |
-| GatewayStack | UsersStack, LambdaStack | 
+| GatewayStack | UsersStack, LambdaStack |
+ 
 # Steps
 
 
