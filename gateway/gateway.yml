@@ -28,10 +28,11 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: GET
-        Uri: !Join:
-          - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-          - !ImportValue ${lambdaStack}-LambdaAlphaArn
-          - /invocations
+        Uri: !Join
+          - ''
+          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+            - !ImportValue ${lambdaStack}-LambdaAlphaArn
+            - /invocations
 
   PostResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -50,9 +51,10 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Join:
-          - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-          - !ImportValue ${lambdaStack}-LambdaAlphaArn
-          - /invocations
+        Uri: !Join
+          - ''
+          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+            - !ImportValue ${lambdaStack}-LambdaBetaArn
+            - /invocations
 
           
