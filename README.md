@@ -33,7 +33,7 @@ source .env
 ./scripts/ecr-stack --components <one | two | three | four >
 # Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
 ./scripts/lambda-stack --components <one | two | three | four> --environment <Dev | Prod | Test>
-./scripts/gateway-stack --environment Dev
+./scripts/gateway-stack --environment <Dev | Prod | Test>
 ```
 
 # TODO

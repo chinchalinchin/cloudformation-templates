@@ -15,28 +15,80 @@ Resources:
     Properties:
       Name: !Sub CCC-RestAPI-${environmentName}
 
+  CognitoUsers:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: code-challenge-auth-pool
+      UsernameConfiguration:
+        CaseSensitive: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 1
+      UsernameAttributes:
+        - email
+      MfaConfiguration: "OFF"
+      Schema:
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: email
+
+  CognitoUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "john.smith"
+      UserPoolId: !Ref CognitoUsers
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "gmoore@makpar.com"
+
+  ApiGatewayAuthorizer:
+    Type: "AWS::ApiGateway::Authorizer"
+    Properties:
+      RestApiId: !Ref RestAPI
+      Name: !Sub "{{AWS::StackName}}-Authorizer"
+      Type: "COGNITO_USER_POOLS"
+      IdentitySource: method.request.header.authorization
+      ProviderARNs:
+        - !GetAtt CognitoUsers.Arn
+
   # I think we need to create a deployment first? https://bl.ocks.org/magnetikonline/c314952045eee8e8375b82bc7ec68e88
-  # lambdaApiGatewayInvoke:
-    # Type: AWS::Lambda::Permission
-    # Properties:
-      # Action: lambda:InvokeFunction
-      # FunctionName: !GetAtt lambdaFunction.Arn
-      # Principal: apigateway.amazonaws.com
-      # SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/
+  lambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${apiGatewayHTTPMethod}/
 
   GetResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: 'get'
+      PathPart: 'data'
+      
+  GetResourcePath:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref RestAPI
+      Parent:Id: !Ref GetSource
+      PathPart: '{id}'
       
   GetResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref GetResource
-      HttpMethod: ANY
+      HttpMethod: GET
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -59,7 +111,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref PostResource
-      HttpMethod: ANY
+      HttpMethod: POST
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
