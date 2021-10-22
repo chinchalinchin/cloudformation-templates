@@ -31,6 +31,41 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
+  CognitoUsers:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: code-challenge-auth-pool
+      UsernameConfiguration:
+        CaseSensitive: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 1
+      UsernameAttributes:
+        - email
+      MfaConfiguration: "OFF"
+      Schema:
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: email
+
+  CognitoUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "john.smith"
+      UserPoolId: !Ref CognitoUsers
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "gmoore@makpar.com"
+
 Outputs:
   PipelineUserArn:
     Value: !GetAtt PipelineUser.Arn
@@ -47,3 +82,8 @@ Outputs:
     Description: ARN for Lambda Execution Role
     Export:
       Name: !Sub ${AWS::StackName}-LambdaExecutorArn
+  CognitoUsers:
+    Value: !GetAtt CognitoUsers.Arn
+    Description: User Pool for Cognito
+    Export:
+      Name: !Sub ${AWS::StackName}-CognitoUsers

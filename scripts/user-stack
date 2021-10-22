@@ -1,15 +1,15 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="vpc-stack"
+SCRIPT_NAME="users-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     vpc-stack --environment <Dev | Prod | Test> --action <create | update>
-
-#   Defaults to: create
+# >$     user-stack --action <create | update>
+#
+#   NOTE: ``--action`` defaults to `create` if not supplied.
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -23,21 +23,16 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-                --action)
+            --action)
                     ACTION="$2"
                     shift
                     shift 
                     ;;
-                --help)
+            --help)
                     help
                     exit 0
                     ;;
-                --environment)
-                    ENVIRONMENT="$2"
-                    shift
-                    shift
-                    ;;
-                *)
+            *)
                     log "Input not understood. See \e[3m--help\e[0m for information on using this command."
                     exit 1
                     ;;
@@ -49,22 +44,22 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/vpc/vpc.yml ./vpc.yml
+cp $PROJECT_DIR/templates/iam/iam.yml ./iam.yml
 
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
-        --template-body file://vpc.yml \
-        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
+        --stack-name "$USER_STACK" \
+        --template-body file://iam.yml \
+        --capabilities CAPABILITY_NAMED_IAM
 elif [ "$ACTION" == "update" ]
-then
     aws cloudformation update-stack \
-        --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
-        --template-body file://vpc.yml \
-        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
+        --stack-name "$USER_STACK" \
+        --template-body file://iam.yml \
+        --capabilities CAPABILITY_NAMED_IAM
 else
-    log "Action not understood"
+    log "Action not understood."
+    exit 1
 fi
-
-rm ./vpc.yml
+    
+rm ./iam.yml

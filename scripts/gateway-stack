@@ -21,28 +21,49 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-                --help)
-                    help
-                    exit 0
-                    ;;
-                --environment)
-                    ENVIRONMENT="$2"
-                    shift
-                    shift
-                    ;;
-                *)
-                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                    exit 1
-                    ;;
+            --action)
+                ACTION="$2"
+                shift
+                shift 
+                ;;
+            --help)
+                help
+                exit 0
+                ;;
+            --environment)
+                ENVIRONMENT="$2"
+                shift
+                shift
+                ;;
+            *)
+                log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+                exit 1
+                ;;
        esac
 done
 
+if [ -z "$ACTION"]
+then
+    ACTION="create"
+fi
+
 cp $PROJECT_DIR/templates/gateway/gateway.yml ./gateway.yml
 
-aws cloudformation create-stack \
-    --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
-    --template-body file://gateway.yml \
-    --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                 ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" 
+if [ "$ACTION" == "create" ]
+then
+    aws cloudformation create-stack \
+        --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
+        --template-body file://gateway.yml \
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                     ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
+                     ParameterKey=userStacks,ParameterValue="${USER_STACK}-${ENVIRONMENT}"
+elif [ "$ACTION" == "update" ]
+    aws cloudformation create-stack \
+        --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
+        --template-body file://gateway.yml \
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                     ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
+                     ParameterKey=userStacks,ParameterValue="${USER_STACK}-${ENVIRONMENT}"
+else
 
 rm ./gateway.yml

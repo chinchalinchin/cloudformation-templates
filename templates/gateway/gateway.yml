@@ -9,46 +9,16 @@ Parameters:
     Type: String
     Default: CCC-LambdaStack-Dev
 
+  userStack:
+    Type: String
+    Default: CCC-UserStack-Dev
+
 Resources:
   RestAPI:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub CCC-RestAPI-${environmentName}
 
-  CognitoUsers:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: code-challenge-auth-pool
-      UsernameConfiguration:
-        CaseSensitive: false
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireLowercase: true
-          RequireSymbols: true
-          RequireUppercase: true
-          TemporaryPasswordValidityDays: 1
-      UsernameAttributes:
-        - email
-      MfaConfiguration: "OFF"
-      Schema:
-        - AttributeDataType: String
-          DeveloperOnlyAttribute: false
-          Mutable: true
-          Name: email
-
-  CognitoUserPoolUser:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "john.smith"
-      UserPoolId: !Ref CognitoUsers
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "gmoore@makpar.com"
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
