@@ -7,7 +7,11 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     lambda-stack --components <one | two | three | four> --environment <Dev | Prod | Test>
+# >$     lambda-stack --components <one | two | three | four> \
+#                     --environment <Dev | Prod | Test> \
+#                     --action <create | update>
+
+#      NOTE: ``--action`` defaults to `create` if not supplied.
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -21,6 +25,11 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
+              --action)
+                     ACTION="$2"
+                     shift
+                     shift 
+                     ;;
               --components)
                      COMPONENTS="$2"
                      shift
@@ -42,15 +51,33 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
+if [ -z "$ACTION"]
+then
+    ACTION="create"
+fi
+
 cp $PROJECT_DIR/templates/lambda/lambda.yml ./lambda.yml
 
-aws cloudformation create-stack \
-       --stack-name "${LAMBDA_STACK}-${ENVIRONMENT}" \
-       --template-body file://lambda.yml \
-       --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                     ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=userStack,ParameterValue=$USER_STACK \
-                     ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
-       --capabilities CAPABILITY_NAMED_IAM
+if [ "$ACTION" == "create"]
+then
+       aws cloudformation create-stack \
+              --stack-name "${LAMBDA_STACK}-${ENVIRONMENT}" \
+              --template-body file://lambda.yml \
+              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
+                            ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                            ParameterKey=userStack,ParameterValue=$USER_STACK \
+                            ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
+              --capabilities CAPABILITY_NAMED_IAM
+elif [ "$ACTION" == "update" ]
+then
+     aws cloudformation update-stack \
+              --stack-name "${LAMBDA_STACK}-${ENVIRONMENT}" \
+              --template-body file://lambda.yml \
+              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
+                            ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                            ParameterKey=userStack,ParameterValue=$USER_STACK \
+                            ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
+              --capabilities CAPABILITY_NAMED_IAM  
+fi
 
 rm ./lambda.yml

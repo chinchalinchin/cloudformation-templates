@@ -69,5 +69,4 @@ else
     exit 1
 fi
     
-
 rm ./gateway.yml
