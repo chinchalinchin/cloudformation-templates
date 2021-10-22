@@ -65,5 +65,9 @@ elif [ "$ACTION" == "update" ]
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
                      ParameterKey=userStacks,ParameterValue="${USER_STACK}-${ENVIRONMENT}"
 else
+    log "Action not understood."
+    exit 1
+fi
+    
 
 rm ./gateway.yml
