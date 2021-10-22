@@ -11,7 +11,7 @@ Parameters:
 
   userStack:
     Type: String
-    Default: CCC-UserStack-Dev
+    Default: CCC-UserStack
 
 Resources:
   RestAPI:
@@ -19,25 +19,15 @@ Resources:
     Properties:
       Name: !Sub CCC-RestAPI-${environmentName}
 
-
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
     Properties:
       RestApiId: !Ref RestAPI
-      Name: !Sub "{{AWS::StackName}}-Authorizer"
+      Name: !Sub ${AWS::StackName}-Authorizer
       Type: "COGNITO_USER_POOLS"
       IdentitySource: method.request.header.authorization
       ProviderARNs:
-        - !GetAtt CognitoUsers.Arn
-
-  # I think we need to create a deployment first? https://bl.ocks.org/magnetikonline/c314952045eee8e8375b82bc7ec68e88
-  lambdaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${apiGatewayHTTPMethod}/
+        - Fn::ImportValue: !Sub "${userStack}-CognitoUsers"
 
   GetResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -46,12 +36,12 @@ Resources:
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: 'data'
       
-  GetResourcePath:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      Parent:Id: !Ref GetSource
-      PathPart: '{id}'
+  # GetResourcePath:
+    # Type: 'AWS::ApiGateway::Resource'
+    # Properties:
+      # RestApiId: !Ref RestAPI
+      # Parent:Id: !Ref GetSource
+      # PathPart: '{id}'
       
   GetResourceMethod:
     Type: 'AWS::ApiGateway::Method'
@@ -68,6 +58,16 @@ Resources:
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
             - /invocations
+
+   # I think we need to create a deployment first? https://bl.ocks.org/magnetikonline/c314952045eee8e8375b82bc7ec68e88
+  LambdaAlphaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: 
+          Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/GET/
 
   PostResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -91,5 +91,15 @@ Resources:
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
             - /invocations
+  
+   # I think we need to create a deployment first? https://bl.ocks.org/magnetikonline/c314952045eee8e8375b82bc7ec68e88
+  LambdaBetaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: 
+        Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/POST/
 
           

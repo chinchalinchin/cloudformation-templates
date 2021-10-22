@@ -39,10 +39,12 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-if [ -z "$ACTION"]
+if [ -z "$ACTION" ]
 then
     ACTION="create"
 fi
+
+echo "$ACTION"
 
 cp $PROJECT_DIR/templates/iam/iam.yml ./iam.yml
 
@@ -53,6 +55,7 @@ then
         --template-body file://iam.yml \
         --capabilities CAPABILITY_NAMED_IAM
 elif [ "$ACTION" == "update" ]
+then
     aws cloudformation update-stack \
         --stack-name "$USER_STACK" \
         --template-body file://iam.yml \

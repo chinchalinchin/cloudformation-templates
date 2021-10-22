@@ -42,12 +42,14 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-if [ -z "$ACTION"]
+if [ -z "$ACTION" ]
 then
     ACTION="create"
 fi
 
 cp $PROJECT_DIR/templates/gateway/gateway.yml ./gateway.yml
+
+echo "${LAMBDA_STACK}-${ENVIRONMENT}"
 
 if [ "$ACTION" == "create" ]
 then
@@ -56,14 +58,15 @@ then
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStacks,ParameterValue="${USER_STACK}-${ENVIRONMENT}"
+                     ParameterKey=userStack,ParameterValue="${USER_STACK}"
 elif [ "$ACTION" == "update" ]
-    aws cloudformation create-stack \
+then
+    aws cloudformation update-stack \
         --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStacks,ParameterValue="${USER_STACK}-${ENVIRONMENT}"
+                     ParameterKey=userStack,ParameterValue="${USER_STACK}"
 else
     log "Action not understood."
     exit 1

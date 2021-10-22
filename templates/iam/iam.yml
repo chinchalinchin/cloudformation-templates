@@ -58,7 +58,7 @@ Resources:
   CognitoUserPoolUser:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
-      Username: "john.smith"
+      Username: "gmoore@makpar.com"
       UserPoolId: !Ref CognitoUsers
       UserAttributes:
         - Name: "email_verified"
