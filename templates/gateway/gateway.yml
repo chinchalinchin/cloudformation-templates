@@ -19,6 +19,12 @@ Resources:
     Properties:
       Name: !Sub CCC-RestAPI-${environmentName}
 
+  AuthDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: Fn::ImportValue: !Sub "${userStack}-CognitoUsers"
+      Domain: "comet.makpar-innovation.com"
+
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
     Properties:
