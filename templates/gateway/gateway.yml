@@ -22,9 +22,13 @@ Resources:
   AuthDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      UserPoolId: Fn::ImportValue: !Sub "${userStack}-CognitoUsers"
+      UserPoolId: Fn::ImportValue: !Sub "${userStack}-CognitoUserPool"
       Domain: "comet.makpar-innovation.com"
 
+  APIClient:
+    Type: AWS::Cogntio::UserPoolClient
+    Properties:
+      UserPoolId: Fn::ImportValue: !Sub "${userStack}-CognitoUserPoolId"
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
     Properties:
@@ -33,7 +37,7 @@ Resources:
       Type: "COGNITO_USER_POOLS"
       IdentitySource: method.request.header.authorization
       ProviderARNs:
-        - Fn::ImportValue: !Sub "${userStack}-CognitoUsers"
+        - Fn::ImportValue: !Sub "${userStack}-CognitoUserPool"
 
   GetResource:
     Type: 'AWS::ApiGateway::Resource'
