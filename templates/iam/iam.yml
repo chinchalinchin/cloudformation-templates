@@ -31,7 +31,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
-  CognitoUsers:
+  CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: code-challenge-auth-pool
@@ -59,7 +59,7 @@ Resources:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "gmoore@makpar.com"
-      UserPoolId: !Ref CognitoUsers
+      UserPoolId: !Ref CognitoUserPool
       UserAttributes:
         - Name: "email_verified"
           Value: "true"
@@ -83,7 +83,12 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-LambdaExecutorArn
   CognitoUsers:
-    Value: !GetAtt CognitoUsers.Arn
-    Description: User Pool for Cognito
+    Value: !GetAtt CognitoUserPool.Arn
+    Description: User Pool ARN for Cognito
     Export:
-      Name: !Sub ${AWS::StackName}-CognitoUsers
+      Name: !Sub ${AWS::StackName}-CognitoUserPool
+  CognitoUserPoolID:
+    Value: !Ref CognitoUserPool
+    Description: User Pool ID for Cognito
+    Export:
+      Name: !Sub ${AWS::StackName}-CognitoUserPoolID
