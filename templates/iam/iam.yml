@@ -31,6 +31,12 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
+  AuthDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: Fn::ImportValue: !Sub "${userStack}-CognitoUserPool"
+      Domain: "comet.makpar-innovation.com"
+
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
