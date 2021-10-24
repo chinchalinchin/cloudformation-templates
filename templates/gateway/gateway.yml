@@ -40,7 +40,7 @@ Resources:
   CloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: ${AWS::StackName}-LogGroup
+      LogGroupName: !Sub ${AWS::StackName}-LogGroup
       RetentionInDays: 30
 
   RestAPIDeployment:
