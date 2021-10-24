@@ -13,16 +13,36 @@ Parameters:
     Type: String
     Default: CCC-UserStack
 
+  alphaEndpoint:
+    Type: String
+    Default: alpha
+
+  betaEndpoint:
+    Type: String
+    Default: beta
+  
+  testEndpoint:
+    Type: String
+    Default: test
+
 Resources:
   RestAPI:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub CCC-RestAPI-${environmentName}
 
-  APIClient:
-    Type: AWS::Cogntio::UserPoolClient
+  RestAPIDeployment:
+    Type: AWS::ApiGateway::Deployment
     Properties:
-      UserPoolId: Fn::ImportValue: !Sub "${userStack}-CognitoUserPoolId"
+      RestApiId: !Ref RestAPI
+      Description: !Sub "${environmentName} RestAPI deployment"
+      StageName: !Ref environmentName
+
+  APIClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: 
+        Fn::ImportValue: !Sub "${userStack}-CognitoUserPoolID"
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
@@ -34,13 +54,27 @@ Resources:
       ProviderARNs:
         - Fn::ImportValue: !Sub "${userStack}-CognitoUserPool"
 
-  GetResource:
+  AlphaResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: 'data'
-      
+      PathPart: !Ref alphaEndpoint
+  
+  BetaResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ParentId: !GetAtt RestAPI.RootResourceId
+      PathPart: !Ref betaEndpoint
+
+  TestResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ParentId: !GetAtt RestAPI.RootResourceId
+      PathPart: 'test'
+
   # GetResourcePath:
     # Type: 'AWS::ApiGateway::Resource'
     # Properties:
@@ -48,48 +82,37 @@ Resources:
       # Parent:Id: !Ref GetSource
       # PathPart: '{id}'
       
-  GetResourceMethod:
+  AlphaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref GetResource
+      ResourceId: !Ref AlphaResource
       HttpMethod: GET
-      AuthorizationType: NONE
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
         Type: AWS_PROXY
-        IntegrationHttpMethod: GET
+        # INTEGRATION HTTP METHOD MUST BE POST
+        #   NOTE: API Gateway transforms all incoming requests into POSTS
+        IntegrationHttpMethod: POST
         Uri: !Join
           - ''
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
             - /invocations
-
-   # I think we need to create a deployment first? https://bl.ocks.org/magnetikonline/c314952045eee8e8375b82bc7ec68e88
-  LambdaAlphaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: 
-          Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/GET/
-
-  PostResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: 'post'
-
-  PostResourceMethod:
+  
+  BetaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref PostResource
+      ResourceId: !Ref BetaResource
       HttpMethod: POST
-      AuthorizationType: NONE
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
         Type: AWS_PROXY
+        # INTEGRATION HTTP METHOD MUST BE POST
+        #   NOTE: API Gateway transforms all incoming requests into POSTS
         IntegrationHttpMethod: POST
         Uri: !Join
           - ''
@@ -97,14 +120,52 @@ Resources:
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
             - /invocations
   
-   # I think we need to create a deployment first? https://bl.ocks.org/magnetikonline/c314952045eee8e8375b82bc7ec68e88
+  TestResourceMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref TestResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        # INTEGRATION HTTP METHOD MUST BE POST
+        #   NOTE: API Gateway transforms all incoming requests into POSTS
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
+            - /invocations
+
+  LambdaAlphaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: 
+          Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: 
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}
+
   LambdaBetaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: 
-        Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+        Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/POST/
+      SourceArn: 
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${betaEndpoint}
+  
+  LambdaDeltaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: 
+          Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: 
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${testEndpoint}
 
           

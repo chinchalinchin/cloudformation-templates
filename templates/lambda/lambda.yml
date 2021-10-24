@@ -215,11 +215,11 @@ Outputs:
     Value: !GetAtt LambdaBeta.Arn
     Export:
       Name: !Sub ${AWS::StackName}-LambdaBetaArn
-  LambdaGamma:
+  LambdaGammaArn:
     Value: !GetAtt LambdaGamma.Arn
     Export:
       Name: !Sub ${AWS::StackName}-LambdaGammaArn
-  LambdaDelta:
+  LambdaDeltaArn:
     Value: !GetAtt LambdaDelta.Arn
     Export: 
       Name: !Sub ${AWS::StackName}-LambdaDeltaArn
