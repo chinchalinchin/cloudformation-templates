@@ -31,6 +31,22 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
+  APILogger:
+    Type: AWS::IAM::Role
+    Description: Role to allow API Gateway to push logs to CloudWatch
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principle:
+              Service:
+                - apigateway.amazonaws.com
+              Action:
+                - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
   # AuthDomain:
     # Type: AWS::Cognito::UserPoolDomain
     # Properties:
@@ -90,6 +106,11 @@ Outputs:
     Description: ARN for Lambda Execution Role
     Export:
       Name: !Sub ${AWS::StackName}-LambdaExecutorArn
+  LoggerRoleArn:
+    Value: !GetAtt APILogger.Arn
+    Description: ARN for API Logger Role
+    Export:
+      Name: !Sub ${AWS::StackName}-LoggerArn
   CognitoUsers:
     Value: !GetAtt CognitoUserPool.Arn
     Description: User Pool ARN for Cognito

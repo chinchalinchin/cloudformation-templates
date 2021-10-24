@@ -35,6 +35,12 @@ Resources:
     Type: AWS::ApiGateway::Account
     Properties:
       CloudWatchRoleArn: arn:aws:iam::${AWS::AccountId}:role/service-role/CloudTrail_CloudWatchLogs_Role
+  
+  CloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: ${AWS::StackName}-LogGroup
+      RetentionInDays: 30
 
   RestAPIDeployment:
     Type: AWS::ApiGateway::Deployment
