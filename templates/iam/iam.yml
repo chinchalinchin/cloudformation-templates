@@ -39,11 +39,11 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principle:
+            Principal:
               Service:
                 - apigateway.amazonaws.com
-              Action:
-                - "sts:AssumeRole"
+            Action:
+              - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
 

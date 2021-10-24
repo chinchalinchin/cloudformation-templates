@@ -34,7 +34,8 @@ Resources:
   CloudWatch:
     Type: AWS::ApiGateway::Account
     Properties:
-      CloudWatchRoleArn: arn:aws:iam::${AWS::AccountId}:role/service-role/CloudTrail_CloudWatchLogs_Role
+      CloudWatchRoleArn: 
+        Fn::ImportValue: !Sub ${userStack}-LoggerArn
   
   CloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
