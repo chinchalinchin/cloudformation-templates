@@ -31,6 +31,11 @@ Resources:
     Properties:
       Name: !Sub CCC-RestAPI-${environmentName}
 
+  CloudWatch:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: arn:aws:iam::${AWS::AccountId}:role/service-role/CloudTrail_CloudWatchLogs_Role
+
   RestAPIDeployment:
     Type: AWS::ApiGateway::Deployment
     Properties:
@@ -146,7 +151,7 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${alphaEndpoint}
 
   LambdaBetaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -156,7 +161,7 @@ Resources:
         Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${betaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${betaEndpoint}
   
   LambdaDeltaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -166,6 +171,6 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${testEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${testEndpoint}
 
           

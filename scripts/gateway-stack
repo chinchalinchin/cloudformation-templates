@@ -49,8 +49,6 @@ fi
 
 cp $PROJECT_DIR/templates/gateway/gateway.yml ./gateway.yml
 
-echo "${LAMBDA_STACK}-${ENVIRONMENT}"
-
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
