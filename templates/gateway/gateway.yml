@@ -55,8 +55,8 @@ Resources:
         LoggingLevel: INFO
         MetricsEnabled: True
         MethodSettings:
-          - ResourcePath: "/test"
-            HttpMethod: GET
+          - ResourcePath: "/*"
+            HttpMethod: "*"
             LoggingLevel: INFO
             MetricsEnabled: True
     DependsOn:
@@ -173,6 +173,11 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${alphaEndpoint}
+    DependsOn:
+      - RestAPI
+      - AlphaResource
+      - AlphaResourceMethod
+      - RestAPIDeployment
 
   LambdaBetaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -183,6 +188,11 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${betaEndpoint}
+    DependsOn:
+      - RestAPI
+      - BetaResource
+      - BetaResourceMethod
+      - RestAPIDeployment
   
   LambdaDeltaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -193,5 +203,10 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${testEndpoint}
+    DependsOn:
+      - RestAPI
+      - TestResource
+      - TestResourceMethod
+      - RestAPIDeployment
 
           
