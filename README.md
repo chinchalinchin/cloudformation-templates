@@ -14,11 +14,11 @@ aws cloudformation create-stack
 | Stack  |  Dependency |
 | ------ | ----------- |
 | UsersStack | None |
-| VPCStack | None | 
+| VPCStack-${env} | None | 
 | ECRStack | UsersStack | 
-| RDSStack | VPCStack | 
-| LambdaStack | VPCStack, ECRStack, UsersStack |
-| GatewayStack | UsersStack, LambdaStack |
+| RDSStack-${env} | VPCStack-${env} | 
+| LambdaStack-${env} | VPCStack-${env}, ECRStack, UsersStack |
+| GatewayStack-${env} | UsersStack, LambdaStack-${env} |
 
 # Steps
 
