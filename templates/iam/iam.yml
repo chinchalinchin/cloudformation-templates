@@ -47,13 +47,13 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
 
-  # AuthDomain:
-    # Type: AWS::Cognito::UserPoolDomain
-    # Properties:
-      # UserPoolId: !Ref CognitoUserPool
-      # Domain: "comet.makpar-innovation.com"
-    # DependsOn:
-      # - CognitoUserPool
+  AuthDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      Domain: "makpar-innovation"
+    DependsOn:
+      - CognitoUserPool
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
@@ -78,7 +78,6 @@ Resources:
           DeveloperOnlyAttribute: false
           Mutable: true
           Name: email
-      AllowedOAuthFlows: implicit
 
   CognitoUserPoolUser:
     Type: "AWS::Cognito::UserPoolUser"
