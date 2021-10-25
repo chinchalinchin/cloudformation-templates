@@ -172,7 +172,7 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${alphaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}
     DependsOn:
       - RestAPI
       - AlphaResource
@@ -187,7 +187,7 @@ Resources:
         Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${betaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${betaEndpoint}
     DependsOn:
       - RestAPI
       - BetaResource
@@ -202,11 +202,15 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/*/*/${testEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${testEndpoint}
     DependsOn:
       - RestAPI
       - TestResource
       - TestResourceMethod
       - RestAPIDeployment
+
+Outputs:
+  GatewayEndpoint:
+    Value: !Sub https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/${environmentName}
 
           

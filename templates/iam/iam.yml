@@ -78,6 +78,7 @@ Resources:
           DeveloperOnlyAttribute: false
           Mutable: true
           Name: email
+      AllowedOAuthFlows: implicit
 
   CognitoUserPoolUser:
     Type: "AWS::Cognito::UserPoolUser"
