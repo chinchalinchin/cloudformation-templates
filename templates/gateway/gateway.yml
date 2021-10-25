@@ -49,6 +49,13 @@ Resources:
       RestApiId: !Ref RestAPI
       Description: !Sub "${environmentName} RestAPI deployment"
       StageName: !Ref environmentName
+      StageDescription:
+        AccessLogSettings:
+          DestinationArn:
+    DependsOn:
+      - RestAPI
+      - CloudWatch
+      - CloudWatchLogGroup
 
   APIClient:
     Type: AWS::Cognito::UserPoolClient
