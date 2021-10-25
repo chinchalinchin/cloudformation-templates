@@ -51,11 +51,9 @@ aws cloudformation create-stack
     --capabilities CAPABILITY_NAMED_IAM
 ```
 
-2. `VPCStack-{environment}` and `UserStack` have no dependencies on other stacks. `ECRStack-{component}` has a dependency on `UserStack` through the pipeline user. `LambdaComponentStack-{component}-{environment}` has a dependency on `UserStack` through the lambda executor role, `VPCStack-${environment}` through the database security group and `ECRStack-{component}` through the **ECR** that holds the lambda image. `RDSStack-${environment}` has a dependency on `VPCStack-${environment}` through the database security group and subnet group. 
+2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
 
-3. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
-
-4. the **ECR** stack and the **User** stack are independent of the environment being provisioned. The differences in the environment images is managed through tags in the **ECR** repo, while users and roles are global resources available in all environments.
+3. the **ECR** stack and the **User** stack are independent of the environment being provisioned. The differences in the environment images is managed through tags in the **ECR** repo, while users and roles are global resources available in all environments.
 
 # Documentation
 ## CloudFormation
