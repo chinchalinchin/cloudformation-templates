@@ -50,8 +50,9 @@ Resources:
       Description: !Sub "${environmentName} RestAPI deployment"
       StageName: !Ref environmentName
       StageDescription:
-        AccessLogSettings:
-          DestinationArn:
+        AccessLogSetting:
+          DestinationArn: !GetAtt CloudWatchLogGroup.Arn
+        LoggingLevel: INFO
     DependsOn:
       - RestAPI
       - CloudWatch
