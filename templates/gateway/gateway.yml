@@ -53,6 +53,12 @@ Resources:
         AccessLogSetting:
           DestinationArn: !GetAtt CloudWatchLogGroup.Arn
         LoggingLevel: INFO
+        MetricsEnabled: True
+        MethodSettings:
+          - ResourcePath: "/test"
+            HttpMethod: GET
+            LoggingLevel: INFO
+            MetricsEnabled: True
     DependsOn:
       - RestAPI
       - CloudWatch
