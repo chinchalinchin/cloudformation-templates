@@ -14,11 +14,11 @@ aws cloudformation create-stack
 | Stack  |  Dependency |
 | ------ | ----------- |
 | UsersStack | None |
-| VPCStack-${env} | None | 
+| VPCStack-$ENV | None | 
 | ECRStack | UsersStack | 
-| RDSStack-${env} | VPCStack-${env} | 
-| LambdaStack-${env} | VPCStack-${env}, ECRStack, UsersStack |
-| GatewayStack-${env} | UsersStack, LambdaStack-${env} |
+| RDSStack-$ENV | VPCStack-$ENV | 
+| LambdaStack-$ENV | VPCStack-$ENV, ECRStack, UsersStack |
+| GatewayStack-$ENV | UsersStack, LambdaStack-$ENV |
 
 # Steps
 
@@ -36,10 +36,6 @@ source .env
 ./scripts/gateway-stack --environment <Dev | Prod | Test>
 ```
 
-# TODO
-
- can probably provision secrets directly in RDS template with a !Ref pointing the Endpoint.Address return value of the Postgres instance and the username/password passed into the script.
- 
 # Notes
 
 1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
