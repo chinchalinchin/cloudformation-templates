@@ -23,9 +23,17 @@ Parameters:
     Type: String
     Default: beta
   
-  testEndpoint:
+  gammaEndpoint:
     Type: String
-    Default: test
+    Default: gamma
+
+  deltaEndpoint:
+    Type: String
+    Default: delta
+
+  epsilonEndpoint:
+    Type: String
+    Default: epsilon
 
 Resources:
   RestAPI:
@@ -66,13 +74,6 @@ Resources:
       - CloudWatch
       - CloudWatchLogGroup
 
-  APIClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      UserPoolId: 
-        Fn::ImportValue: !Sub "${userStack}-CognitoUserPoolID"
-      AllowedOAuthFlows: implicit
-
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
     Properties:
@@ -97,12 +98,19 @@ Resources:
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: !Ref betaEndpoint
 
-  TestResource:
+  DeltaResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: 'test'
+      PathPart: !Ref deltaEndpoint
+
+  EpsilonResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:   
+      RestApiId: !Ref RestAPI
+      ParentId: !GetAtt RestAPI.RootResourceId
+      PathPart: !Ref epsilonEndpoint
 
   # GetResourcePath:
     # Type: 'AWS::ApiGateway::Resource'
@@ -149,7 +157,7 @@ Resources:
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
             - /invocations
   
-  TestResourceMethod:
+  DeltaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
@@ -166,6 +174,24 @@ Resources:
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
             - /invocations
+  
+  EpsilonResourceMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref EpsilonResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        # INTEGRATION HTTP METHOD MUST BE POST
+        #   NOTE: API Gateways transform all incoming requests into POSTS
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+          - Fn::ImportValue: !Sub ${lambdaStack}-LambdaEpsilonArn
+          - /invocations
 
   LambdaAlphaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -197,6 +223,21 @@ Resources:
       - BetaResourceMethod
       - RestAPIDeployment
   
+  LambdaGammaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::ImportValue: !Sub ${lambdaStack}-LambdaGammaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        !Sub arn:aws:execute-api:${AWS:Region}:${AWS::AcountId}:${RestAPI}/${environmentName}/*/${gammaEndpoint}
+    Depends:
+      - RestAPI
+      - GammaResource
+      - GammaResouceMethod
+      - RestAPIDeployment
+
   LambdaDeltaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
     Properties:
@@ -205,13 +246,28 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${testEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${deltaEndpoint}
     DependsOn:
       - RestAPI
-      - TestResource
-      - TestResourceMethod
+      - DeltaResource
+      - DeltaResourceMethod
       - RestAPIDeployment
-
+  
+  LamdbaEpsilonApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::ImportValue: !Sub ${lambdaStack}-LambdaEpsilonArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AcountId}:${RestAPI}/${environmentName}/*/${epsilonEndpoint}
+    DependsOn:
+      - RestAPI
+      - EpsilonResource
+      - EpsilonResourceMethod
+      - RestAPIDeployment
+      
 Outputs:
   GatewayEndpoint:
     Value: !Sub https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/${environmentName}
