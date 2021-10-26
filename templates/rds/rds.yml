@@ -2,10 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Provisions a DB instances with credentials resolved from the SSM parameter store and deploys it into a private subnet in the CCC-VPCStack-${environmentName}."
 
 Parameters:
-  # Stack Parameters
-  dbUsername:
-    Type: String
-    Default: WilliamFaulkner
   environmentName:
     Type: String
     Default: Dev
@@ -25,7 +21,7 @@ Resources:
         MasterUsername: !Sub "{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}"
         MasterUserPassword: !Sub "{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}"
         BackupRetentionPeriod: 7
-        MultiAZ: true
+        MultiAZ: false
         AutoMinorVersionUpgrade: true
         Iops: 1000
         PubliclyAccessible: false

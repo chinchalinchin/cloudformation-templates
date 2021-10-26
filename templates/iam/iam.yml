@@ -30,6 +30,17 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: CognitoTokenPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: TokenPermissions
+                Effect: Allow
+                Action:
+                  - "cognito-idp:AdminInitiateAuth"
+                Resource: 
+                  - !GetAtt CognitoUserPool.Arn
 
   APILogger:
     Type: AWS::IAM::Role
@@ -94,6 +105,8 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref CognitoUserPool
+      AllowedOAuthFlows:
+        - client_credentials
 
 Outputs:
   PipelineUserArn:
