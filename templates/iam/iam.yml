@@ -89,6 +89,13 @@ Resources:
           Value: "true"
         - Name: "email"
           Value: "gmoore@makpar.com"
+  
+  APIClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: 
+        Fn::ImportValue: !Ref CognitoUserPool
+      AllowedOAuthFlows: implicit
 
 Outputs:
   PipelineUserArn:
@@ -121,3 +128,8 @@ Outputs:
     Description: User Pool ID for Cognito
     Export:
       Name: !Sub ${AWS::StackName}-CognitoUserPoolID
+  CognitoClientID:
+    Value: !Ref APIClient
+    Description: Client ID for API Client
+    Export:
+      Name: !Sub ${AWS::StackName}-APIClient
