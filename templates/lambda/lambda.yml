@@ -11,7 +11,8 @@ Parameters:
       - two
       - three
       - four
-    Default: four
+      - five 
+    Default: five
   environmentName:
     Type: String
     Default: Dev
@@ -39,23 +40,33 @@ Conditions:
   CreateFourComponents: !Equals
       - !Ref components
       - four
+  CreateFiveComponents: !Equals
+      - !Ref components
+      - five
   
   CreateAlphaComponent: !Or
     - !Condition CreateOneComponent
     - !Condition CreateTwoComponents
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
 
   CreateBetaComponent: !Or
     - !Condition CreateTwoComponents
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
 
   CreateGammaComponent: !Or
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
 
-  CreateDeltaComponent: !Condition CreateFourComponents
+  CreateDeltaComponent: !Or
+    - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
+
+  CreateEpsilonComponent: !Condition CreateFiveComponents
 
 Resources:
   LambdaAlpha: # GET
@@ -178,6 +189,25 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaDelta
 
+  LambdaEpsilon:
+    Type: AWS::Lambda::Function
+    Condition: CreateEpsilonComponent
+    Description: Lambda Epsilon function
+    Properties: 
+      FunctionName: !Sub lambda-epsilon-${environmentName}
+      Code:
+        ImageUri: !Sub
+          - "${ecrRepo}:${environment}"
+          - ecrRepo:
+              Fn::ImportValue: !Sub ${ecrStack}-LambdaEpsilonImageRepository
+            environment: !Ref environmentName
+      PackageType: Image
+      Role:
+        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+      Tags:
+        - Key: Name 
+          Value: !Sub ${AWS::StackName}-LambdaEpsilon
+
   PipelineLambdaPolicy:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to update Lambda functions
@@ -191,6 +221,7 @@ Resources:
             Action: 
               - "lambda:UpdateFunctionCode"
             Resource:
+              - !GetAtt LambdaEpsilon.Arn
               - !GetAtt LambdaGamma.Arn
               - !GetAtt LambdaDelta.Arn
               - !GetAtt LambdaBeta.Arn
@@ -198,13 +229,11 @@ Resources:
       Users: 
         - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
     DependsOn:
+      - LambdaEpsilon
       - LambdaGamma
       - LambdaDelta
       - LambdaBeta
       - LambdaAlpha
-
-    # RestProxy:
-      # Type: AWS::ApiGateway::RestApi
 
 Outputs:
   LambdaAlphaArn:
@@ -223,3 +252,7 @@ Outputs:
     Value: !GetAtt LambdaDelta.Arn
     Export: 
       Name: !Sub ${AWS::StackName}-LambdaDeltaArn
+  LambdaEpsilonArn:
+    Value: !GetAtt LambdaEpsilon.Arn
+    Export: 
+      Name: !sUB ${AWS::StackName}-LambdaEpsilonArn

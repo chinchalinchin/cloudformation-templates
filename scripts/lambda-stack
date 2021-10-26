@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     lambda-stack --components <one | two | three | four> \
+# >$     lambda-stack --components <one | two | three | four | five> \
 #                     --environment <Dev | Prod | Test> \
 #                     --action <create | update>
 
