@@ -9,7 +9,8 @@ Parameters:
       - two
       - three
       - four
-    Default: four
+      - five
+    Default: five
   userStack:
     Type: String
     Default: CCC-UserStack
@@ -27,23 +28,33 @@ Conditions:
   CreateFourComponents: !Equals
       - !Ref components
       - four
+  CreateFiveComponents: !Equals
+      - !Ref components
+      - five
   
   CreateAlphaComponent: !Or
     - !Condition CreateOneComponent
     - !Condition CreateTwoComponents
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
 
   CreateBetaComponent: !Or
     - !Condition CreateTwoComponents
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
 
   CreateGammaComponent: !Or
     - !Condition CreateThreeComponents
     - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
 
-  CreateDeltaComponent: !Condition CreateFourComponents
+  CreateDeltaComponent: !Or
+    - !Condition CreateFourComponents
+    - !Condition CreateFiveComponents
+
+  CreateEpsilonComponent: !Condition CreateFiveComponents
 
 Resources:
   LambdaAlphaECR:
@@ -138,6 +149,29 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaDeltaECR
 
+  LambdaEpsilonECR:
+    Type: AWS::ECR::Repository
+    Condition: CreateEpsilonComponent
+    Description: ECR to hold image of Lambda Epsilon function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: lambda-epsilon
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaEpsilonPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+              Action:
+                - "ecr:BatchGetImage"
+                - "ecr:GetDownloadUrlForLayer"
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-LambdaEpsilonECR
+
   PipelineLambdaECRPolicy:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to push and pull from ECR
@@ -166,13 +200,16 @@ Resources:
               - !GetAtt LambdaBetaECR.Arn
               - !GetAtt LambdaDeltaECR.Arn
               - !GetAtt LambdaGammaECR.Arn
+              - !GetAtt LambdaEpsilonECR.Arn
       Users: 
         - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
+
     DependsOn:
       - LambdaAlphaECR
       - LambdaBetaECR
       - LambdaDeltaECR
       - LambdaGammaECR
+      - LambdaEpsilonECR
 
 Outputs:
   LambdaAlphaImageRepository:

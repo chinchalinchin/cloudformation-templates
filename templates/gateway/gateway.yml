@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the CCC-LambdaStack-${env} into endpoints. In addition, it attaches a Lambda authorizer and ."
+
 Parameters:
   environmentName:
     Type: String
@@ -70,7 +72,6 @@ Resources:
       UserPoolId: 
         Fn::ImportValue: !Sub "${userStack}-CognitoUserPoolID"
       AllowedOAuthFlows: implicit
-
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
