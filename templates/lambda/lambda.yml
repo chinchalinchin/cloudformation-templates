@@ -204,6 +204,10 @@ Resources:
       PackageType: Image
       Role:
         Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+      Environment:
+        Variables:
+          CLIENT_ID: Fn::ImportValue: !Sub ${userStack}-APIClientID
+          POOL_ID: Fn::ImportValue: !Sub ${userStack}-UserPoolID
       Tags:
         - Key: Name 
           Value: !Sub ${AWS::StackName}-LambdaEpsilon

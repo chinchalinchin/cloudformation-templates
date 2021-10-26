@@ -122,14 +122,14 @@ Outputs:
     Value: !GetAtt CognitoUserPool.Arn
     Description: User Pool ARN for Cognito
     Export:
-      Name: !Sub ${AWS::StackName}-CognitoUserPool
+      Name: !Sub ${AWS::StackName}-UserPoolArn
   CognitoUserPoolID:
     Value: !Ref CognitoUserPool
     Description: User Pool ID for Cognito
     Export:
-      Name: !Sub ${AWS::StackName}-CognitoUserPoolID
+      Name: !Sub ${AWS::StackName}-UserPoolID
   CognitoClientID:
     Value: !Ref APIClient
     Description: Client ID for API Client
     Export:
-      Name: !Sub ${AWS::StackName}-APIClient
+      Name: !Sub ${AWS::StackName}-APIClientID
