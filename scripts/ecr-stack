@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     ecr-stack --components <one | two | three | four>
+# >$     ecr-stack --components <one | two | three | four | five>
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -21,6 +21,11 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
+              --action)
+                     ACTION="$2"
+                     shift
+                     shift 
+                     ;;
               --components)
                      COMPONENTS="$2"
                      shift
@@ -37,13 +42,32 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
+if [ -z "$ACTION" ]
+then
+    ACTION="create"
+fi
+
 cp $PROJECT_DIR/templates/ecr/ecr.yml ./ecr.yml
 
-aws cloudformation create-stack \
-       --stack-name "${ECR_STACK}" \
-       --template-body file://ecr.yml \
-       --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                     ParameterKey=userStack,ParameterValue=$USER_STACK \
-       --capabilities CAPABILITY_NAMED_IAM
+if [ "$ACTION" == "create" ]
+then
+       aws cloudformation create-stack \
+              --stack-name "${ECR_STACK}" \
+              --template-body file://ecr.yml \
+              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
+                            ParameterKey=userStack,ParameterValue=$USER_STACK \
+              --capabilities CAPABILITY_NAMED_IAM
+elif [ "$ACTION" == "update" ]
+then 
+       aws cloudformation update-stack \
+              --stack-name "${ECR_STACK}" \
+              --template-body file://ecr.yml \
+              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
+                            ParameterKey=userStack,ParameterValue=$USER_STACK \
+              --capabilities CAPABILITY_NAMED_IAM
+else
+       log "Action not understood."
+       exit 1
+fi
 
 rm ./ecr.yml

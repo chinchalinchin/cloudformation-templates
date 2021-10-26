@@ -165,12 +165,12 @@ Resources:
             Principal:
               Service:
                 - lambda.amazonaws.com
-              Action:
-                - "ecr:BatchGetImage"
-                - "ecr:GetDownloadUrlForLayer"
-    Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-LambdaEpsilonECR
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-LambdaEpsilonECR
 
   PipelineLambdaECRPolicy:
     Type: AWS::IAM::Policy
@@ -231,4 +231,4 @@ Outputs:
   LambdaEpsilonImageRepository:
     Value: !GetAtt LambdaEpsilonECR.RepositoryUri
     Export:
-      Name: !Sub ${AWS:StackName}-LambdaEpsilonImageRepository
+      Name: !Sub ${AWS::StackName}-LambdaEpsilonImageRepository
