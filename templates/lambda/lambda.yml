@@ -206,8 +206,10 @@ Resources:
         Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
       Environment:
         Variables:
-          CLIENT_ID: Fn::ImportValue: !Sub ${userStack}-APIClientID
-          POOL_ID: Fn::ImportValue: !Sub ${userStack}-UserPoolID
+          CLIENT_ID: 
+            Fn::ImportValue: !Sub ${userStack}-APIClientID
+          POOL_ID: 
+            Fn::ImportValue: !Sub ${userStack}-UserPoolID
       Tags:
         - Key: Name 
           Value: !Sub ${AWS::StackName}-LambdaEpsilon
@@ -259,4 +261,4 @@ Outputs:
   LambdaEpsilonArn:
     Value: !GetAtt LambdaEpsilon.Arn
     Export: 
-      Name: !sUB ${AWS::StackName}-LambdaEpsilonArn
+      Name: !Sub ${AWS::StackName}-LambdaEpsilonArn

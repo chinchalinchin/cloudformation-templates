@@ -44,8 +44,6 @@ then
     ACTION="create"
 fi
 
-echo "$ACTION"
-
 cp $PROJECT_DIR/templates/iam/iam.yml ./iam.yml
 
 if [ "$ACTION" == "create" ]

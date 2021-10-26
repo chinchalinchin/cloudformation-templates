@@ -93,9 +93,7 @@ Resources:
   APIClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      UserPoolId: 
-        Fn::ImportValue: !Ref CognitoUserPool
-      AllowedOAuthFlows: implicit
+      UserPoolId: !Ref CognitoUserPool
 
 Outputs:
   PipelineUserArn:
@@ -118,7 +116,7 @@ Outputs:
     Description: ARN for API Logger Role
     Export:
       Name: !Sub ${AWS::StackName}-LoggerArn
-  CognitoUsers:
+  CognitoUserPoolArn:
     Value: !GetAtt CognitoUserPool.Arn
     Description: User Pool ARN for Cognito
     Export:

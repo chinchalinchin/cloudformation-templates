@@ -70,9 +70,12 @@ Resources:
             LoggingLevel: INFO
             MetricsEnabled: True
     DependsOn:
-      - RestAPI
       - CloudWatch
       - CloudWatchLogGroup
+      - AlphaResourceMethod
+      - BetaResourceMethod
+      - DeltaResourceMethod
+      - EpsilonResourceMethod
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
@@ -82,7 +85,7 @@ Resources:
       Type: "COGNITO_USER_POOLS"
       IdentitySource: method.request.header.authorization
       ProviderARNs:
-        - Fn::ImportValue: !Sub "${userStack}-CognitoUserPool"
+        - Fn::ImportValue: !Sub "${userStack}-UserPoolArn"
 
   AlphaResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -90,6 +93,8 @@ Resources:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: !Ref alphaEndpoint
+    DependsOn:
+      - RestAPI
   
   BetaResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -97,6 +102,8 @@ Resources:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: !Ref betaEndpoint
+    DependsOn:
+      - RestAPI
 
   DeltaResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -104,6 +111,8 @@ Resources:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: !Ref deltaEndpoint
+    DependsOn:
+      - RestAPI
 
   EpsilonResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -111,6 +120,8 @@ Resources:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: !Ref epsilonEndpoint
+    DependsOn:
+      - RestAPI
 
   # GetResourcePath:
     # Type: 'AWS::ApiGateway::Resource'
@@ -137,6 +148,8 @@ Resources:
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
             - /invocations
+    DependsOn:
+      - AlphaResource
   
   BetaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
@@ -156,12 +169,14 @@ Resources:
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
             - /invocations
+    DependsOn:
+      - BetaResource
   
   DeltaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref TestResource
+      ResourceId: !Ref DeltaResource
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
@@ -174,6 +189,8 @@ Resources:
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
             - /invocations
+    DependsOn:
+      - DeltaResource
   
   EpsilonResourceMethod:
     Type: 'AWS::ApiGateway::Method'
@@ -190,8 +207,10 @@ Resources:
         Uri: !Join
           - ''
           - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-          - Fn::ImportValue: !Sub ${lambdaStack}-LambdaEpsilonArn
-          - /invocations
+            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaEpsilonArn
+            - /invocations
+    DependsOn:
+      - EpsilonResource
 
   LambdaAlphaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -203,9 +222,6 @@ Resources:
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}
     DependsOn:
-      - RestAPI
-      - AlphaResource
-      - AlphaResourceMethod
       - RestAPIDeployment
 
   LambdaBetaApiGatewayInvoke:
@@ -218,24 +234,6 @@ Resources:
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${betaEndpoint}
     DependsOn:
-      - RestAPI
-      - BetaResource
-      - BetaResourceMethod
-      - RestAPIDeployment
-  
-  LambdaGammaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties: 
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::ImportValue: !Sub ${lambdaStack}-LambdaGammaArn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        !Sub arn:aws:execute-api:${AWS:Region}:${AWS::AcountId}:${RestAPI}/${environmentName}/*/${gammaEndpoint}
-    Depends:
-      - RestAPI
-      - GammaResource
-      - GammaResouceMethod
       - RestAPIDeployment
 
   LambdaDeltaApiGatewayInvoke:
@@ -248,9 +246,6 @@ Resources:
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${deltaEndpoint}
     DependsOn:
-      - RestAPI
-      - DeltaResource
-      - DeltaResourceMethod
       - RestAPIDeployment
   
   LamdbaEpsilonApiGatewayInvoke:
@@ -261,11 +256,8 @@ Resources:
         Fn::ImportValue: !Sub ${lambdaStack}-LambdaEpsilonArn
       Principal: apigateway.amazonaws.com
       SourceArn:
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AcountId}:${RestAPI}/${environmentName}/*/${epsilonEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${epsilonEndpoint}
     DependsOn:
-      - RestAPI
-      - EpsilonResource
-      - EpsilonResourceMethod
       - RestAPIDeployment
       
 Outputs:
