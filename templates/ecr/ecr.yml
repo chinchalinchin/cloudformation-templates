@@ -228,3 +228,7 @@ Outputs:
     Value: !GetAtt LambdaDeltaECR.RepositoryUri
     Export: 
       Name: !Sub ${AWS::StackName}-LambdaDeltaImageRepository
+  LambdaEpsilonImageRepository:
+    Value: !GetAtt LambdaEpsilonECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS:StackName}-LambdaEpsilonImageRepository
