@@ -90,7 +90,7 @@ Resources:
           Mutable: true
           Name: email
 
-  CognitoUserPoolUser:
+  GrantUserPoolUser:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "gmoore@makpar.com"
@@ -100,7 +100,27 @@ Resources:
           Value: "true"
         - Name: "email"
           Value: "gmoore@makpar.com"
-  
+  PeterUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "pcofrancesco@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "pcofrancesc@makpar.com"
+  ThomasUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "tklock@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "tklock@makpar.com"
+
   APIClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:

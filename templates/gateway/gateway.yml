@@ -87,14 +87,31 @@ Resources:
       ProviderARNs:
         - Fn::ImportValue: !Sub "${userStack}-UserPoolArn"
 
-  AlphaResource:
+          # GetResourcePath:
+    # Type: 'AWS::ApiGateway::Resource'
+    # Properties:
+      # RestApiId: !Ref RestAPI
+      # Parent:Id: !Ref GetSource
+      # PathPart: '{id}'
+
+  AlphaResource: 
     Type: 'AWS::ApiGateway::Resource'
-    Properties:
+    Properties: 
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: !Ref alphaEndpoint
     DependsOn:
       - RestAPI
+
+  ParamResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ParentId: !Ref AlphaResource
+      PathPart: "{award_id}"
+    DependsOn:
+      - RestAPI
+      - AlphaResource
   
   BetaResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -123,19 +140,16 @@ Resources:
     DependsOn:
       - RestAPI
 
-  # GetResourcePath:
-    # Type: 'AWS::ApiGateway::Resource'
-    # Properties:
-      # RestApiId: !Ref RestAPI
-      # Parent:Id: !Ref GetSource
-      # PathPart: '{id}'
+
       
   AlphaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref AlphaResource
+      ResourceId: !Ref ParamResource
       HttpMethod: GET
+      RequestParameters:
+        "method.request.path.award_id": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -220,7 +234,7 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}/*
     DependsOn:
       - RestAPIDeployment
 
