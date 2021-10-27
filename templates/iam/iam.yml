@@ -105,8 +105,19 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      AllowedOAuthFlows:
-        - client_credentials
+      ClientName: CCCAPICognitoClient
+      ExplicitAuthFlows:
+        - "ALLOW_CUSTOM_AUTH"
+        - "ALLOW_REFRESH_TOKEN_AUTH"
+        - "ALLOW_USER_PASSWORD_AUTH"
+        - "ALLOW_USER_SRP_AUTH"
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: "minutes"
+        IdToken: "minutes"
+        RefreshToken: "days"
 
 Outputs:
   PipelineUserArn:
