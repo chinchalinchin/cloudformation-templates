@@ -65,6 +65,7 @@ then
               --template-body file://lambda.yml \
               --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
                             ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                            ParameterKey=dbName,ParameterValue=$RDS_DBNAME \
                             ParameterKey=userStack,ParameterValue=$USER_STACK \
                             ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM
@@ -75,6 +76,7 @@ then
               --template-body file://lambda.yml \
               --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
                             ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                            ParameterKey=dbName,ParameterValue=$RDS_DBNAME \
                             ParameterKey=userStack,ParameterValue=$USER_STACK \
                             ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM  

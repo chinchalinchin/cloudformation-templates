@@ -16,6 +16,9 @@ Parameters:
   environmentName:
     Type: String
     Default: Dev
+  dbName:
+    Type: String
+    Default: usaspending
   # Stack Dependencies
   userStack:
     Type: String
@@ -69,7 +72,7 @@ Conditions:
   CreateEpsilonComponent: !Condition CreateFiveComponents
 
 Resources:
-  LambdaAlpha: # GET
+  LambdaAlpha: # search by naics code / retrieve all data
     Type: AWS::Lambda::Function
     Condition: CreateAlphaComponent
     Description: Lambda function alpha
@@ -95,11 +98,12 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
+          POSTGRES_DBNAME: !Ref dbName
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaAlpha
 
-  LambdaBeta: # PUT
+  LambdaBeta: # get all naics codes
     Type: AWS::Lambda::Function
     Condition: CreateBetaComponent
     Description: Lambda beta function
@@ -125,6 +129,7 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
+          POSTGRES_DBNAME: !Ref dbName
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaBeta
@@ -156,11 +161,12 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
+          POSTGRES_DBNAME: !Ref dbName
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaGamma
 
-  LambdaDelta: # Trigger
+  LambdaDelta: # user authentication verification
     Type: AWS::Lambda::Function
     Condition: CreateDeltaComponent
     Description: Lambda Delta function
@@ -186,11 +192,12 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
+          POSTGRES_DBNAME: !Ref dbName
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaDelta
 
-  LambdaEpsilon:
+  LambdaEpsilon: # token endpoint
     Type: AWS::Lambda::Function
     Condition: CreateEpsilonComponent
     Description: Lambda Epsilon function

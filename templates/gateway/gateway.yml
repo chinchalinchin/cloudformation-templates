@@ -151,7 +151,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref AlphaResource
-      PathPart: "{naics_description}"
+      PathPart: "{naics_code}"
     DependsOn:
       - RestAPI
       - AlphaResource
@@ -183,8 +183,6 @@ Resources:
     DependsOn:
       - RestAPI
 
-
-      
   AlphaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
@@ -192,7 +190,7 @@ Resources:
       ResourceId: !Ref ParamResource
       HttpMethod: GET
       RequestParameters:
-        "method.request.path.naics_description": true
+        "method.request.path.naics_code": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
