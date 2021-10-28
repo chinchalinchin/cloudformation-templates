@@ -63,6 +63,10 @@ then
         --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
+elif [ "$ACTION" == "delete" ]
+then
+    aws cloudformation delete-stack \
+        --stack-name "${VPC_STACK}-${ENVIRONMENT}"
 else
     log "Action not understood"
 fi

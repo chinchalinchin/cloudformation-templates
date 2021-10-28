@@ -7,7 +7,10 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     gateway-stack --environment <Dev | Prod | Test>
+# >$     gateway-stack --environment <Dev | Prod | Test | Staging> \
+#                      --action <create | update | delete>
+#
+# NOTE: if no `--action` is provided, it will default to `create`
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -69,6 +72,10 @@ then
                      ParameterKey=hostedZZoneId,ParameterValue=$HOSTED_ZONE_ID \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
                      ParameterKey=userStack,ParameterValue="${USER_STACK}"
+elif [ "$ACTION" == "delete"]
+then
+    aws cloudformation delete-stack \
+        --stackname "${GATEWAY_STACK}-${ENVIRONMENT}"
 else
     log "Action not understood."
     exit 1

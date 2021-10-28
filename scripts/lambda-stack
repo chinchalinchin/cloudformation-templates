@@ -8,8 +8,8 @@ source $PROJECT_DIR/.env
 
 # Example Usage:
 # >$     lambda-stack --components <one | two | three | four | five> \
-#                     --environment <Dev | Prod | Test> \
-#                     --action <create | update>
+#                     --environment <Dev | Prod | Test | Staging> \
+#                     --action <create | update | delete>
 
 #      NOTE: ``--action`` defaults to `create` if not supplied.
 
@@ -70,7 +70,7 @@ then
               --capabilities CAPABILITY_NAMED_IAM
 elif [ "$ACTION" == "update" ]
 then
-     aws cloudformation update-stack \
+       aws cloudformation update-stack \
               --stack-name "${LAMBDA_STACK}-${ENVIRONMENT}" \
               --template-body file://lambda.yml \
               --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
@@ -78,6 +78,10 @@ then
                             ParameterKey=userStack,ParameterValue=$USER_STACK \
                             ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM  
+elif [ "$ACTION" == "delete" ]
+then 
+       aws cloudformation delete-stack \
+              --stack-name "${LAMBDA_STACK}-${ENVIRONMENT}"
 fi
 
 rm ./lambda.yml

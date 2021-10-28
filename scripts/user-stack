@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     user-stack --action <create | update>
+# >$     user-stack --action <create | update | delete>
 #
 #   NOTE: ``--action`` defaults to `create` if not supplied.
 
@@ -58,6 +58,10 @@ then
         --stack-name "$USER_STACK" \
         --template-body file://iam.yml \
         --capabilities CAPABILITY_NAMED_IAM
+elif [ "$ACTION" == "delete" ]
+then
+    aws cloudformation delete-stack \
+        --stack-name "$USER_STACK"
 else
     log "Action not understood."
     exit 1
