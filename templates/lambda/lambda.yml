@@ -129,7 +129,7 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaBeta
 
-  LambdaGamma: # Trigger
+  LambdaGamma: # Database Initializer
     Type: AWS::Lambda::Function
     Condition: CreateGammaComponent
     Description: Lambda gamma function
@@ -150,6 +150,7 @@ Resources:
         SubnetIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      MemorySize: 4000 
       Environment:
         Variables:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${environmentName}-dbHost:SecretString}}'

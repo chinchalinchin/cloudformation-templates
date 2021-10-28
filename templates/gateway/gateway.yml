@@ -9,7 +9,7 @@ Parameters:
 
   lambdaStack:
     Type: String
-    Default: CCC-LambdaStack-Dev
+    Default: CCC-LambdaStack
 
   userStack:
     Type: String
