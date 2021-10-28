@@ -6,34 +6,28 @@ Parameters:
   environmentName:
     Type: String
     Default: Dev
-
   certificateArn:
     Type: String
-    
+  hostedZoneId:
+    Type: String
   lambdaStack:
     Type: String
     Default: CCC-LambdaStack
-
   userStack:
     Type: String
     Default: CCC-UserStack
-
   alphaEndpoint:
     Type: String
     Default: alpha
-
   betaEndpoint:
     Type: String
     Default: beta
-  
   gammaEndpoint:
     Type: String
     Default: gamma
-
   deltaEndpoint:
     Type: String
     Default: delta
-
   epsilonEndpoint:
     Type: String
     Default: epsilon
@@ -79,6 +73,33 @@ Resources:
       - BetaResourceMethod
       - DeltaResourceMethod
       - EpsilonResourceMethod
+
+  RestAPIDomainName:
+  Type: 'AWS::ApiGateway::DomainName'
+  Properties:
+    CertificateArn: !Ref certificateArn
+    DomainName: !Sub api.${environmentName}.usaspending.makpar-innovation.com
+    EndpointConfiguration:
+      Types:
+        - EDGE
+
+  RestAPIBasePathMapping:
+    Type: 'AWS::ApiGateway::BasePathMapping'
+    Properties:
+      DomainName: !Ref RestAPIDomainName
+      RestApiId: !Ref RestAPI
+      Stage: !Ref environmentName
+
+  RestAPIRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: api.${environmentName}.usaspending.makpar-innovation.com # Your chosen subdomain
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
