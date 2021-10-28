@@ -32,6 +32,17 @@ Parameters:
     Type: String
     Default: epsilon
 
+Mappings:
+  SubDomainMap:
+    Dev: 
+      subdomain:  "-dev"
+    Test: 
+      subdomain: "-test"
+    Staging: 
+      subdomain: "-staging"
+    Prod: 
+      subdomain: ""
+
 Resources:
   RestAPI:
     Type: AWS::ApiGateway::RestApi
@@ -75,13 +86,18 @@ Resources:
       - EpsilonResourceMethod
 
   RestAPIDomainName:
-  Type: 'AWS::ApiGateway::DomainName'
-  Properties:
-    CertificateArn: !Ref certificateArn
-    DomainName: !Sub api.${environmentName}.usaspending.makpar-innovation.com
-    EndpointConfiguration:
-      Types:
-        - EDGE
+    Type: 'AWS::ApiGateway::DomainName'
+    Properties:
+      CertificateArn: !Ref certificateArn
+      DomainName: !Sub 
+        - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+        - subdomainEnv: !FindInMap
+          - SubDomainMap
+          - !Ref environmentName
+          - subdomain
+      EndpointConfiguration:
+        Types:
+          - EDGE
 
   RestAPIBasePathMapping:
     Type: 'AWS::ApiGateway::BasePathMapping'
@@ -89,17 +105,27 @@ Resources:
       DomainName: !Ref RestAPIDomainName
       RestApiId: !Ref RestAPI
       Stage: !Ref environmentName
+    DependsOn:
+      - RestAPI
+      - RestAPIDomainName
 
   RestAPIRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
-        - Name: api.${environmentName}.usaspending.makpar-innovation.com # Your chosen subdomain
+        - Name: !Sub 
+            - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+            - subdomainEnv: !FindInMap
+              - SubDomainMap
+              - !Ref environmentName
+              - subdomain
           Type: A
           AliasTarget:
             HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
             DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
+    DependsOn:
+      - RestAPIDomainName
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
