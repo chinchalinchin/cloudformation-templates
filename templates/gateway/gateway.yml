@@ -7,6 +7,9 @@ Parameters:
     Type: String
     Default: Dev
 
+  certificateArn:
+    Type: String
+    
   lambdaStack:
     Type: String
     Default: CCC-LambdaStack
@@ -86,13 +89,6 @@ Resources:
       IdentitySource: method.request.header.authorization
       ProviderARNs:
         - Fn::ImportValue: !Sub "${userStack}-UserPoolArn"
-
-          # GetResourcePath:
-    # Type: 'AWS::ApiGateway::Resource'
-    # Properties:
-      # RestApiId: !Ref RestAPI
-      # Parent:Id: !Ref GetSource
-      # PathPart: '{id}'
 
   AlphaResource: 
     Type: 'AWS::ApiGateway::Resource'
