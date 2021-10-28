@@ -214,7 +214,8 @@ Resources:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref DeltaResource
       HttpMethod: GET
-      AuthorizationType: NONE
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
         Type: AWS_PROXY
         # INTEGRATION HTTP METHOD MUST BE POST
