@@ -104,7 +104,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref AlphaResource
-      PathPart: "{award_id}"
+      PathPart: "{naics_description}"
     DependsOn:
       - RestAPI
       - AlphaResource
@@ -145,7 +145,29 @@ Resources:
       ResourceId: !Ref ParamResource
       HttpMethod: GET
       RequestParameters:
-        "method.request.path.award_id": true
+        "method.request.path.naics_description": true
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        # INTEGRATION HTTP METHOD MUST BE POST
+        #   NOTE: API Gateway transforms all incoming requests into POSTS
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+            - /invocations
+    DependsOn:
+      - AlphaResource
+      - ParamResource
+
+  AlphaAllResourceMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref AlphaResource
+      HttpMethod: GET
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -166,7 +188,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref BetaResource
-      HttpMethod: POST
+      HttpMethod: GET
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -188,7 +210,8 @@ Resources:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref DeltaResource
       HttpMethod: GET
-      AuthorizationType: NONE
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
         Type: AWS_PROXY
         # INTEGRATION HTTP METHOD MUST BE POST
@@ -231,6 +254,18 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}/*
+    DependsOn:
+      - RestAPIDeployment
+
+  LambdaAlphaAllApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: 
+          Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: 
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}
     DependsOn:
       - RestAPIDeployment
 
