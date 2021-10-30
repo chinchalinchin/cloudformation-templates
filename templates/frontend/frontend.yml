@@ -7,6 +7,10 @@ Parameters:
     Type: String
     Default: CCC-DNSStack-Dev
 
+  userStack:
+    Type: String
+    Default: CCC-UserStack
+
   domain:
     Type: String
     Default: makpar-innovation.com
@@ -14,6 +18,10 @@ Parameters:
   subdomain:
     Type: String
     Default: usaspending
+
+  environmentName:
+    Type: String
+    Default: Dev
 
 Mappings:
   SubEnvDomainMap:
@@ -57,6 +65,9 @@ Resources:
             Action: 's3:GetObject'
             Principal: '*'
             Resource: !Sub '${FrontendDeployBucket.Arn}/*'
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
+
 
   CloudFrontDistribution:
     Type: "AWS::CloudFront::Distribution"
