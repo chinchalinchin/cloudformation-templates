@@ -148,23 +148,27 @@ Resources:
       - RestAPIDomainName
 
 Outputs: 
+  RestAPIDomain:
+    Value: !Ref RestAPIDomainName
+    Export:
+      Name: ${AWS::StackName}-RestAPIDomainName
   CertificateId:
     Value: !Ref Certificate
     Condition: NotDNSExistss
     Export:
-      Name: CCC-CertificateId
+      Name: ${AWS:StackName}-CertificateID
   CertificateId:
     Value: !Ref certificateId
     Condition: DNSExists
     Export:
-      Name: CCC-CertificateId
+      Name: ${AWS::StackName}-CertificateID
   HostedZoneId:
     Value: !Ref HostedZone
     Condition: NotDNSExists
     Export:
-      Name: CCC-HostedZoneId
+      Name: ${AWS::StackName}-HostedZoneID
   HostedZoneId:
     Value: !Ref hostedZoneId
     Condition: DNSExists
     Export:
-      Name: CCC-HostedZoneId
+      Name: ${AWS::StackName}-HostedZoneID

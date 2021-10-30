@@ -65,7 +65,6 @@ Resources:
             Action: 
               - "s3:GetObject"
               - "s3:PutObject"
-              - "s3:GetObject"
               - "s3:DeleteObject"
             Principal: '*'
             Resource: !Sub '${FrontendDeployBucket.Arn}/*'
@@ -151,4 +150,5 @@ Resources:
         AliasTarget:
           DNSName: !GetAtt CloudFrontDistribution.DomainName
           EvaluateTargetHealth: false
-          HostedZoneId: !Ref hostedZoneId
+          HostedZoneId: 
+            Fn::ImportValue: !Sub ${dnsStack}-HostedZoneID

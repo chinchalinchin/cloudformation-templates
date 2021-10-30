@@ -74,7 +74,7 @@ Resources:
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: code-challenge-auth-pool
+      UserPoolName: !Sub ${AWS::StackName}-UserPool
       UsernameConfiguration:
         CaseSensitive: false
       AdminCreateUserConfig:
@@ -86,14 +86,15 @@ Resources:
           RequireSymbols: true
           RequireUppercase: true
           TemporaryPasswordValidityDays: 1
-      UsernameAttributes:
-        - email
-      MfaConfiguration: "OFF"
       Schema:
         - AttributeDataType: String
           DeveloperOnlyAttribute: false
           Mutable: true
           Name: email
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: name
   
   PeterC:
     Type: "AWS::Cognito::UserPoolUser"
@@ -105,6 +106,8 @@ Resources:
           Value: "true"
         - Name: "email"
           Value: "pcofrancesco@makpar.com"
+        - Name: "name"
+          Value: "PeterPeterPumpkinEater"
   
   GrantM:
     Type: "AWS::Cognito::UserPoolUser"
@@ -116,6 +119,8 @@ Resources:
           Value: "true"
         - Name: "email"
           Value: "gmoore@makpar.com"
+        - Name: "name"
+          Value: "MooreForYourMoney"
   
   JustinS:
     Type: "AWS::Cognito::UserPoolUser"
@@ -127,6 +132,8 @@ Resources:
           Value: "true"
         - Name: "email"
           Value: "jstauffer@makpar.com"
+        - Name: "name"
+          Value: "JustinTime"
 
   ThomasK:
     Type: "AWS::Cognito::UserPoolUser"
@@ -138,30 +145,23 @@ Resources:
           Value: "true"
         - Name: "email"
           Value: "tklock@makpar.com"
+        - Name: "name"
+          Value: "KlockedAndLoaded"
   
   MattP:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
-      Username: "pcofrancesco@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "pcofrancesco@makpar.com"
-  
-  MattUserPoolUser:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "mpinardi@makpar.com"
+      Username: "mpinardi@baosystems.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
         - Name: "email_verified"
           Value: "true"
         - Name: "email"
           Value: "mpinardi@baosystems.com"
+        - Name: "name"
+          Value: "MattErsOfOpinion"
   
-  PhungUserPoolUser:
+  PhungN:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "pngo@makpar.com"
@@ -171,6 +171,8 @@ Resources:
           Value: "true"
         - Name: "email"
           Value: "pngo@makpar.com"
+        - Name: "name"
+          Value: "NgoTheDistance"
 
   APIClient:
     Type: AWS::Cognito::UserPoolClient
