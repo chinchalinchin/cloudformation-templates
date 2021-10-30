@@ -58,19 +58,19 @@ then
         --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=certificateArn,ParameterValue=$CERTIFICATE_ARN \
+                     ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                      ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                      ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
                      ParameterKey=userStack,ParameterValue="${USER_STACK}" 
-                     
+
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=certificateArn,ParameterValue=$CERTIFICATE_ARN \
+                     ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                      ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                      ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \

@@ -101,6 +101,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+      Timeout: 90
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaAlpha
@@ -132,6 +133,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+      Timeout: 90
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaBeta
@@ -164,6 +166,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+      Timeout: 90
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaGamma
@@ -195,6 +198,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+      Timeout: 90
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaDelta
@@ -220,6 +224,7 @@ Resources:
             Fn::ImportValue: !Sub ${userStack}-APIClientID
           # POOL_ID: !ref userPoolId
             # Fn::ImportValue: !Sub ${userStack}-UserPoolID
+      Timeout: 180
       Tags:
         - Key: Name 
           Value: !Sub ${AWS::StackName}-LambdaEpsilon

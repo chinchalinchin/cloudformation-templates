@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: "A stack containing the resources to serve associate routes in the AWS DNS record set. This stack should be stood up last, after everything else has been successfully provisioned. The template can conditionally provision the hosted zone and certificate for a domain that has been registered. If template is not told to configure this values, it will need the hosted zone ID and the certificate ID passed in through parameters"
+
+Parameters:
+  DNS:
+    Description: "If DNS has been configured, you do not need this parameter. If you want to set up the DNS configuration for a domain, pass in `true`."
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
+
+  certificateId:
+    Type: String
+    Description: "If the DNS has been configured prior to this template, you must pass in the CertificateId for the associated domain. Otherwise, you do not need this parameter."
+    Default: ${AWS::NoValue}
+
+  hostedZoneId:
+    Type: String
+    Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do nto need this paramter."    
+
+Conditions:
+  DNSExists: !Equals 
+    - !Ref DNS
+    - false
+  
+  NotDNSExists: !Not
+    - Condition: DNSExists
+
+Resources:
+
+  FrontendHostedZone:
+    Condition: NotDNSExists
+    Type: 'AWS::Route53::HostedZone'
+    Properties:
+      Name: "makpar-innovation.com."
+
+  CertificateManagerCertificate:
+    Condition: DomainDoesNotExist
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: !Ref DomainName
+      ValidationMethod: DNS
+
+  RestAPIDomainName:
+    Condition: DomainExists
+    Type: 'AWS::ApiGateway::DomainName'
+    Properties:
+      CertificateArn: !Sub "arn:aws:acm:us-east-1:012296628633:certificate/${certificateId}"
+      DomainName: !Sub 
+        - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+        - subdomainEnv: !FindInMap
+          - SubDomainMap
+          - !Ref environmentName
+          - subdomain
+      EndpointConfiguration:
+        Types:
+          - EDGE
+
+  RestAPIBasePathMapping:
+    Type: 'AWS::ApiGateway::BasePathMapping'
+    Properties:
+      DomainName: !Ref RestAPIDomainName
+      RestApiId: !Ref RestAPI
+      Stage: !Ref environmentName
+    DependsOn:
+      - RestAPI
+      - RestAPIDomainName
+
+  RestAPIRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Sub 
+            - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+            - subdomainEnv: !FindInMap
+              - SubDomainMap
+              - !Ref environmentName
+              - subdomain
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
+    DependsOn:
+      - RestAPIDomainName

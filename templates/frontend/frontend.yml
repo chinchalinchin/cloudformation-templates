@@ -1,12 +1,57 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Metadata:
-  Generator: "former2"
-Description: ""
+
+Description: "A stack containing the resources to serve the CCC-Frontend-${ENV} assets. This stack will provision "
+
+Parameters:
+  domain:
+    Type: String
+    Default: ${AWS::NoValue}
+
+Conditions:
+  NoDomain: !Equals 
+    - !Ref domain
+    - ${AWS::NoValue}
+  
+  Domain: !Not
+    - Condition: NoDomain
+    
 Resources:
-  Route53HostedZone:
+
+  FrontendHostedZone:
     Type: "AWS::Route53::HostedZone"
     Properties:
       Name: "makpar-innovation.com."
+
+  # NOTE: Need this if we have to setup our own domain
+  # CertificateManagerCertificate:
+    # Type: AWS::CertificateManager::Certificate
+    # Properties:
+      # DomainName: !Ref DomainName
+      # ValidationMethod: DNS
+
+  FrontendDeployBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Sub '${AWS::StackName}-deployment'
+      LoggingConfiguration:
+        DestinationBucketName: !Ref S3BucketLogs
+        LogFilePrefix: 'cdn/'
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+
+  DeployBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendDeployBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 's3:GetObject'
+            Principal: '*'
+            Resource: !Sub '${FrontendDeployBucket.Arn}/*'
 
   CloudFrontDistribution:
     Type: "AWS::CloudFront::Distribution"
