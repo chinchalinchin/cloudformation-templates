@@ -61,6 +61,8 @@ fi
 
 cp $PROJECT_DIR/templates/dns/dns.yml ./dns.yml
 
+echo $DNS_EXISTS 
+
 if [ "$ACTION" == "create" ]
 then
     if [ "$DNS_EXISTS" == "true" ]
@@ -68,18 +70,18 @@ then
         aws cloudformation create-stack \
             --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
             --template-body file://dns.yml \
-            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT 
-            --parameters ParameterKey=domain,ParameterValue=$DOMAIN
-            --parameters ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
-            --parameters ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID
-            --parameters ParameterKey=hostedZoneId,ParameterKey=$HOSTED_ZONE_ID
-            --parameters ParameterKey=DNS,ParameterKey=true
+            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+            --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
+            --parameters ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+            --parameters ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
+            --parameters ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
+            --parameters ParameterKey=DNS,ParameterValue=true
     else
         aws cloudformation create-stack \
             --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
             --template-body file://dns.yml \
-            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT 
-            --parameters ParameterKey=domain,ParameterValue=$DOMAIN
+            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+            --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
             --parameters ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
     fi
 

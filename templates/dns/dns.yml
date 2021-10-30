@@ -30,7 +30,8 @@ Parameters:
 
   hostedZoneId:
     Type: String
-    Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do nto need this paramter."    
+    Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do nto need this paramter."
+    Default: ${AWS::NoValue}    
 
   gatewayStack:
     Type: String
@@ -47,13 +48,13 @@ Conditions:
 Mappings:
   SubEnvDomainMap:
     Dev: 
-      subdomain:  "-dev"
+      subdomainEnv:  "-dev"
     Test: 
-      subdomain: "-test"
+      subdomainEnv: "-test"
     Staging: 
-      subdomain: "-staging"
+      subdomainEnv: "-staging"
     Prod: 
-      subdomain: ""
+      subdomainEnv: ""
 
 Resources:
   HostedZone:
@@ -65,13 +66,13 @@ Resources:
 
   Certificate:
     Description: "Certificate that is provisioned if DNS confiuration does not exist."
-    Condition: NotDNSExist
+    Condition: NotDNSExists
     Type: 'AWS::CertificateManager::Certificate'
     Properties:
-      DomainName: !Ref DomainName
+      DomainName: !Sub "${domain}"
       ValidationMethod: DNS
 
-  RestAPIDomainName:
+  DNSRestAPIDomainName:
     # NOTE: Condition & The Certificate ARN
     Condition: DNSExists
     Type: 'AWS::ApiGateway::DomainName'
@@ -79,33 +80,37 @@ Resources:
       CertificateArn: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${certificateId}"
       DomainName: !Sub 
         - "api-${subdomainName}${subdomainEnv}.${domainName}"
-        - subdomainEnv: !FindInMap
-          - SubEnvDomainMap
-          - !Ref environmentName
-        - subdomainName: !Ref subdomain
-        - domainName: !Ref domain
+        - subdomainEnv: 
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
+          subdomainName: !Ref subdomain
+          domainName: !Ref domain
       EndpointConfiguration:
         Types:
           - EDGE
 
-  RestAPIDomainName:
+  NoDNSRestAPIDomainName:
     # NOTE: Condition & The Certificate ARN
     Condition: NotDNSExists
     Type: 'AWS::ApiGateway::DomainName'
     Properties:
-      CertificateArn: !GetAtt Certificate.Arn
+      CertificateArn: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${Certificate}"
       DomainName: !Sub 
         - "api-${subdomainName}${subdomainEnv}.${domainName}"
-        - subdomainEnv: !FindInMap
-          - SubEnvDomainMap
-          - !Ref environmentName
-        - subdomainName: !Ref subdomain
-        - domainName: !Ref domain
+        - subdomainEnv: 
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
+          subdomainName: !Ref subdomain
+          domainName: !Ref domain
       EndpointConfiguration:
         Types:
           - EDGE
 
-  RestAPIRoute53RecordSetGroup:
+  DNSRestAPIRoute53RecordSetGroup:
     # NOTE: Condition & The HostedZoneId
     Condition: DNSExists
     Type: AWS::Route53::RecordSetGroup
@@ -114,19 +119,21 @@ Resources:
       RecordSets:
         - Name: !Sub 
             - "api-${subdomainName}${subdomainEnv}.${domainName}"
-            - subdomainEnv: !FindInMap
-              - SubDomainMap
-              - !Ref environmentName
-            - subdomainName: !Ref subdomain
-            - domainName: !Ref domainName
+            - subdomainEnv: 
+                Fn::FindInMap:
+                  - SubEnvDomainMap
+                  - !Ref environmentName
+                  - subdomainEnv
+              subdomainName: !Ref subdomain
+              domainName: !Ref domain
           Type: A
           AliasTarget:
-            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
-            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
+            HostedZoneId: !GetAtt DNSRestAPIDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt DNSRestAPIDomainName.DistributionDomainName
     DependsOn:
-      - RestAPIDomainName
+      - DNSRestAPIDomainName
       
-  RestAPIRoute53RecordSetGroup:
+  NoDNSRestAPIRoute53RecordSetGroup:
     # NOTE: Condition & the HostedZoneId
     Condition: NotDNSExists
     Type: AWS::Route53::RecordSetGroup
@@ -135,40 +142,48 @@ Resources:
       RecordSets:
         - Name: !Sub 
             - "api-${subdomainName}${subdomainEnv}.${domainName}"
-            - subdomainEnv: !FindInMap
-              - SubDomainMap
-              - !Ref environmentName
-            - subdomainName: !Ref subdomain
-            - domainName: !Ref domainName
+            - subdomainEnv: 
+                Fn::FindInMap:
+                  - SubEnvDomainMap
+                  - !Ref environmentName
+                  - subdomainEnv
+              subdomainName: !Ref subdomain
+              domainName: !Ref domain
           Type: A
           AliasTarget:
-            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
-            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
+            HostedZoneId: !GetAtt NoDNSRestAPIDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt NoDNSRestAPIDomainName.DistributionDomainName
     DependsOn:
-      - RestAPIDomainName
+      - NoDNSRestAPIDomainName
 
 Outputs: 
-  RestAPIDomain:
-    Value: !Ref RestAPIDomainName
-    Export:
-      Name: ${AWS::StackName}-RestAPIDomainName
-  CertificateId:
-    Value: !Ref Certificate
-    Condition: NotDNSExistss
-    Export:
-      Name: ${AWS:StackName}-CertificateID
-  CertificateId:
-    Value: !Ref certificateId
+  DNSRestAPIDomain:
     Condition: DNSExists
+    Value: !Ref DNSRestAPIDomainName
     Export:
-      Name: ${AWS::StackName}-CertificateID
-  HostedZoneId:
-    Value: !Ref HostedZone
+      Name: !Sub ${AWS::StackName}-RestAPIDomainName
+  NoDNSRestAPIDomain:
     Condition: NotDNSExists
+    Value: !Ref NoDNSRestAPIDomainName
     Export:
-      Name: ${AWS::StackName}-HostedZoneID
-  HostedZoneId:
-    Value: !Ref hostedZoneId
+      Name: !Sub ${AWS::StackName}-RestAPIDomainName
+  NoDNSCertificateId:
+    Condition: NotDNSExists
+    Value: !Ref Certificate
+    Export:
+      Name: !Sub ${AWS::StackName}-CertificateID
+  DNSCertificateId:
     Condition: DNSExists
+    Value: !Ref certificateId
     Export:
-      Name: ${AWS::StackName}-HostedZoneID
+      Name: !Sub ${AWS::StackName}-CertificateID
+  NoDNSHostedZoneId:
+    Condition: NotDNSExists
+    Value: !Ref HostedZone
+    Export:
+      Name: !Sub ${AWS::StackName}-HostedZoneID
+  DNSHostedZoneId:
+    Condition: DNSExists
+    Value: !Ref hostedZoneId
+    Export:
+      Name: !Sub ${AWS::StackName}-HostedZoneID

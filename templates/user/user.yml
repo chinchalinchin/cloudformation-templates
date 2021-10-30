@@ -107,7 +107,9 @@ Resources:
         - Name: "email"
           Value: "pcofrancesco@makpar.com"
         - Name: "name"
-          Value: "PeterPeterPumpkinEater"
+          Value: "SaltPeter"
+    DependsOn:
+      - CognitoUserPool
   
   GrantM:
     Type: "AWS::Cognito::UserPoolUser"
@@ -121,6 +123,8 @@ Resources:
           Value: "gmoore@makpar.com"
         - Name: "name"
           Value: "MooreForYourMoney"
+    DependsOn:
+        - CognitoUserPool
   
   JustinS:
     Type: "AWS::Cognito::UserPoolUser"
@@ -134,6 +138,8 @@ Resources:
           Value: "jstauffer@makpar.com"
         - Name: "name"
           Value: "JustinTime"
+    DependsOn:
+      - CognitoUserPool
 
   ThomasK:
     Type: "AWS::Cognito::UserPoolUser"
@@ -147,6 +153,8 @@ Resources:
           Value: "tklock@makpar.com"
         - Name: "name"
           Value: "KlockedAndLoaded"
+    DependsOn:
+      - CognitoUserPool
   
   MattP:
     Type: "AWS::Cognito::UserPoolUser"
@@ -160,6 +168,8 @@ Resources:
           Value: "mpinardi@baosystems.com"
         - Name: "name"
           Value: "MattErsOfOpinion"
+    DependsOn:
+      - CognitoUserPool
   
   PhungN:
     Type: "AWS::Cognito::UserPoolUser"
@@ -173,12 +183,14 @@ Resources:
           Value: "pngo@makpar.com"
         - Name: "name"
           Value: "NgoTheDistance"
+    DependsOn:
+      - CognitoUserPool
 
   APIClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      ClientName: CCCAPICognitoClient
+      ClientName: !Sub ${AWS::StackName}-APICognitoClient
       ExplicitAuthFlows:
         - "ALLOW_CUSTOM_AUTH"
         - "ALLOW_REFRESH_TOKEN_AUTH"
@@ -191,19 +203,23 @@ Resources:
         AccessToken: "minutes"
         IdToken: "minutes"
         RefreshToken: "days"
+    DependsOn:
+      - CognitoUserPool
 
   WebClient: 
-    Type: AWS::Cognito::UserPooLClient
+    Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      ClientNmae: FrontendWebCognitoClient
-    AccessTokenValidity: 60
+      ClientName: !Sub ${AWS::StackName}-WebCognitoClient
+      AccessTokenValidity: 60
       IdTokenValidity: 60
       RefreshTokenValidity: 30
       TokenValidityUnits:
         AccessToken: "minutes"
         IdToken: "minutes"
         RefreshToken: "days"
+    DependsOn:
+      - CognitoUserPool
 
 Outputs:
   PipelineUserArn:
