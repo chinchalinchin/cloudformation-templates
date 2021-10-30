@@ -4,13 +4,17 @@ Description: "A stack containing the resources to serve associate routes in the 
 
 Parameters:
   DNS:
-    Description: "If DNS has been configured, you do not need this parameter. If you want to set up the DNS configuration for a domain, pass in `true`."
     Type: String
+    Description: "If DNS has been configured, you do not need this parameter. If you want to set up the DNS configuration for a domain, pass in `true`."
     AllowedValues:
       - true
       - false
     Default: false
 
+  environmentName:
+    Type: String
+    Default: Dev
+    
   certificateId:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the CertificateId for the associated domain. Otherwise, you do not need this parameter."
@@ -20,6 +24,10 @@ Parameters:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do nto need this paramter."    
 
+  gatewayStack:
+    Type: String
+    Default: CCC-GatewayStack-Dev
+
 Conditions:
   DNSExists: !Equals 
     - !Ref DNS
@@ -28,26 +36,56 @@ Conditions:
   NotDNSExists: !Not
     - Condition: DNSExists
 
+Mappings:
+  SubDomainMap:
+    Dev: 
+      subdomain:  "-dev"
+    Test: 
+      subdomain: "-test"
+    Staging: 
+      subdomain: "-staging"
+    Prod: 
+      subdomain: ""
+
 Resources:
 
-  FrontendHostedZone:
+  HostedZone:
+    Description: "Hosted Zone that is provisioned if DNS configuration does not exist."
     Condition: NotDNSExists
     Type: 'AWS::Route53::HostedZone'
     Properties:
       Name: "makpar-innovation.com."
 
-  CertificateManagerCertificate:
-    Condition: DomainDoesNotExist
+  Certificate:
+    Description: "Certificate that is provisioned if DNS confiuration does not exist."
+    Condition: NotDNSExist
     Type: 'AWS::CertificateManager::Certificate'
     Properties:
       DomainName: !Ref DomainName
       ValidationMethod: DNS
 
   RestAPIDomainName:
-    Condition: DomainExists
+    # NOTE: Condition & The Certificate ARN
+    Condition: DNSExists
     Type: 'AWS::ApiGateway::DomainName'
     Properties:
       CertificateArn: !Sub "arn:aws:acm:us-east-1:012296628633:certificate/${certificateId}"
+      DomainName: !Sub 
+        - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+        - subdomainEnv: !FindInMap
+          - SubDomainMap
+          - !Ref environmentName
+          - subdomain
+      EndpointConfiguration:
+        Types:
+          - EDGE
+
+  RestAPIDomainName:
+    # NOTE: Condition & The Certificate ARN
+    Condition: NotDNSExists
+    Type: 'AWS::ApiGateway::DomainName'
+    Properties:
+      CertificateArn: !GetAtt Certificate.Arn
       DomainName: !Sub 
         - "api-usaspending${subdomainEnv}.makpar-innovation.com"
         - subdomainEnv: !FindInMap
@@ -62,16 +100,38 @@ Resources:
     Type: 'AWS::ApiGateway::BasePathMapping'
     Properties:
       DomainName: !Ref RestAPIDomainName
-      RestApiId: !Ref RestAPI
+      RestApiId: 
+        Fn::ImportValue: !Sub ${gatewayStack}-RestAPIID
       Stage: !Ref environmentName
     DependsOn:
-      - RestAPI
       - RestAPIDomainName
 
   RestAPIRoute53RecordSetGroup:
+    # NOTE: Condition & The HostedZoneId
+    Condition: DNSExists
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Sub 
+            - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+            - subdomainEnv: !FindInMap
+              - SubDomainMap
+              - !Ref environmentName
+              - subdomain
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
+    DependsOn:
+      - 
+      
+  RestAPIRoute53RecordSetGroup:
+    # NOTE: Condition & the HostedZoneId
+    Condition: NotDNSExists
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZone
       RecordSets:
         - Name: !Sub 
             - "api-usaspending${subdomainEnv}.makpar-innovation.com"

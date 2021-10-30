@@ -14,7 +14,7 @@ Parameters:
     Type: String
   lambdaStack:
     Type: String
-    Default: CCC-LambdaStack
+    Default: CCC-LambdaStack-Dev
   userStack:
     Type: String
     Default: CCC-UserStack
@@ -33,17 +33,6 @@ Parameters:
   epsilonEndpoint:
     Type: String
     Default: epsilon
-
-Mappings:
-  SubDomainMap:
-    Dev: 
-      subdomain:  "-dev"
-    Test: 
-      subdomain: "-test"
-    Staging: 
-      subdomain: "-staging"
-    Prod: 
-      subdomain: ""
 
 Resources:
   RestAPI:
@@ -356,5 +345,7 @@ Resources:
 Outputs:
   GatewayEndpoint:
     Value: !Sub https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/${environmentName}
-
-          
+  RestAPIID: 
+    Value: !Ref RestAPI
+    Export:
+      Name: ${AWS::StackName}-RestAPIID
