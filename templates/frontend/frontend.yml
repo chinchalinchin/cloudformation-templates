@@ -62,12 +62,15 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: 'Allow'
-            Action: 's3:GetObject'
+            Action: 
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
             Principal: '*'
             Resource: !Sub '${FrontendDeployBucket.Arn}/*'
       Users: 
         - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
-
 
   CloudFrontDistribution:
     Type: "AWS::CloudFront::Distribution"
@@ -128,7 +131,7 @@ Resources:
         DefaultRootObject: 'index.html'
         IPV6Enabled: true
         Logging:
-          Bucket: !GetAtt S3BucketLogs.DomainName
+          Bucket: !GetAtt FrontendBucketLogs.DomainName
           IncludeCookies: false
           Prefix: 'cdn/'
 
