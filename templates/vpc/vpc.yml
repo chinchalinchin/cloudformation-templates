@@ -7,6 +7,10 @@ Parameters:
     Description: An environment name that is prefixed to resource names
     Type: String
     Default: Dev
+  
+  dbKeyName:
+    Type: String
+    Default: ccc_db_key_Dev
 
 Mappings:
   SubnetConfig:
@@ -240,6 +244,7 @@ Resources:
         AssociatePublicIpAddress: true                                # We will definitely need a public IP address
         GroupSet: [!Ref NATSecurityGroup, !Ref DatabaseSecurityGroup]                             # Plug in the security group
       SourceDestCheck: false                                          # NATs don't work if EC2 tries the match source addresses with destinations.
+      KeyName: !Ref dbKeyName
       Tags:
       - Key: Name
         Value: !Sub NAT-${AWS::StackName}

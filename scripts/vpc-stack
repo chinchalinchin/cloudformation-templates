@@ -54,20 +54,34 @@ cp $PROJECT_DIR/templates/vpc/vpc.yml ./vpc.yml
 
 if [ "$ACTION" == "create" ]
 then
+    ssh-keygen -t rsa -C "${SSH_KEY_NAME}_${ENVIRONMENT}" -f ~/.ssh/"${SSH_KEY_NAME}_${ENVIRONMENT}"
+
+    aws ec2 import-key-pair \
+        --key-name "${SSH_KEY_NAME}_${ENVIRONMENT}"  \
+        --public-key-material fileb://~/.ssh/"${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
+
     aws cloudformation create-stack \
         --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
-        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+        --parameters ParameterKey=dbKeyName,ParameterValue="${SSH_KEY_NAME}_${ENVIRONMENT}"
+
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
-        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+        --parameters ParameterKey=dbKeyName,ParameterValue="${SSH_KEY_NAME}_${ENVIRONMENT}"
+
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
         --stack-name "${VPC_STACK}-${ENVIRONMENT}"
+    
+    aws ec2 delete-key-pair \
+        --key-name "${SSH_KEY_NAME}_${ENVIRONMENT}"
+
 else
     log "Action not understood"
 fi

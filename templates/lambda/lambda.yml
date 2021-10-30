@@ -19,6 +19,8 @@ Parameters:
   dbName:
     Type: String
     Default: usaspending
+  userPoolId:
+    Type: String
   # Stack Dependencies
   userStack:
     Type: String
@@ -216,8 +218,8 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${userStack}-APIClientID
-          POOL_ID: 
-            Fn::ImportValue: !Sub ${userStack}-UserPoolID
+          # POOL_ID: !ref userPoolId
+            # Fn::ImportValue: !Sub ${userStack}-UserPoolID
       Tags:
         - Key: Name 
           Value: !Sub ${AWS::StackName}-LambdaEpsilon
