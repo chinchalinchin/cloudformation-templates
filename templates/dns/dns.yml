@@ -13,7 +13,7 @@ Parameters:
 
   domain:
     Type: String
-    Default: makpar-innovation
+    Default: makpar-innovation.com
 
   subdomain:
     Type: String
@@ -61,7 +61,7 @@ Resources:
     Condition: NotDNSExists
     Type: 'AWS::Route53::HostedZone'
     Properties:
-      Name: !Sub "${domain}.com."
+      Name: !Sub "${domain}"
 
   Certificate:
     Description: "Certificate that is provisioned if DNS confiuration does not exist."
@@ -78,7 +78,7 @@ Resources:
     Properties:
       CertificateArn: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${certificateId}"
       DomainName: !Sub 
-        - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
+        - "api-${subdomainName}${subdomainEnv}.${domainName}"
         - subdomainEnv: !FindInMap
           - SubEnvDomainMap
           - !Ref environmentName
@@ -95,7 +95,7 @@ Resources:
     Properties:
       CertificateArn: !GetAtt Certificate.Arn
       DomainName: !Sub 
-        - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
+        - "api-${subdomainName}${subdomainEnv}.${domainName}"
         - subdomainEnv: !FindInMap
           - SubEnvDomainMap
           - !Ref environmentName
@@ -113,7 +113,7 @@ Resources:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
         - Name: !Sub 
-            - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
+            - "api-${subdomainName}${subdomainEnv}.${domainName}"
             - subdomainEnv: !FindInMap
               - SubDomainMap
               - !Ref environmentName
@@ -134,7 +134,7 @@ Resources:
       HostedZoneId: !Ref HostedZone
       RecordSets:
         - Name: !Sub 
-            - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
+            - "api-${subdomainName}${subdomainEnv}.${domainName}"
             - subdomainEnv: !FindInMap
               - SubDomainMap
               - !Ref environmentName

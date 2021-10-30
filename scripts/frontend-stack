@@ -1,14 +1,14 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="vpc-stack"
+SCRIPT_NAME="frontend-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     vpc-stack --environment <Dev | Prod | Test> \
-#                   --action <create | update | delete>
+# >$     frontend-stack --environment <Dev | Prod | Test | Staging> \
+#                       --action <create | update | delete>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
 
@@ -50,40 +50,28 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/vpc/vpc.yml ./vpc.yml
+cp $PROJECT_DIR/templates/frontend/frontend.yml ./frontend.yml
 
 if [ "$ACTION" == "create" ]
 then
-    ssh-keygen -t rsa -C "${SSH_KEY_NAME}_${ENVIRONMENT}" -f ~/.ssh/"${SSH_KEY_NAME}_${ENVIRONMENT}"
-
-    aws ec2 import-key-pair \
-        --key-name "${SSH_KEY_NAME}_${ENVIRONMENT}"  \
-        --public-key-material fileb://~/.ssh/"${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
-
     aws cloudformation create-stack \
         --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
-        --template-body file://vpc.yml \
+        --template-body file://frontend.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-        --parameters ParameterKey=dbKeyName,ParameterValue="${SSH_KEY_NAME}_${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
-        --template-body file://vpc.yml \
+        --stack-name "${FRONTEND_STACK}-${ENVIRONMENT}" \
+        --template-body file://frontend.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-        --parameters ParameterKey=dbKeyName,ParameterValue="${SSH_KEY_NAME}_${ENVIRONMENT}"
 
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${VPC_STACK}-${ENVIRONMENT}"
-    
-    aws ec2 delete-key-pair \
-        --key-name "${SSH_KEY_NAME}_${ENVIRONMENT}"
-
+        --stack-name "${FRONTEND_STACK}-${ENVIRONMENT}"
 else
     log "Action not understood"
 fi
 
-rm ./vpc.yml
+rm ./frontend.yml

@@ -7,9 +7,24 @@ Parameters:
     Type: String
     Default: CCC-DNSStack-Dev
 
+  domain:
+    Type: String
+    Default: makpar-innovation.com
+    
   subdomain:
     Type: String
     Default: usaspending
+
+Mappings:
+  SubEnvDomainMap:
+    Dev: 
+      subdomain:  "-dev"
+    Test: 
+      subdomain: "-test"
+    Staging: 
+      subdomain: "-staging"
+    Prod: 
+      subdomain: ""
 
 Resources:
   FrontendBucketLogs:
@@ -47,8 +62,13 @@ Resources:
     Type: "AWS::CloudFront::Distribution"
     Properties:
       DistributionConfig: 
-        Aliases: 
-        - "usaspending.makpar-innovation.com"
+        Aliases: !Sub
+          - "${subdomainName}${subdomainEnv}.${domainName}"
+          - subdomainName: !Ref subdomain
+          - domainName: !Ref domain
+          - subdomainEnv: !FindInMap:
+            - SubEnvDomainMap
+            - !Ref environmentName
         Origins: 
         - ConnectionAttempts: 3
           ConnectionTimeout: 10
@@ -84,16 +104,37 @@ Resources:
           SmoothStreaming: false
           TargetOriginId: !Ref FrontendDeployBucket
           ViewerProtocolPolicy: "redirect-to-https"
-        Comment: ""
         PriceClass: "PriceClass_All"
         Enabled: true
         ViewerCertificate: 
-          AcmCertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/fb77f968-40f2-43ee-8261-1b22006b4bcd"
+          AcmCertificateArn: !Sub 
+            - "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/{certificateId}"
+            - certificateId: 
+              Fn::ImportValue: !Sub ${dnsStack}-CertificateId
           MinimumProtocolVersion: "TLSv1.2_2019"
           SslSupportMethod: "sni-only"
-        Restrictions: 
-          GeoRestriction: 
-            RestrictionType: "none"
         HttpVersion: "http2"
-        DefaultRootObject: ""
+        DefaultRootObject: 'index.html'
         IPV6Enabled: true
+        Logging:
+          Bucket: !GetAtt S3BucketLogs.DomainName
+          IncludeCookies: false
+          Prefix: 'cdn/'
+
+  Route53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Ref domain
+      RecordSets:
+      - Name: !Sub
+          - "${subdomainName}${subdomainEnv}.${domainName}"
+          - subdomainName: !Ref subdomain
+          - domainName: !Ref domain
+          - subdomainEnv: !FindInMap:
+            - SubEnvDomainMap
+            - !Ref environmentName
+        Type: A
+        AliasTarget:
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+          EvaluateTargetHealth: false
+          HostedZoneId: !Ref hostedZoneId

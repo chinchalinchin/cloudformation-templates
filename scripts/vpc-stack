@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     vpc-stack --environment <Dev | Prod | Test> \
+# >$     vpc-stack --environment <Dev | Prod | Test | Staging> \
 #                   --action <create | update | delete>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
