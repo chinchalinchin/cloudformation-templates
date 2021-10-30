@@ -3,21 +3,27 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the CCC-LambdaStack-${env} into endpoints. In addition, it attaches a Lambda authorizer and ."
 
 Parameters:
-  environmentName:
-    Type: String
-    Default: Dev
-  certificateId:
-    Type: String
-  hostedZoneId:
-    Type: String
+  # REQUIRED
   userPoolId:
     Type: String
-  lambdaStack:
+  # OPTIONAL, DEFAULTS TO DEV ENVIRONMENT
+  environmentName:
     Type: String
-    Default: CCC-LambdaStack-Dev
+    Description: "Defaults to Dev"
+    Default: Dev
   userStack:
     Type: String
+    Description: "Defaults to CCC-UserStack"
     Default: CCC-UserStack
+  dnsStack:
+    Type: String
+    Description: "Defaults to CCC-DNSStack-Dev"
+    Default: CCC-DNSStack-Dev
+  lambdaStack:
+    Type: String
+    Description: "Defaults to CCC-LambdaStack-Dev"
+    Default: CCC-LambdaStack-Dev
+  # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
     Default: alpha
@@ -76,45 +82,13 @@ Resources:
       - DeltaResourceMethod
       - EpsilonResourceMethod
 
-  RestAPIDomainName:
-    Type: 'AWS::ApiGateway::DomainName'
-    Properties:
-      CertificateArn: !Sub "arn:aws:acm:us-east-1:012296628633:certificate/${certificateId}"
-      DomainName: !Sub 
-        - "api-usaspending${subdomainEnv}.makpar-innovation.com"
-        - subdomainEnv: !FindInMap
-          - SubDomainMap
-          - !Ref environmentName
-          - subdomain
-      EndpointConfiguration:
-        Types:
-          - EDGE
-
   RestAPIBasePathMapping:
     Type: 'AWS::ApiGateway::BasePathMapping'
     Properties:
-      DomainName: !Ref RestAPIDomainName
+      DomainName: 
+        Fn::ImportValue: !Sub ${dnsStack}-RestAPIDomainName
       RestApiId: !Ref RestAPI
       Stage: !Ref environmentName
-    DependsOn:
-      - RestAPI
-      - RestAPIDomainName
-
-  RestAPIRoute53RecordSetGroup:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !Ref hostedZoneId
-      RecordSets:
-        - Name: !Sub 
-            - "api-usaspending${subdomainEnv}.makpar-innovation.com"
-            - subdomainEnv: !FindInMap
-              - SubDomainMap
-              - !Ref environmentName
-              - subdomain
-          Type: A
-          AliasTarget:
-            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
-            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
     DependsOn:
       - RestAPIDomainName
 

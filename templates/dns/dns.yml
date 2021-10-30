@@ -11,6 +11,14 @@ Parameters:
       - false
     Default: false
 
+  domain:
+    Type: String
+    Default: makpar-innovation
+
+  subdomain:
+    Type: String
+    Default: usaspending
+
   environmentName:
     Type: String
     Default: Dev
@@ -37,7 +45,7 @@ Conditions:
     - Condition: DNSExists
 
 Mappings:
-  SubDomainMap:
+  SubEnvDomainMap:
     Dev: 
       subdomain:  "-dev"
     Test: 
@@ -48,13 +56,12 @@ Mappings:
       subdomain: ""
 
 Resources:
-
   HostedZone:
     Description: "Hosted Zone that is provisioned if DNS configuration does not exist."
     Condition: NotDNSExists
     Type: 'AWS::Route53::HostedZone'
     Properties:
-      Name: "makpar-innovation.com."
+      Name: !Sub "${domain}.com."
 
   Certificate:
     Description: "Certificate that is provisioned if DNS confiuration does not exist."
@@ -69,13 +76,14 @@ Resources:
     Condition: DNSExists
     Type: 'AWS::ApiGateway::DomainName'
     Properties:
-      CertificateArn: !Sub "arn:aws:acm:us-east-1:012296628633:certificate/${certificateId}"
+      CertificateArn: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${certificateId}"
       DomainName: !Sub 
-        - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+        - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
         - subdomainEnv: !FindInMap
-          - SubDomainMap
+          - SubEnvDomainMap
           - !Ref environmentName
-          - subdomain
+        - subdomainName: !Ref subdomain
+        - domainName: !Ref domain
       EndpointConfiguration:
         Types:
           - EDGE
@@ -87,24 +95,15 @@ Resources:
     Properties:
       CertificateArn: !GetAtt Certificate.Arn
       DomainName: !Sub 
-        - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+        - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
         - subdomainEnv: !FindInMap
-          - SubDomainMap
+          - SubEnvDomainMap
           - !Ref environmentName
-          - subdomain
+        - subdomainName: !Ref subdomain
+        - domainName: !Ref domain
       EndpointConfiguration:
         Types:
           - EDGE
-
-  RestAPIBasePathMapping:
-    Type: 'AWS::ApiGateway::BasePathMapping'
-    Properties:
-      DomainName: !Ref RestAPIDomainName
-      RestApiId: 
-        Fn::ImportValue: !Sub ${gatewayStack}-RestAPIID
-      Stage: !Ref environmentName
-    DependsOn:
-      - RestAPIDomainName
 
   RestAPIRoute53RecordSetGroup:
     # NOTE: Condition & The HostedZoneId
@@ -114,17 +113,18 @@ Resources:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
         - Name: !Sub 
-            - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+            - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
             - subdomainEnv: !FindInMap
               - SubDomainMap
               - !Ref environmentName
-              - subdomain
+            - subdomainName: !Ref subdomain
+            - domainName: !Ref domainName
           Type: A
           AliasTarget:
             HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
             DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
     DependsOn:
-      - 
+      - RestAPIDomainName
       
   RestAPIRoute53RecordSetGroup:
     # NOTE: Condition & the HostedZoneId
@@ -134,14 +134,37 @@ Resources:
       HostedZoneId: !Ref HostedZone
       RecordSets:
         - Name: !Sub 
-            - "api-usaspending${subdomainEnv}.makpar-innovation.com"
+            - "api-${subdomainName}${subdomainEnv}.${domainName}.com"
             - subdomainEnv: !FindInMap
               - SubDomainMap
               - !Ref environmentName
-              - subdomain
+            - subdomainName: !Ref subdomain
+            - domainName: !Ref domainName
           Type: A
           AliasTarget:
             HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
             DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
     DependsOn:
       - RestAPIDomainName
+
+Outputs: 
+  CertificateId:
+    Value: !Ref Certificate
+    Condition: NotDNSExistss
+    Export:
+      Name: CCC-CertificateId
+  CertificateId:
+    Value: !Ref certificateId
+    Condition: DNSExists
+    Export:
+      Name: CCC-CertificateId
+  HostedZoneId:
+    Value: !Ref HostedZone
+    Condition: NotDNSExists
+    Export:
+      Name: CCC-HostedZoneId
+  HostedZoneId:
+    Value: !Ref hostedZoneId
+    Condition: DNSExists
+    Export:
+      Name: CCC-HostedZoneId

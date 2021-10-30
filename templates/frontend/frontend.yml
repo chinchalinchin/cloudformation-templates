@@ -3,31 +3,21 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "A stack containing the resources to serve the CCC-Frontend-${ENV} assets. This stack will provision "
 
 Parameters:
-  domain:
+  dnsStack: 
     Type: String
-    Default: ${AWS::NoValue}
+    Default: CCC-DNSStack-Dev
 
-Conditions:
-  NoDomain: !Equals 
-    - !Ref domain
-    - ${AWS::NoValue}
-  
-  Domain: !Not
-    - Condition: NoDomain
-    
+  subdomain:
+    Type: String
+    Default: usaspending
+
 Resources:
-
-  FrontendHostedZone:
-    Type: "AWS::Route53::HostedZone"
+  FrontendBucketLogs:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
     Properties:
-      Name: "makpar-innovation.com."
-
-  # NOTE: Need this if we have to setup our own domain
-  # CertificateManagerCertificate:
-    # Type: AWS::CertificateManager::Certificate
-    # Properties:
-      # DomainName: !Ref DomainName
-      # ValidationMethod: DNS
+      AccessControl: LogDeliveryWrite
+      BucketName: !Sub '${AWS::StackName}-logs'
 
   FrontendDeployBucket:
     Type: AWS::S3::Bucket
@@ -36,7 +26,7 @@ Resources:
       AccessControl: PublicRead
       BucketName: !Sub '${AWS::StackName}-deployment'
       LoggingConfiguration:
-        DestinationBucketName: !Ref S3BucketLogs
+        DestinationBucketName: !Ref FrontendBucketLogs
         LogFilePrefix: 'cdn/'
       WebsiteConfiguration:
         IndexDocument: 'index.html'
@@ -58,18 +48,22 @@ Resources:
     Properties:
       DistributionConfig: 
         Aliases: 
-        - "sad-dev.makpar-innovation.com"
+        - "usaspending.makpar-innovation.com"
         Origins: 
-        - 
-          ConnectionAttempts: 3
+        - ConnectionAttempts: 3
           ConnectionTimeout: 10
-          DomainName: "mil-sec-analytics.s3.amazonaws.com"
-          Id: "S3-mil-sec-analytics"
-          OriginPath: ""
-          S3OriginConfig: 
-            OriginAccessIdentity: "origin-access-identity/cloudfront/E2J2G6UQUY8017"
-        OriginGroups: 
-          Quantity: 0
+          DomainName: !GetAtt FrontendDeployBucket.DomainName
+          Id: !Ref FrontendDeployBucket
+          CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginKeepaliveTimeout: 5
+              OriginProtocolPolicy: 'https-only'
+              OriginReadTimeout: 30
+              OriginSSLProtocols:
+                - TLSv1
+                - TLSv1.1
+                - TLSv1.2
         DefaultCacheBehavior: 
           AllowedMethods: 
           - "HEAD"
@@ -82,10 +76,13 @@ Resources:
           CachedMethods: 
           - "HEAD"
           - "GET"
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: true
           Compress: false
-          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6"
           SmoothStreaming: false
-          TargetOriginId: "S3-mil-sec-analytics"
+          TargetOriginId: !Ref FrontendDeployBucket
           ViewerProtocolPolicy: "redirect-to-https"
         Comment: ""
         PriceClass: "PriceClass_All"

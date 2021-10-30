@@ -1,15 +1,16 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="users-stack"
+SCRIPT_NAME="dns-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     user-stack --action <create | update | delete>
-#
-#   NOTE: ``--action`` defaults to `create` if not supplied.
+# >$     dns-stack --environment <Dev | Prod | Test> \
+#                   --action <create | update | delete>
+
+#   NOTE: ``--action`` defaults to `create` if not supplied
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -23,52 +24,55 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-            --action)
+                --action)
                     ACTION="$2"
                     shift
                     shift 
                     ;;
-            --help)
+                --help)
                     help
                     exit 0
                     ;;
-            *)
+                --environment)
+                    ENVIRONMENT="$2"
+                    shift
+                    shift
+                    ;;
+                *)
                     log "Input not understood. See \e[3m--help\e[0m for information on using this command."
                     exit 1
                     ;;
        esac
 done
 
-if [ -z "$ACTION" ]
+if [ -z "$ACTION"]
 then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/user/user.yml ./user.yml
+cp $PROJECT_DIR/templates/dns/dns.yml ./dns.yml
 
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "$USER_STACK" \
-        --template-body file://user.yml \
-        --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID
+        --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
+        --template-body file://dns.yml \
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT 
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "$USER_STACK" \
-        --template-body file://user.yml \
-        --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID
-        
+        --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
+        --template-body file://dns.yml \
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT 
+
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "$USER_STACK"
+        --stack-name "${DNS_STACK}-${ENVIRONMENT}"
+
 else
-    log "Action not understood."
-    exit 1
+    log "Action not understood"
 fi
-    
-rm ./user.yml
+
+rm ./dns.yml

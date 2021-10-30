@@ -43,8 +43,9 @@ Resources:
                 Action:
                   - "cognito-idp:AdminInitiateAuth"
                 Resource: 
-                  - !Sub "arn:aws:cognito-idp:us-east-1:${AWS::AccountId}:userpool/${userPoolId}"
-                  # - !GetAtt CognitoUserPool.Arn
+                  - !GetAtt CognitoUserPool.Arn
+    DependsOn:
+      - CognitoUserPool
 
   APILogger:
     Type: AWS::IAM::Role
@@ -65,38 +66,127 @@ Resources:
   AuthDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      UserPoolId: !Ref userPoolId
+      UserPoolId: !Ref CognitoUserPool
       Domain: "makpar-innovation"
+    DependsOn:
+      - CognitoUserPool
 
-  # CognitoUserPool:
-    # Type: AWS::Cognito::UserPool
-    # Properties:
-      # UserPoolName: code-challenge-auth-pool
-      # UsernameConfiguration:
-        # CaseSensitive: false
-      # AdminCreateUserConfig:
-        # AllowAdminCreateUserOnly: true
-      # Policies:
-        # PasswordPolicy:
-          # MinimumLength: 8
-          # RequireLowercase: true
-          # RequireSymbols: true
-          # RequireUppercase: true
-          # TemporaryPasswordValidityDays: 1
-      # UsernameAttributes:
-        # - email
-      # MfaConfiguration: "OFF"
-      # Schema:
-        # - AttributeDataType: String
-          # DeveloperOnlyAttribute: false
-          # Mutable: true
-          # Name: email
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: code-challenge-auth-pool
+      UsernameConfiguration:
+        CaseSensitive: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 1
+      UsernameAttributes:
+        - email
+      MfaConfiguration: "OFF"
+      Schema:
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: email
+  
+  PeterUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "pcofrancesco@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "pcofrancesco@makpar.com"
+  
+  GrantUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "gmoore@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "gmoore@makpar.com"
+  
+  PeterUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "pcofrancesco@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "pcofrancesco@makpar.com"
+  
+  JustinUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "jstauffer@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "jstauffer@makpar.com"
+
+  ThomasUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "tklock@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "tklock@makpar.com"
+  
+  PeterUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "pcofrancesco@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "pcofrancesco@makpar.com"
+  
+  MattUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "mpinardi@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "mpinardi@baosystems.com"
+  
+  PhungUserPoolUser:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "pngo@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "pngo@makpar.com"
 
   APIClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      UserPoolId: !Ref userPoolId
-      ## !Ref CognitoUserPool
+      UserPoolId: !Ref CognitoUserPool
       ClientName: CCCAPICognitoClient
       ExplicitAuthFlows:
         - "ALLOW_CUSTOM_AUTH"
@@ -132,16 +222,16 @@ Outputs:
     Description: ARN for API Logger Role
     Export:
       Name: !Sub ${AWS::StackName}-LoggerArn
-  # CognitoUserPoolArn:
-    # Value: !GetAtt CognitoUserPool.Arn
-    # Description: User Pool ARN for Cognito
-    # Export:
-      # Name: !Sub ${AWS::StackName}-UserPoolArn
-  # CognitoUserPoolID:
-    # Value: !Ref CognitoUserPool
-    # Description: User Pool ID for Cognito
-    # Export:
-      # Name: !Sub ${AWS::StackName}-UserPoolID
+  CognitoUserPoolArn:
+    Value: !GetAtt CognitoUserPool.Arn
+    Description: User Pool ARN for Cognito
+    Export:
+      Name: !Sub ${AWS::StackName}-UserPoolArn
+  CognitoUserPoolID:
+    Value: !Ref CognitoUserPool
+    Description: User Pool ID for Cognito
+    Export:
+      Name: !Sub ${AWS::StackName}-UserPoolID
   CognitoClientID:
     Value: !Ref APIClient
     Description: Client ID for API Client
