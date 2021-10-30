@@ -192,6 +192,19 @@ Resources:
         IdToken: "minutes"
         RefreshToken: "days"
 
+  WebClient: 
+    Type: AWS::Cognito::UserPooLClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientNmae: FrontendWebCognitoClient
+    AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: "minutes"
+        IdToken: "minutes"
+        RefreshToken: "days"
+
 Outputs:
   PipelineUserArn:
     Value: !GetAtt PipelineUser.Arn
