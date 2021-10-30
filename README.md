@@ -13,12 +13,14 @@ aws cloudformation create-stack
 
 | Stack  |  Dependency |
 | ------ | ----------- |
-| UsersStack | None |
+| UserStack | None |
+| ECRStack | UserStack | 
 | VPCStack-$ENV | None | 
-| ECRStack | UsersStack | 
+| DNSStack-$ENV | None |
+| FrontendStack-$ENV | DNSStack-$ENV, UserStack |
 | RDSStack-$ENV | VPCStack-$ENV | 
-| LambdaStack-$ENV | VPCStack-$ENV, ECRStack, UsersStack |
-| GatewayStack-$ENV | UsersStack, LambdaStack-$ENV |
+| LambdaStack-$ENV | VPCStack-$ENV, ECRStack, UserStack |
+| GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
 
 # Steps
 
@@ -28,14 +30,16 @@ cp .sample.env .env
 # configure stack names and RDS credentials in .env file 
 source .env
 ./scripts/users-stack
-./scripts/vpc-stack --environment <Dev | Prod | Test>
-./scripts/rds-stack --environment <Dev | Prod | Test>
+./scripts/dns-stack [--dns-exists]
+./scripts/frontend-stack --environment <Dev | Prod | Test | Staging>
+./scripts/vpc-stack --environment <Dev | Prod | Test | Staging>
+./scripts/rds-stack --environment <Dev | Prod | Test | Staging>
 # Pass RDS Host Url to SecretManager
-./scrips/rds-host-secret --environment <Dev | Prod | Test>
-./scripts/ecr-stack --components <one | two | three | four >
+./scrips/rds-host-secret --environment <Dev | Prod | Test | Staging>
+./scripts/ecr-stack --components <one | two | three | four | five>
 # Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
-./scripts/lambda-stack --components <one | two | three | four> --environment <Dev | Prod | Test>
-./scripts/gateway-stack --environment <Dev | Prod | Test>
+./scripts/lambda-stack --components <one | two | three | four | five> --environment <Dev | Prod | Test | Staging>
+./scripts/gateway-stack --environment <Dev | Prod | Test | Staging>
 ```
 
 NOTE: all scripts have an optional argument ``--action`` with allowable values of `create` or `update`. If `update` is passed through the ``--action`` flag, the script will update the current stack instead of creating a new one.

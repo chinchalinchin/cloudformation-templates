@@ -58,9 +58,10 @@ then
         --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://frontend.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-        --parameters ParameteKey=domain,ParameterValue=$DOMAIN \
-        --parameters ParameteKey=subdomain,ParameterValue=$SUBDOMAIN \
-        --parameters ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT"
+        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
+        --parameters ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+        --parameters ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT" \
+        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
 
 elif [ "$ACTION" == "update" ]
 then
@@ -68,9 +69,10 @@ then
         --stack-name "${FRONTEND_STACK}-${ENVIRONMENT}" \
         --template-body file://frontend.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-        --parameters ParameteKey=domain,ParameterValue=$DOMAIN \
-        --parameters ParameteKey=subdomain,ParameterValue=$SUBDOMAIN \
-        --parameters ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT"
+        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
+        --parameters ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+        --parameters ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT" \
+        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
 
 elif [ "$ACTION" == "delete" ]
 then
