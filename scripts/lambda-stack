@@ -21,7 +21,6 @@ function help(){
     echo -e "\n\e[4m$SCRIPT_NAME\e[0m\n\n\t$SCRIPT_DES" 
 }
 
-POSITIONAL=()
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in

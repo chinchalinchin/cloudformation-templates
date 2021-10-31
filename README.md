@@ -23,6 +23,7 @@ aws cloudformation create-stack
 
 # Steps
 
+A more detailed version of what follows can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/356483073/AWS+Resource+and+CI+CD+Setup+Walk-Thru)
 
 ```
 cp .sample.env .env
