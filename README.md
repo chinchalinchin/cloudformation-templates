@@ -9,7 +9,6 @@ aws cloudformation create-stack
 
 # Dependencies
 
-#
 
 | Stack  |  Dependency |
 | ------ | ----------- |

@@ -55,24 +55,26 @@ cp $PROJECT_DIR/templates/frontend/frontend.yml ./frontend.yml
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${VPC_STACK}-${ENVIRONMENT}" \
+        --stack-name "${FRONTEND_STACK}-${ENVIRONMENT}" \
         --template-body file://frontend.yml \
+        --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-        --parameters ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-        --parameters ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT" \
-        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
+                     ParameterKey=domain,ParameterValue=$DOMAIN \
+                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                     ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT" \
+                     ParameterKey=userStack,ParameterValue=$USER_STACK
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${FRONTEND_STACK}-${ENVIRONMENT}" \
         --template-body file://frontend.yml \
+        --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-        --parameters ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-        --parameters ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT" \
-        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
+                     ParameterKey=domain,ParameterValue=$DOMAIN \
+                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                     ParameterKey=dnsStack,ParameterValue="$DNS_STACK-$ENVIRONMENT" \
+                     ParameterKey=userStack,ParameterValue=$USER_STACK
 
 elif [ "$ACTION" == "delete" ]
 then

@@ -10,29 +10,23 @@ Parameters:
       - true
       - false
     Default: false
-
   domain:
     Type: String
     Default: makpar-innovation.com
-
   subdomain:
     Type: String
     Default: usaspending
-
   environmentName:
     Type: String
     Default: Dev
-    
   certificateId:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the CertificateId for the associated domain. Otherwise, you do not need this parameter."
     Default: ${AWS::NoValue}
-
   hostedZoneId:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do nto need this paramter."
     Default: ${AWS::NoValue}    
-
   gatewayStack:
     Type: String
     Default: CCC-GatewayStack-Dev
@@ -40,7 +34,7 @@ Parameters:
 Conditions:
   DNSExists: !Equals 
     - !Ref DNS
-    - false
+    - true
   
   NotDNSExists: !Not
     - Condition: DNSExists
@@ -69,7 +63,7 @@ Resources:
     Condition: NotDNSExists
     Type: 'AWS::CertificateManager::Certificate'
     Properties:
-      DomainName: !Sub "${domain}"
+      DomainName: !Sub "*.${domain}"
       ValidationMethod: DNS
 
   DNSRestAPIDomainName:
@@ -80,6 +74,7 @@ Resources:
       CertificateArn: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${certificateId}"
       DomainName: !Sub 
         - "api-${subdomainName}${subdomainEnv}.${domainName}"
+        # api-usaspending-dev.makpar-innovation.com
         - subdomainEnv: 
             Fn::FindInMap:
               - SubEnvDomainMap

@@ -176,7 +176,7 @@ Resources:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to push and pull from ECR
     Properties:
-      PolicyName: !Sub pipeline-ecr-policy
+      PolicyName: pipeline-ecr-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:

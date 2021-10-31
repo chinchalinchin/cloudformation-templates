@@ -6,19 +6,15 @@ Parameters:
   dnsStack: 
     Type: String
     Default: CCC-DNSStack-Dev
-
   userStack:
     Type: String
     Default: CCC-UserStack
-
   domain:
     Type: String
     Default: makpar-innovation.com
-    
   subdomain:
     Type: String
     Default: usaspending
-
   environmentName:
     Type: String
     Default: Dev
@@ -26,13 +22,13 @@ Parameters:
 Mappings:
   SubEnvDomainMap:
     Dev: 
-      subdomain:  "-dev"
+      subdomainEnv:  "-dev"
     Test: 
-      subdomain: "-test"
+      subdomainEnv: "-test"
     Staging: 
-      subdomain: "-staging"
+      subdomainEnv: "-staging"
     Prod: 
-      subdomain: ""
+      subdomainEnv: ""
 
 Resources:
   FrontendBucketLogs:
@@ -40,14 +36,26 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       AccessControl: LogDeliveryWrite
-      BucketName: !Sub '${AWS::StackName}-logs'
+      BucketName: !Sub 
+        - "ccc-frontend${environment}-logs"
+        - environment: 
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
 
   FrontendDeployBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       AccessControl: PublicRead
-      BucketName: !Sub '${AWS::StackName}-deployment'
+      BucketName: !Sub 
+        - "ccc-frontend${environment}-deployment"
+        - environment:
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
       LoggingConfiguration:
         DestinationBucketName: !Ref FrontendBucketLogs
         LogFilePrefix: 'cdn/'
@@ -68,6 +76,31 @@ Resources:
               - "s3:DeleteObject"
             Principal: '*'
             Resource: !Sub '${FrontendDeployBucket.Arn}/*'
+    DependsOn:
+      - FrontendDeployBucket
+
+  PipelineBucketPolicy:
+    Type: AWS::IAM::Policy
+    Description: Policy to allow pipeline to push and pull from ECR
+    Properties:
+      PolicyName: !Sub pipeline-${environmentName}-bucket-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: piplineCrudOps
+            Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+            Resource: 
+              - !Sub '${FrontendDeployBucket.Arn}/*'
+          - Sid: pipelineReadOp
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+            Resource: 
+              - !Sub '${FrontendDeployBucket.Arn}'
       Users: 
         - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
 
@@ -75,13 +108,16 @@ Resources:
     Type: "AWS::CloudFront::Distribution"
     Properties:
       DistributionConfig: 
-        Aliases: !Sub
-          - "${subdomainName}${subdomainEnv}.${domainName}"
-          - subdomainName: !Ref subdomain
-          - domainName: !Ref domain
-          - subdomainEnv: !FindInMap:
-            - SubEnvDomainMap
-            - !Ref environmentName
+        Aliases: 
+          - !Sub
+            - "${subdomainName}${subdomainEnv}.${domainName}"
+            - subdomainName: !Ref subdomain
+              domainName: !Ref domain
+              subdomainEnv: 
+                Fn::FindInMap:
+                  - SubEnvDomainMap
+                  - !Ref environmentName
+                  - subdomainEnv
         Origins: 
         - ConnectionAttempts: 3
           ConnectionTimeout: 10
@@ -121,9 +157,9 @@ Resources:
         Enabled: true
         ViewerCertificate: 
           AcmCertificateArn: !Sub 
-            - "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/{certificateId}"
+            - "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${certificateId}"
             - certificateId: 
-              Fn::ImportValue: !Sub ${dnsStack}-CertificateId
+                Fn::ImportValue: !Sub ${dnsStack}-CertificateID
           MinimumProtocolVersion: "TLSv1.2_2019"
           SslSupportMethod: "sni-only"
         HttpVersion: "http2"
@@ -133,22 +169,31 @@ Resources:
           Bucket: !GetAtt FrontendBucketLogs.DomainName
           IncludeCookies: false
           Prefix: 'cdn/'
+    DependsOn:
+      - FrontendDeployBucket
+      - FrontendBucketLogs
 
   Route53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Properties:
-      HostedZoneName: !Ref domain
+      HostedZoneId:
+        Fn::ImportValue: !Sub '${dnsStack}-HostedZoneID'
       RecordSets:
-      - Name: !Sub
-          - "${subdomainName}${subdomainEnv}.${domainName}"
-          - subdomainName: !Ref subdomain
-          - domainName: !Ref domain
-          - subdomainEnv: !FindInMap:
-            - SubEnvDomainMap
-            - !Ref environmentName
-        Type: A
-        AliasTarget:
-          DNSName: !GetAtt CloudFrontDistribution.DomainName
-          EvaluateTargetHealth: false
-          HostedZoneId: 
-            Fn::ImportValue: !Sub ${dnsStack}-HostedZoneID
+        - Name: !Sub
+            - "${subdomainName}${subdomainEnv}.${domainName}"
+            - subdomainName: !Ref subdomain
+              domainName: !Ref domain
+              subdomainEnv: 
+                Fn::FindInMap:
+                  - SubEnvDomainMap
+                  - !Ref environmentName
+                  - subdomainEnv
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt CloudFrontDistribution.DomainName
+            EvaluateTargetHealth: false
+            # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
+            # alias record that routes traffic to a CloudFront distribution.
+            HostedZoneId: Z2FDTNDATAQYW2
+    DependsOn:
+      - CloudFrontDistribution

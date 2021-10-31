@@ -3,9 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the CCC-LambdaStack-${env} into endpoints. In addition, it attaches a Lambda authorizer and ."
 
 Parameters:
-  # REQUIRED
-  userPoolId:
-    Type: String
   # OPTIONAL, DEFAULTS TO DEV ENVIRONMENT
   environmentName:
     Type: String
@@ -86,11 +83,11 @@ Resources:
     Type: 'AWS::ApiGateway::BasePathMapping'
     Properties:
       DomainName: 
-        Fn::ImportValue: !Sub ${dnsStack}-RestAPIDomainName
+        Fn::ImportValue: !Sub "${dnsStack}-RestAPIDomainName"
       RestApiId: !Ref RestAPI
       Stage: !Ref environmentName
     DependsOn:
-      - RestAPIDomainName
+      - RestAPIDeployment
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
@@ -100,8 +97,7 @@ Resources:
       Type: "COGNITO_USER_POOLS"
       IdentitySource: method.request.header.authorization
       ProviderARNs:
-        - !Sub "arn:aws:cognito-idp:us-east-1:${AWS::AccountId}:userpool/${userPoolId}"
-        # - Fn::ImportValue: !Sub "${userStack}-UserPoolArn"
+        - Fn::ImportValue: !Sub "${userStack}-UserPoolArn"
 
   AlphaResource: 
     Type: 'AWS::ApiGateway::Resource'
@@ -322,4 +318,4 @@ Outputs:
   RestAPIID: 
     Value: !Ref RestAPI
     Export:
-      Name: ${AWS::StackName}-RestAPIID
+      Name: !Sub ${AWS::StackName}-RestAPIID
