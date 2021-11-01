@@ -58,7 +58,8 @@ then
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStack,ParameterValue="${USER_STACK}" 
+                     ParameterKey=userStack,ParameterValue="${USER_STACK}" \
+                     ParameterKey=dnsStack,ParameterValue="${DNS_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
@@ -67,9 +68,11 @@ then
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStack,ParameterValue="${USER_STACK}"
+                     ParameterKey=userStack,ParameterValue="${USER_STACK}" \
+                     ParameterKey=dnsStack,ParameterValue="${DNS_STACK}-${ENVIRONMENT}"
 
-elif [ "$ACTION" == "delete"]
+
+elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
         --stackname "${GATEWAY_STACK}-${ENVIRONMENT}"

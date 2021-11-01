@@ -211,6 +211,7 @@ Resources:
     Properties:
       UserPoolId: !Ref CognitoUserPool
       ClientName: !Sub ${AWS::StackName}-WebCognitoClient
+      GenerateSecret: true
       AccessTokenValidity: 60
       IdTokenValidity: 60
       RefreshTokenValidity: 30
