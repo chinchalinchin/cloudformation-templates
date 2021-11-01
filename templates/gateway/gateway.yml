@@ -23,17 +23,10 @@ Parameters:
   # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
-<<<<<<< HEAD
     Default: search
   betaEndpoint:
     Type: String
     Default: issues
-=======
-    Default: details
-  betaEndpoint:
-    Type: String
-    Default: codes
->>>>>>> 8396745a53bd7988b580548b8ddb2861ec13ae9c
   gammaEndpoint:
     Type: String
     Default: gamma
