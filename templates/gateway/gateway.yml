@@ -23,10 +23,10 @@ Parameters:
   # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
-    Default: details
+    Default: search
   betaEndpoint:
     Type: String
-    Default: codes
+    Default: issues
   gammaEndpoint:
     Type: String
     Default: gamma
@@ -113,7 +113,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref AlphaResource
-      PathPart: "{naics_code}"
+      PathPart: "{state}"
     DependsOn:
       - RestAPI
       - AlphaResource
@@ -152,7 +152,7 @@ Resources:
       ResourceId: !Ref ParamResource
       HttpMethod: GET
       RequestParameters:
-        "method.request.path.naics_code": true
+        "method.request.path.state": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
