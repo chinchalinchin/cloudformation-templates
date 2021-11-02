@@ -73,7 +73,7 @@ then
                                      # --description "Database Password Secret for ${ENVIRONMENT} environment" \
                                      #--secret-string $RDS_PASSWORD
 
-    aws secretsmanager update-secret --secret-id "${ENVIRONMENT}-dbPassword" \
+    aws secretsmanager create-secret --name "${ENVIRONMENT}-dbPassword" \
                                      --description "Database Password Secret for ${ENVIRONMENT} environment" \
                                      --secret-string $RDS_PASSWORD
 
