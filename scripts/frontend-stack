@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
-if [ -z "$ACTION"]
+if [ -z "$ACTION" ]
 then
     ACTION="create"
 fi
