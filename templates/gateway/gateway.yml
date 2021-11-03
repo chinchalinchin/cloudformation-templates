@@ -23,7 +23,7 @@ Parameters:
   # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
-    Default: search
+    Default: auction
   betaEndpoint:
     Type: String
     Default: issues
@@ -113,7 +113,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref AlphaResource
-      PathPart: "{state}"
+      PathPart: "{zip_code}"
     DependsOn:
       - RestAPI
       - AlphaResource
@@ -152,7 +152,7 @@ Resources:
       ResourceId: !Ref ParamResource
       HttpMethod: GET
       RequestParameters:
-        "method.request.path.state": true
+        "method.request.path.zip_code": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
