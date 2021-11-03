@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'A stack containing a dummy account for pipeline, execution role for Lambda, and other IAM resources needed for the comet-code-challenge'
+Description: 'A stack for provisioning user accounts'
 
 Parameters:
   username:
