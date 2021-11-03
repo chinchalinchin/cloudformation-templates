@@ -101,6 +101,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+          API_KEY: !Sub '{{resolve:secretsmanager:${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -133,6 +134,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+          API_KEY: !Sub '{{resolve:secretsmanager:${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -166,6 +168,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+          API_KEY: !Sub '{{resolve:secretsmanager:${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -198,6 +201,7 @@ Resources:
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           POSTGRES_DBNAME: !Ref dbName
+          API_KEY: !Sub '{{resolve:secretsmanager:${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -222,6 +226,7 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${userStack}-APIClientID
+          API_KEY: !Sub '{{resolve:secretsmanager:${environmentName}-dbPassword:SecretString}}'
           # POOL_ID: !ref userPoolId
             # Fn::ImportValue: !Sub ${userStack}-UserPoolID
       Timeout: 180
