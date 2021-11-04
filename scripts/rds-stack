@@ -73,9 +73,11 @@ then
                                      # --description "Database Password Secret for ${ENVIRONMENT} environment" \
                                      #--secret-string $RDS_PASSWORD
 
-    aws secretsmanager create-secret --name "${ENVIRONMENT}-dbPassword" \
+    aws secretsmanager update-secret --secret-id "${ENVIRONMENT}-dbPassword" \
                                      --description "Database Password Secret for ${ENVIRONMENT} environment" \
                                      --secret-string $RDS_PASSWORD
+
+
 
     aws cloudformation create-stack --stack-name "${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
