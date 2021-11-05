@@ -18,7 +18,7 @@ Parameters:
     Default: Dev
   dbName:
     Type: String
-    Default: usaspending
+    Default: comet_code_challenge
   userPoolId:
     Type: String
   # Stack Dependencies
