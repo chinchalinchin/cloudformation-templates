@@ -61,34 +61,38 @@ then
     #       stack, the secrets will still exist in the SecretsManager, and you will
     #       want to use `update-secret` instead of `create-secret`
     
-    aws secretsmanager create-secret --name "${APP_NAME}-${ENVIRONMENT}-dbUsername" \
-                                     --description "Database Username Secret for ${ENVIRONMENT} environment" \
-                                     --secret-string $RDS_USERNAME
-
-    #aws secretsmanager update-secret --secret-id "${APP_NAME}-${ENVIRONMENT}-dbUsername" \
+    #aws secretsmanager create-secret --name "${APP_NAME}-${ENVIRONMENT}-dbUsername" \
      #                                --description "Database Username Secret for ${ENVIRONMENT} environment" \
       #                               --secret-string $RDS_USERNAME
 
-     aws secretsmanager create-secret --name "${APP_NAME}-${ENVIRONMENT}-dbPassword" \
-                                      --description "Database Password Secret for ${ENVIRONMENT} environment" \
-                                     --secret-string $RDS_PASSWORD
+    aws secretsmanager update-secret --secret-id "${APPLICATION}-${ENVIRONMENT}-dbUsername" \
+                                     --description "Database Username Secret for ${ENVIRONMENT} environment" \
+                                     --secret-string $RDS_USERNAME
 
-    #aws secretsmanager update-secret --secret-id "${APP_NAME}-${ENVIRONMENT}-dbPassword" \
-     #                                --description "Database Password Secret for ${ENVIRONMENT} environment" \
+    #aws secretsmanager create-secret --name "${APP_NAME}-${ENVIRONMENT}-dbPassword" \
+     #                                 --description "Database Password Secret for ${ENVIRONMENT} environment" \
       #                               --secret-string $RDS_PASSWORD
+
+    aws secretsmanager update-secret --secret-id "${APPLICATION}-${ENVIRONMENT}-dbPassword" \
+                                     --description "Database Password Secret for ${ENVIRONMENT} environment" \
+                                     --secret-string $RDS_PASSWORD
 
 
 
     aws cloudformation create-stack --stack-name "${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
+                                    --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                                                 ParameterKey=applicationName,ParameterValue=$APPLICATION \
                                                  ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack --stack-name "${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
+                                    --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                                                 ParameterKey=applicationName,ParameterValue=$APPLICATION \
                                                  ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" 
 elif [ "$ACTION" == "delete" ]
 then
