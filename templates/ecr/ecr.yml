@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "Conditionally provisions ECRS to hold images for Lambda functions and attaches policies to pull and push to these ECRs to the PipelineUser from the CCC-UserStack."
+Description: "Conditionally provisions ECRs to hold images for Lambda functions and attaches policies to pull and push to these ECRs to the PipelineUser from the InnoLab-UserStack."
 Parameters:
   components:
     Type: String
@@ -11,9 +11,13 @@ Parameters:
       - four
       - five
     Default: five
+  functionName:
+    Type: String
+    Default: innolab-lambda
   userStack:
     Type: String
-    Default: CCC-UserStack
+    Default: InnoLab-UserStack
+  
 
 Conditions:
   CreateOneComponent: !Equals
@@ -64,7 +68,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: lambda-alpha
+      RepositoryName: !Sub "${functionName}-alpha"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -87,7 +91,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: lambda-beta
+      RepositoryName: !Sub "${functionName}-beta"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -110,7 +114,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: lambda-gamma
+      RepositoryName: !Sub "${functionName}-gamma"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -133,7 +137,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: lambda-delta
+      RepositoryName: !Sub "${functionName}-delta"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -156,7 +160,7 @@ Resources:
     Properties:
       ImageScanningConfiguration:
         ScanOnPush: true
-      RepositoryName: lambda-epsilon
+      RepositoryName: !Sub "${functionName}-epsilon"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:

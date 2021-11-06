@@ -23,6 +23,7 @@ Resources:
         BackupRetentionPeriod: 7
         MultiAZ: false
         AutoMinorVersionUpgrade: true
+        Iops: 1000
         PubliclyAccessible: false
         StorageType: io1
         StorageEncrypted: true

@@ -23,10 +23,10 @@ Parameters:
   # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
-    Default: alpha
+    Default: docket
   betaEndpoint:
     Type: String
-    Default: beta
+    Default: agency
   gammaEndpoint:
     Type: String
     Default: gamma
@@ -74,8 +74,10 @@ Resources:
     DependsOn:
       - CloudWatch
       - CloudWatchLogGroup
-      - AlphaResourceMethod
-      - BetaResourceMethod
+      - AlphaRootResourceMethod
+      - AlphaParamResourceMethod
+      - BetaRootResourceMethod
+      - BetaParamResourceMethod
       - DeltaResourceMethod
       - EpsilonResourceMethod
 
@@ -101,7 +103,6 @@ Resources:
 
   AlphaRootResource: 
     Type: 'AWS::ApiGateway::Resource'
-    Description: 
     Properties: 
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
@@ -114,17 +115,26 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref AlphaRootResource
-      PathPart: "{parameter}"
+      PathPart: "{docket_id}"
     DependsOn:
       - RestAPI
       - AlphaRootResource
   
-  BetaResource:
+  BetaRootResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
       PathPart: !Ref betaEndpoint
+    DependsOn:
+      - RestAPI
+
+  BetaParamResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ParentId: !Ref BetaRootResource
+      PathPart: "{agency_id}"
     DependsOn:
       - RestAPI
 
@@ -161,7 +171,7 @@ Resources:
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref AlphaResource
+      ResourceId: !Ref AlphaRootResource
       HttpMethod: GET
       Integration:
         IntegrationResponses:
@@ -248,7 +258,7 @@ Resources:
       ResourceId: !Ref AlphaParamResource
       HttpMethod: GET
       RequestParameters:
-        "method.request.path.parameter": true
+        "method.request.path.docket_id": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -297,39 +307,51 @@ Resources:
     DependsOn:
       - AlphaParamResource
 
-  BetaResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref BetaResource
-      HttpMethod: GET
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayAuthorizer
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateway transforms all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Join
-          - ''
-          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
-            - /invocations
-    DependsOn:
-      - BetaResource
-  
-  BetaCORS:
+  # Mock Response for root method to return 400 status code
+  BetaRootResourceMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref BetaResource
+      ResourceId: !Ref BetaRootResource
+      HttpMethod: GET
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 400
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 400
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+    DependsOn:
+      - BetaRootResource
+  
+  BetaRootCORS:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref BetaRootResource
       HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
         - StatusCode: 200
           ResponseParameters:
             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            # method.response.header.Access-Control-Allow-Methods: "'*'"
             method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
             method.response.header.Access-Control-Allow-Origin: "'*'"
           ResponseTemplates:
@@ -347,7 +369,63 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: false
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn: 
-      - BetaResource
+      - BetaRootResource
+
+  BetaParamResourceMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref BetaParamResource
+      HttpMethod: GET
+      RequestParameters:
+        "method.request.path.agency_id": true
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        # INTEGRATION HTTP METHOD MUST BE POST
+        #   NOTE: API Gateway transforms all incoming requests into POSTS
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
+            - /invocations
+    DependsOn:
+      - BetaRootResource
+      - BetaParamResource
+
+  BetaParamCORS:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref BetaParamResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            # method.response.header.Access-Control-Allow-Methods: "'*'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+    DependsOn:
+      - BetaParamResource
 
   DeltaResourceMethod:
     Type: 'AWS::ApiGateway::Method'
@@ -539,6 +617,19 @@ Resources:
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${betaEndpoint}
     DependsOn:
       - RestAPIDeployment
+
+  LambdaBetaParamApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: 
+          Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: 
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${betaEndpoint}/*
+    DependsOn:
+      - RestAPIDeployment
+
 
   LambdaDeltaApiGatewayInvoke:
     Type: AWS::Lambda::Permission

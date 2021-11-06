@@ -110,7 +110,7 @@ Resources:
       DistributionConfig: 
         Aliases: 
           - !Sub
-            - "${subdomainName}${subdomainEnv}-2.${domainName}"
+            - "${subdomainName}${subdomainEnv}.${domainName}"
             - subdomainName: !Ref subdomain
               domainName: !Ref domain
               subdomainEnv: 
@@ -180,7 +180,7 @@ Resources:
         Fn::ImportValue: !Sub '${dnsStack}-HostedZoneID'
       RecordSets:
         - Name: !Sub
-            - "${subdomainName}${subdomainEnv}-2.${domainName}"
+            - "${subdomainName}${subdomainEnv}.${domainName}"
             - subdomainName: !Ref subdomain
               domainName: !Ref domain
               subdomainEnv: 

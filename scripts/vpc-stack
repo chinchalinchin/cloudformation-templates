@@ -25,27 +25,27 @@ function help(){
 }
 
 while [[ $# -gt 0 ]]; do
-       key="$1"
-       case $key in
-                --action)
-                    ACTION="$2"
-                    shift
-                    shift 
-                    ;;
-                --help)
-                    help
-                    exit 0
-                    ;;
-                --environment)
-                    ENVIRONMENT="$2"
-                    shift
-                    shift
-                    ;;
-                *)
-                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                    exit 1
-                    ;;
-       esac
+    key="$1"
+    case $key in
+        --action)
+            ACTION="$2"
+            shift
+            shift 
+            ;;
+        --help)
+            help
+            exit 0
+            ;;
+        --environment)
+            ENVIRONMENT="$2"
+            shift
+            shift
+            ;;
+        *)
+            log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+            exit 1
+            ;;
+    esac
 done
 
 if [ -z "$ACTION"]

@@ -230,7 +230,9 @@ Resources:
       VpcId: !Ref VPC
       SecurityGroupIngress:
       - IpProtocol: -1
-        CidrIp: 0.0.0.0/0
+        SourceSecurityGroupId: !Ref NATSecurityGroup
+    DependsOn:
+      - NATSecurityGroup
 
   NATInstance:
     Type: AWS::EC2::Instance

@@ -50,17 +50,15 @@ then
     aws cloudformation create-stack \
         --stack-name "$USER_STACK" \
         --template-body file://user.yml \
-        --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID
-
+        --capabilities CAPABILITY_NAMED_IAM 
+        
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "$USER_STACK" \
         --template-body file://user.yml \
-        --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID
-        
+        --capabilities CAPABILITY_NAMED_IAM
+
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \

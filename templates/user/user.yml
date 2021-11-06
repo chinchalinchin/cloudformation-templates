@@ -5,21 +5,18 @@ Description: 'A stack containing a dummy account for pipeline, execution role fo
 Parameters:
   pipelineUser:
     Type: String
-    Default: ccc-pipeline
-  
-  userPoolId:
-    Type: String
+    Default: innolab-pipeline
 
 Resources:
   PipelineUser:
     Type: AWS::IAM::User
-    Description: User account for CCC pipeline to perform all the necessary deployment operations
+    Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
 
   LambdaExecutor:
     Type: AWS::IAM::Role
-    Description: Role to allow CCC Lambdas to access other AWS Services
+    Description: Role to allow Innolab Lambdas to access other AWS Services
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -96,6 +93,42 @@ Resources:
           Mutable: true
           Name: name
   
+  APIClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Sub ${AWS::StackName}-APICognitoClient
+      ExplicitAuthFlows:
+        - "ALLOW_CUSTOM_AUTH"
+        - "ALLOW_REFRESH_TOKEN_AUTH"
+        - "ALLOW_USER_PASSWORD_AUTH"
+        - "ALLOW_USER_SRP_AUTH"
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: "minutes"
+        IdToken: "minutes"
+        RefreshToken: "days"
+    DependsOn:
+      - CognitoUserPool
+
+  WebClient: 
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Sub ${AWS::StackName}-WebCognitoClient
+      GenerateSecret: true
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: "minutes"
+        IdToken: "minutes"
+        RefreshToken: "days"
+    DependsOn:
+      - CognitoUserPool
+
   PeterC:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
@@ -111,6 +144,19 @@ Resources:
     DependsOn:
       - CognitoUserPool
   
+  TariqI:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "tislam@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "tislam@makpar.com"
+        - Name: "name"
+          Value: "Tariq"
+
   GrantM:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
@@ -186,41 +232,6 @@ Resources:
     DependsOn:
       - CognitoUserPool
 
-  APIClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      UserPoolId: !Ref CognitoUserPool
-      ClientName: !Sub ${AWS::StackName}-APICognitoClient
-      ExplicitAuthFlows:
-        - "ALLOW_CUSTOM_AUTH"
-        - "ALLOW_REFRESH_TOKEN_AUTH"
-        - "ALLOW_USER_PASSWORD_AUTH"
-        - "ALLOW_USER_SRP_AUTH"
-      AccessTokenValidity: 60
-      IdTokenValidity: 60
-      RefreshTokenValidity: 30
-      TokenValidityUnits:
-        AccessToken: "minutes"
-        IdToken: "minutes"
-        RefreshToken: "days"
-    DependsOn:
-      - CognitoUserPool
-
-  WebClient: 
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      UserPoolId: !Ref CognitoUserPool
-      ClientName: !Sub ${AWS::StackName}-WebCognitoClient
-      GenerateSecret: true
-      AccessTokenValidity: 60
-      IdTokenValidity: 60
-      RefreshTokenValidity: 30
-      TokenValidityUnits:
-        AccessToken: "minutes"
-        IdToken: "minutes"
-        RefreshToken: "days"
-    DependsOn:
-      - CognitoUserPool
 
 Outputs:
   PipelineUserArn:
