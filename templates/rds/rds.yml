@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Provisions a DB instances with credentials resolved from the SSM parameter store and deploys it into a private subnet in the CCC-VPCStack-${environmentName}."
+Description: "Provisions a DB instances with credentials resolved from the SecretManager and deploys it into a private subnet in the ${applicationName}-VPCStack-${environmentName}. A policy is created to allow users to connect to the RDS through IAM"
 
 Parameters:
   # note: applicationName is used to pull the correct secret
@@ -48,7 +48,7 @@ Resources:
   
   DatabaseConnectPolicy:
     Type: AWS::IAM::Policy
-    Description: Policy to allow DBAdmin to connect via AWS CLI
+    Description: Policy to allow users to connect via AWS CLI
     Properties:
       PolicyName: !Sub ${applicationName}-${environmentName}-db-connect-policy
       PolicyDocument:
@@ -59,7 +59,8 @@ Resources:
             Action:
               - "rds-db:connect"
             Resource: 
-              - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PostgresRDS}/{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
+              # NOTE: db-QJLKM6XPHWPIA2MO6QTDQAGNHQ is a regional variable and does not change unless the region is changed.
+              - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:db-QJLKM6XPHWPIA2MO6QTDQAGNHQ/{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
       Users:
         - ian.mcnutt
         - matt.alston
@@ -67,6 +68,8 @@ Resources:
         - thomas.klock
         - peter.cofrancesco
         - tariq.islam
+    DependsOn:
+      - PostgresRDS
 
 Outputs:
   RDSEndpoint:
