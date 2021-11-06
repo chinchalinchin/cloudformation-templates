@@ -10,7 +10,7 @@ Parameters:
   
   dbKeyName:
     Type: String
-    Default: ccc_db_key_Dev
+    Default: innolab_db_key_Dev
 
 Mappings:
   SubnetConfig:

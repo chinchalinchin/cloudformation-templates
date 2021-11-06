@@ -29,7 +29,7 @@ Parameters:
     Default: agency
   gammaEndpoint:
     Type: String
-    Default: gamma
+    Default: mock-data
   deltaEndpoint:
     Type: String
     Default: delta

@@ -61,21 +61,21 @@ then
     #       stack, the secrets will still exist in the SecretsManager, and you will
     #       want to use `update-secret` instead of `create-secret`
     
-    # aws secretsmanager create-secret --name "${ENVIRONMENT}-dbUsername" \
-                                     # --description "Database Username Secret for ${ENVIRONMENT} environment" \
-                                     #--secret-string $RDS_USERNAME
-
-    aws secretsmanager update-secret --secret-id "${ENVIRONMENT}-dbUsername" \
+    aws secretsmanager create-secret --name "${APP_NAME}-${ENVIRONMENT}-dbUsername" \
                                      --description "Database Username Secret for ${ENVIRONMENT} environment" \
                                      --secret-string $RDS_USERNAME
 
-    # aws secretsmanager create-secret --name "${ENVIRONMENT}-dbPassword" \
-                                     # --description "Database Password Secret for ${ENVIRONMENT} environment" \
-                                     #--secret-string $RDS_PASSWORD
+    #aws secretsmanager update-secret --secret-id "${APP_NAME}-${ENVIRONMENT}-dbUsername" \
+     #                                --description "Database Username Secret for ${ENVIRONMENT} environment" \
+      #                               --secret-string $RDS_USERNAME
 
-    aws secretsmanager update-secret --secret-id "${ENVIRONMENT}-dbPassword" \
-                                     --description "Database Password Secret for ${ENVIRONMENT} environment" \
+     aws secretsmanager create-secret --name "${APP_NAME}-${ENVIRONMENT}-dbPassword" \
+                                      --description "Database Password Secret for ${ENVIRONMENT} environment" \
                                      --secret-string $RDS_PASSWORD
+
+    #aws secretsmanager update-secret --secret-id "${APP_NAME}-${ENVIRONMENT}-dbPassword" \
+     #                                --description "Database Password Secret for ${ENVIRONMENT} environment" \
+      #                               --secret-string $RDS_PASSWORD
 
 
 
