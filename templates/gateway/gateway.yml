@@ -23,10 +23,10 @@ Parameters:
   # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
-    Default: docket
+    Default: alpha
   betaEndpoint:
     Type: String
-    Default: agency
+    Default: beta
   gammaEndpoint:
     Type: String
     Default: mock-data
@@ -115,7 +115,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref AlphaRootResource
-      PathPart: "{docket_id}"
+      PathPart: "{alpha_param}"
     DependsOn:
       - RestAPI
       - AlphaRootResource
@@ -134,7 +134,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref BetaRootResource
-      PathPart: "{agency_id}"
+      PathPart: "{beta_param}"
     DependsOn:
       - RestAPI
 
@@ -258,7 +258,7 @@ Resources:
       ResourceId: !Ref AlphaParamResource
       HttpMethod: GET
       RequestParameters:
-        "method.request.path.docket_id": true
+        "method.request.path.alpha_param": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -378,7 +378,7 @@ Resources:
       ResourceId: !Ref BetaParamResource
       HttpMethod: GET
       RequestParameters:
-        "method.request.path.agency_id": true
+        "method.request.path.beta_param": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:

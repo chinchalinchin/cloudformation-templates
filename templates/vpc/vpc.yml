@@ -277,6 +277,11 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub ${AWS::StackName}-VPC
+  BastionHostDNSUrl:
+    Description: IPv4 DNS public URL for bastion host
+    Value: !GetAtt NATInstance.PublicDnsName
+    Export:
+      Name: !Sub ${AWS::StackName}-BastionHostURL
   PublicSubnetA:
     Description: First Public Subnet
     Value: !Ref PublicSubnetA

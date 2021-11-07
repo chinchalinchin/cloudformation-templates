@@ -5,19 +5,22 @@ Description: "A stack containing the resources to serve the CCC-Frontend-${ENV} 
 Parameters:
   dnsStack: 
     Type: String
-    Default: CCC-DNSStack-Dev
+    Default: InnoLab-DNSStack-Dev
   userStack:
     Type: String
-    Default: CCC-UserStack
+    Default: InnoLab-UserStack
   domain:
     Type: String
     Default: makpar-innovation.com
   subdomain:
     Type: String
-    Default: usaspending
+    Default: laboratory
   environmentName:
     Type: String
     Default: Dev
+  applicationName:
+    Type: String
+    Default: innolab
 
 Mappings:
   SubEnvDomainMap:
@@ -29,6 +32,7 @@ Mappings:
       subdomainEnv: "-staging"
     Prod: 
       subdomainEnv: ""
+    
 
 Resources:
   FrontendBucketLogs:
@@ -37,7 +41,7 @@ Resources:
     Properties:
       AccessControl: LogDeliveryWrite
       BucketName: !Sub 
-        - "ccc-frontend${environment}-logs"
+        - "${applicationName}-frontend${environment}-logs"
         - environment: 
             Fn::FindInMap:
               - SubEnvDomainMap
@@ -50,7 +54,7 @@ Resources:
     Properties:
       AccessControl: PublicRead
       BucketName: !Sub 
-        - "ccc-frontend${environment}-deployment"
+        - "${applicationName}-frontend${environment}-deployment"
         - environment:
             Fn::FindInMap:
               - SubEnvDomainMap
@@ -83,7 +87,7 @@ Resources:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to push and pull from ECR
     Properties:
-      PolicyName: !Sub pipeline-${environmentName}-bucket-policy
+      PolicyName: !Sub ${applicationName}-pipeline-${environmentName}-bucket-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
