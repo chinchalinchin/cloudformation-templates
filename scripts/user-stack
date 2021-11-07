@@ -50,14 +50,18 @@ then
     aws cloudformation create-stack \
         --stack-name "$USER_STACK" \
         --template-body file://user.yml \
-        --capabilities CAPABILITY_NAMED_IAM 
+        --capabilities CAPABILITY_NAMED_IAM \
+        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
+                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
         
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "$USER_STACK" \
         --template-body file://user.yml \
-        --capabilities CAPABILITY_NAMED_IAM
+        --capabilities CAPABILITY_NAMED_IAM \
+        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
+                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
 
 elif [ "$ACTION" == "delete" ]
 then

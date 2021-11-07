@@ -201,3 +201,11 @@ Resources:
             HostedZoneId: Z2FDTNDATAQYW2
     DependsOn:
       - CloudFrontDistribution
+
+
+Outputs:
+  CloudfrontDistributionID:
+    Value: !Ref CloudFrontDistribution
+    Description: Resource ID for CloudFront Distribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontID

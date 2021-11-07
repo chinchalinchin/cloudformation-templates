@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the CCC-LambdaStack-${env} into endpoints. In addition, it attaches a Lambda authorizer using the User Pool from the CCC-UserStack."
+Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the ${applicationName}-LambdaStack-${environmentName} into endpoints. In addition, it attaches a Lambda authorizer using the User Pool from the ${applicationName}-UserStack."
 
 Parameters:
   # OPTIONAL, DEFAULTS TO DEV ENVIRONMENT
@@ -10,16 +10,16 @@ Parameters:
     Default: Dev
   userStack:
     Type: String
-    Description: "Defaults to CCC-UserStack"
-    Default: CCC-UserStack
+    Description: "Defaults to InnoLab-UserStack"
+    Default: InnoLab-UserStack
   dnsStack:
     Type: String
-    Description: "Defaults to CCC-DNSStack-Dev"
-    Default: CCC-DNSStack-Dev
+    Description: "Defaults to InnoLab-DNSStack-Dev"
+    Default: InnoLab-DNSStack-Dev
   lambdaStack:
     Type: String
-    Description: "Defaults to CCC-LambdaStack-Dev"
-    Default: CCC-LambdaStack-Dev
+    Description: "Defaults to InnoLab-LambdaStack-Dev"
+    Default: InnoLab-LambdaStack-Dev
   # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
@@ -41,7 +41,7 @@ Resources:
   RestAPI:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: !Sub CCC-RestAPI-${environmentName}
+      Name: !Sub InnoLab-RestAPI-${environmentName}
 
   CloudWatch:
     Type: AWS::ApiGateway::Account

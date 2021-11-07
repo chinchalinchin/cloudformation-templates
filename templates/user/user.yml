@@ -6,6 +6,15 @@ Parameters:
   pipelineUser:
     Type: String
     Default: innolab-pipeline
+  
+  # domain and subdomain are used to register callbacks with UserPoolClients
+  domain:
+    Type: String
+    Default: makpar-innovation.com
+  
+  subdomain:
+    Type: String
+    Default: laboratory
 
 Resources:
   PipelineUser:
@@ -98,6 +107,15 @@ Resources:
     Properties:
       UserPoolId: !Ref CognitoUserPool
       ClientName: !Sub ${AWS::StackName}-APICognitoClient
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - !Sub "https://${subdomain}-dev.${domain}"
       ExplicitAuthFlows:
         - "ALLOW_CUSTOM_AUTH"
         - "ALLOW_REFRESH_TOKEN_AUTH"
@@ -110,6 +128,8 @@ Resources:
         AccessToken: "minutes"
         IdToken: "minutes"
         RefreshToken: "days"
+      SupportedIdentityProviders:
+        - COGNITO
     DependsOn:
       - CognitoUserPool
 
