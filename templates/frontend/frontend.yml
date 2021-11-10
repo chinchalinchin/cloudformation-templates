@@ -83,38 +83,38 @@ Resources:
     DependsOn:
       - FrontendDeployBucket
 
-  # PipelineBucketPolicy:
-  #   Type: AWS::IAM::Policy
-  #   Description: Policy to allow pipeline to push and pull from ECR
-  #   Properties:
-  #     PolicyName: !Sub ${applicationName}-pipeline-${environmentName}-bucket-policy
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: piplineCrudOps
-  #           Effect: Allow
-  #           Action:
-  #             - "s3:PutObject"
-  #             - "s3:GetObject"
-  #             - "s3:DeleteObject"
-  #           Resource: 
-  #             - !Sub '${FrontendDeployBucket.Arn}/*'
-  #         - Sid: pipelineReadOp
-  #           Effect: Allow
-  #           Action:
-  #             - "s3:ListBucket"
-  #           Resource: 
-  #             - !Sub '${FrontendDeployBucket.Arn}'
-  #         - Sid: cloudfrontInvalidateOp
-  #           Effect: Allow
-  #           Action:
-  #             - "cloudfront:CreateInvalidation"
-  #           Resource:
-  #             - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
-  #     Users: 
-  #       - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
-  #   DependsOn:
-  #     - CloudFrontDistribution
+  PipelineBucketPolicy:
+    Type: AWS::IAM::Policy
+    Description: Policy to allow pipeline to push and pull from ECR
+      Properties:
+        PolicyName: !Sub ${applicationName}-pipeline-${environmentName}-bucket-policy
+        PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: piplineCrudOps
+            Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+            Resource: 
+                - !Sub '${FrontendDeployBucket.Arn}/*'
+          - Sid: pipelineReadOp
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+            Resource: 
+              - !Sub '${FrontendDeployBucket.Arn}'
+           - Sid: cloudfrontInvalidateOp
+             Effect: Allow
+             Action:
+               - "cloudfront:CreateInvalidation"
+             Resource:
+               - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
+     DependsOn:
+       - CloudFrontDistribution
 
   CloudFrontDistribution:
     Type: "AWS::CloudFront::Distribution"
