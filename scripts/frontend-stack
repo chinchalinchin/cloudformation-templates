@@ -67,6 +67,7 @@ then
 
 elif [ "$ACTION" == "update" ]
 then
+    echo "$SUBDOMAIN"
     aws cloudformation update-stack \
         --stack-name "${FRONTEND_STACK}-${ENVIRONMENT}" \
         --template-body file://frontend.yml \

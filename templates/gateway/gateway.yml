@@ -29,10 +29,10 @@ Parameters:
     Default: beta
   gammaEndpoint:
     Type: String
-    Default: mock-data
+    Default: itinerary
   deltaEndpoint:
     Type: String
-    Default: delta
+    Default: per-diem
   epsilonEndpoint:
     Type: String
     Default: token
@@ -110,6 +110,7 @@ Resources:
     DependsOn:
       - RestAPI
 
+  # Nested Endpoint
   AlphaParamResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
@@ -128,7 +129,8 @@ Resources:
       PathPart: !Ref betaEndpoint
     DependsOn:
       - RestAPI
-
+  
+  # Nested Endpoint
   BetaParamResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
@@ -138,6 +140,7 @@ Resources:
     DependsOn:
       - RestAPI
 
+  # Mock Data Endpoint
   DeltaResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
@@ -147,6 +150,7 @@ Resources:
     DependsOn:
       - RestAPI
 
+  # Token Endpoint
   EpsilonResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:   
@@ -432,7 +436,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref DeltaResource
-      HttpMethod: GET
+      HttpMethod: POST
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -484,9 +488,8 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref GammaResource
-      HttpMethod: GET
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayAuthorizer
+      HttpMethod: POST
+      AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
         # INTEGRATION HTTP METHOD MUST BE POST
