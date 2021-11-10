@@ -86,9 +86,9 @@ Resources:
   PipelineBucketPolicy:
     Type: AWS::IAM::Policy
     Description: Policy to allow pipeline to push and pull from ECR
-      Properties:
-        PolicyName: !Sub ${applicationName}-pipeline-${environmentName}-bucket-policy
-        PolicyDocument:
+    Properties:
+      PolicyName: !Sub ${applicationName}-pipeline-${environmentName}-bucket-policy
+      PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Sid: piplineCrudOps
@@ -105,16 +105,16 @@ Resources:
               - "s3:ListBucket"
             Resource: 
               - !Sub '${FrontendDeployBucket.Arn}'
-           - Sid: cloudfrontInvalidateOp
-             Effect: Allow
-             Action:
-               - "cloudfront:CreateInvalidation"
-             Resource:
-               - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+          - Sid: cloudfrontInvalidateOp
+            Effect: Allow
+            Action:
+              - "cloudfront:CreateInvalidation"
+            Resource:
+              - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
       Users: 
         - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
-     DependsOn:
-       - CloudFrontDistribution
+    DependsOn:
+      - CloudFrontDistribution
 
   CloudFrontDistribution:
     Type: "AWS::CloudFront::Distribution"
