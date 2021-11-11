@@ -28,18 +28,19 @@ A more detailed version of what follows can be found on the [Confluence page](ht
 
 ```
 cp .sample.env .env
-# configure stack names and RDS credentials in .env file 
+# *: configure stack names and RDS credentials in .env file 
 source .env
-./scripts/user-stack
-./scripts/policy-stack 
-./scripts/frontend-stack --environment <Dev | Prod | Test | Staging> 
-./scripts/dns-stack [--dns-exists]
-./scripts/vpc-stack --environment <Dev | Prod | Test | Staging>
-./scripts/rds-stack --environment <Dev | Prod | Test | Staging>
-# Pass RDS Host Url to SecretManager
-./scrips/rds-host-secret --environment <Dev | Prod | Test | Staging>
-./scripts/ecr-stack --components <one | two | three | four | five>
-# Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
+./scripts/stacks/user-stack
+./scripts/stacs/policy-stack 
+./scripts/stacks/frontend-stack --environment <Dev | Prod | Test | Staging> 
+./scripts/stacks/dns-stack [--dns-exists]
+./scripts/stacks/vpc-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/rds-stack --environment <Dev | Prod | Test | Staging>
+# *: Pass RDS Host Url to SecretManager
+./scripts/secrets/rds-host-secret --environment <Dev | Prod | Test | Staging>
+./scripts/scripts/ecr-stack --components <one | two | three | four | five>
+# *: Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
+# *: If API key needs provisioned, add it to .env and use ./scripts/secrets/secret-api-key. 
 ./scripts/lambda-stack --components <one | two | three | four | five> --environment <Dev | Prod | Test | Staging>
 ./scripts/gateway-stack --environment <Dev | Prod | Test | Staging>
 ```
@@ -70,7 +71,7 @@ Note: The username and password secrets for the RDS are created during the `rds-
 4. If an API key needs delivered to the **Lambda** function environment, before the **Lambda** stack goes up, update the **API_KEY** environment variable in *.env* environment file and use the script,
 
 ```
-./scripts/secret-api-key --environemtn
+./scripts/secret-api-key --environment < Dev | Staging | Test | Prod >
 ```
 
 # Documentation
