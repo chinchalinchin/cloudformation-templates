@@ -3,12 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "A stack containing the resources to serve the CCC-Frontend-${ENV} assets. This stack will provision "
 
 Parameters:
-  dnsStack: 
-    Type: String
-    Default: InnoLab-DNSStack-Dev
-  userStack:
-    Type: String
-    Default: InnoLab-UserStack
   domain:
     Type: String
     Default: makpar-innovation.com
@@ -83,83 +77,24 @@ Resources:
     DependsOn:
       - FrontendDeployBucket
 
-  CloudFrontDistribution:
-    Type: "AWS::CloudFront::Distribution"
-    Properties:
-      DistributionConfig: 
-        Aliases: 
-          - !Sub
-            - "${subdomainName}${subdomainEnv}.${domainName}"
-            - subdomainName: !Ref subdomain
-              domainName: !Ref domain
-              subdomainEnv: 
-                Fn::FindInMap:
-                  - SubEnvDomainMap
-                  - !Ref environmentName
-                  - subdomainEnv
-        Origins: 
-        - ConnectionAttempts: 3
-          ConnectionTimeout: 10
-          DomainName: !GetAtt FrontendDeployBucket.DomainName
-          Id: !Ref FrontendDeployBucket
-          CustomOriginConfig:
-              HTTPPort: 80
-              HTTPSPort: 443
-              OriginKeepaliveTimeout: 5
-              OriginProtocolPolicy: 'https-only'
-              OriginReadTimeout: 30
-              OriginSSLProtocols:
-                - TLSv1
-                - TLSv1.1
-                - TLSv1.2
-        DefaultCacheBehavior: 
-          AllowedMethods: 
-          - "HEAD"
-          - "DELETE"
-          - "POST"
-          - "GET"
-          - "OPTIONS"
-          - "PUT"
-          - "PATCH"
-          CachedMethods: 
-          - "HEAD"
-          - "GET"
-          ForwardedValues:
-            Cookies:
-              Forward: none
-            QueryString: true
-          Compress: false
-          SmoothStreaming: false
-          TargetOriginId: !Ref FrontendDeployBucket
-          ViewerProtocolPolicy: "redirect-to-https"
-        PriceClass: "PriceClass_All"
-        Enabled: true
-        ViewerCertificate: 
-          AcmCertificateArn: !Sub 
-            - "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${certificateId}"
-            - certificateId: 
-                Fn::ImportValue: !Sub ${dnsStack}-CertificateID
-          MinimumProtocolVersion: "TLSv1.2_2019"
-          SslSupportMethod: "sni-only"
-        HttpVersion: "http2"
-        DefaultRootObject: 'index.html'
-        IPV6Enabled: true
-        Logging:
-          Bucket: !GetAtt FrontendBucketLogs.DomainName
-          IncludeCookies: false
-          Prefix: 'cdn/'
-    DependsOn:
-      - FrontendDeployBucket
-      - FrontendBucketLogs
-
 Outputs:
-  CloudfrontDistributionID:
-    Value: !Ref CloudFrontDistribution
-    Description: Resource ID for CloudFront Distribution
+  DeployBucketID:
+    Value: !Ref FrontendDeployBucket
+    Description: Resource ID of the frontend deployment bucket
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFrontID
-  CloudfrontDomain:
-    Value: !GetAtt CloudFrontDistribution.DomainName
-    Description: Domain name of CloudFront Distribution
+      Name: !Sub ${AWS::StackName}-FrontendDeployBucketID
+  DeployBucketDomain:
+    Value: !GetAtt FrontendDeployBucket.DomainName
+    Description: Domain name of the frontend deployment bucket
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFrontDomain
+      Name: !Sub ${AWS::StackName}-FrontendDeployBucketDomain
+  LogBucketID:
+    Value: !Ref FrontendBucketLogs
+    Description: Resource ID of the frontend deployment bucket
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendLogBucketID
+  LogBucketDomain:
+    Value: !GetAtt FrontendDeployBucket.DomainName
+    Description: Resource ID of the frontend deployment bucket
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendLogBucketDomain

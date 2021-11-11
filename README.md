@@ -13,14 +13,15 @@ aws cloudformation create-stack
 | Stack  |  Dependency |
 | ------ | ----------- |
 | UserStack | None |
-| PolicyStack | UserStack |
 | ECRStack | None | 
 | VPCStack-$ENV | None | 
-| FrontendStack-$ENV | UserStack |
-| DNSStack-$ENV | FrontendStack-$ENV |
+| FrontendStack-$ENV | None |
+| PolicyStack | UserStack |
 | RDSStack-$ENV | VPCStack-$ENV | 
-| LambdaStack-$ENV | VPCStack-$ENV, ECRStack, UserStack |
+| LambdaStack-$ENV | VPCStack-$ENV, ECRStack |
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
+| DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
+
 
 # Steps
 
@@ -28,12 +29,10 @@ A more detailed version of what follows can be found on the [Confluence page](ht
 
 ```
 cp .sample.env .env
-# *: configure stack names and RDS credentials in .env file 
-source .env
+# *: configure application environment in .env file 
 ./scripts/stacks/user-stack
-./scripts/stacs/policy-stack 
+./scripts/stacks/policy-stack 
 ./scripts/stacks/frontend-stack --environment <Dev | Prod | Test | Staging> 
-./scripts/stacks/dns-stack [--dns-exists]
 ./scripts/stacks/vpc-stack --environment <Dev | Prod | Test | Staging>
 ./scripts/stacks/rds-stack --environment <Dev | Prod | Test | Staging>
 # *: Pass RDS Host Url to SecretManager
@@ -43,6 +42,7 @@ source .env
 # *: If API key needs provisioned, add it to .env and use ./scripts/secrets/secret-api-key. 
 ./scripts/lambda-stack --components <one | two | three | four | five> --environment <Dev | Prod | Test | Staging>
 ./scripts/gateway-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/dns-stack [--dns-exists] --environment <Dev | Prod | Test | Staging> 
 ```
 
 NOTE: all scripts have an optional argument ``--action`` with allowable values of `create` or `update`. If `update` is passed through the ``--action`` flag, the script will update the current stack instead of creating a new one.
