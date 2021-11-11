@@ -25,8 +25,6 @@ Parameters:
   dbName:
     Type: String
     Default: InnoLab
-  userPoolId:
-    Type: String
   # Stack Dependencies
   userStack:
     Type: String
@@ -144,7 +142,7 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaBeta
 
-  LambdaGamma: # Database Initializer
+  LambdaGamma:
     Type: AWS::Lambda::Function
     Condition: CreateGammaComponent
     Properties:

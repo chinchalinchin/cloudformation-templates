@@ -67,7 +67,6 @@ then
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=functionName,ParameterValue=$FUNC_NAME \
                             ParameterKey=dbName,ParameterValue=$RDS_DBNAME \
-                            ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID \
                             ParameterKey=userStack,ParameterValue=$USER_STACK \
                             ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM
@@ -82,7 +81,6 @@ then
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=functionName,ParameterValue=$FUNC_NAME \
                             ParameterKey=dbName,ParameterValue=$RDS_DBNAME \
-                            ParameterKey=userPoolId,ParameterValue=$COGNITO_USER_POOL_ID \
                             ParameterKey=userStack,ParameterValue=$USER_STACK \
                             ParameterKey=vpcStack,ParameterValue="${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM  
