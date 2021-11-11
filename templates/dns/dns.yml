@@ -15,7 +15,7 @@ Parameters:
     Default: makpar-innovation.com
   subdomain:
     Type: String
-    Default: usaspending
+    Default: laboratory
   environmentName:
     Type: String
     Default: Dev
@@ -27,9 +27,9 @@ Parameters:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do nto need this paramter."
     Default: ${AWS::NoValue}    
-  gatewayStack:
+  frontendStack:
     Type: String
-    Default: CCC-GatewayStack-Dev
+    Default: InnoLab-FrontendStack-Dev
 
 Conditions:
   DNSExists: !Equals 
@@ -66,32 +66,13 @@ Resources:
       DomainName: !Sub "*.${domain}"
       ValidationMethod: DNS
 
-  DNSRestAPIDomainName:
+  RestAPIDomainName:
     # NOTE: Condition & The Certificate ARN
     Condition: DNSExists
     Type: 'AWS::ApiGateway::DomainName'
     Properties:
-      CertificateArn: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${certificateId}"
-      DomainName: !Sub 
-        - "api-${subdomainName}${subdomainEnv}.${domainName}"
-        # api-usaspending-dev.makpar-innovation.com
-        - subdomainEnv: 
-            Fn::FindInMap:
-              - SubEnvDomainMap
-              - !Ref environmentName
-              - subdomainEnv
-          subdomainName: !Ref subdomain
-          domainName: !Ref domain
-      EndpointConfiguration:
-        Types:
-          - EDGE
-
-  NoDNSRestAPIDomainName:
-    # NOTE: Condition & The Certificate ARN
-    Condition: NotDNSExists
-    Type: 'AWS::ApiGateway::DomainName'
-    Properties:
-      CertificateArn: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${Certificate}"
+      CertificateArn: 
+        !If [DNSExists, !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${certificateId}", !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${Certificate}"]
       DomainName: !Sub 
         - "api-${subdomainName}${subdomainEnv}.${domainName}"
         - subdomainEnv: 
@@ -105,12 +86,12 @@ Resources:
         Types:
           - EDGE
 
-  DNSRestAPIRoute53RecordSetGroup:
+  RestAPIRoute53RecordSetGroup:
     # NOTE: Condition & The HostedZoneId
     Condition: DNSExists
     Type: AWS::Route53::RecordSetGroup
     Properties:
-      HostedZoneId: !Ref hostedZoneId
+      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
       RecordSets:
         - Name: !Sub 
             - "api-${subdomainName}${subdomainEnv}.${domainName}"
@@ -126,59 +107,45 @@ Resources:
             HostedZoneId: !GetAtt DNSRestAPIDomainName.DistributionHostedZoneId
             DNSName: !GetAtt DNSRestAPIDomainName.DistributionDomainName
     DependsOn:
-      - DNSRestAPIDomainName
-      
-  NoDNSRestAPIRoute53RecordSetGroup:
-    # NOTE: Condition & the HostedZoneId
-    Condition: NotDNSExists
+      - RestAPIDomainName
+    
+  FrontendRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Properties:
-      HostedZoneId: !Ref HostedZone
+      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
       RecordSets:
-        - Name: !Sub 
-            - "api-${subdomainName}${subdomainEnv}.${domainName}"
-            - subdomainEnv: 
+        - Name: !Sub
+            - "${subdomainName}${subdomainEnv}.${domainName}"
+            - subdomainName: !Ref subdomain
+              domainName: !Ref domain
+              subdomainEnv: 
                 Fn::FindInMap:
                   - SubEnvDomainMap
                   - !Ref environmentName
                   - subdomainEnv
-              subdomainName: !Ref subdomain
-              domainName: !Ref domain
           Type: A
           AliasTarget:
-            HostedZoneId: !GetAtt NoDNSRestAPIDomainName.DistributionHostedZoneId
-            DNSName: !GetAtt NoDNSRestAPIDomainName.DistributionDomainName
+            DNSName: !GetAtt CloudFrontDistribution.DomainName
+            EvaluateTargetHealth: false
+            # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
+            # alias record that routes traffic to a CloudFront distribution.
+            HostedZoneId: Z2FDTNDATAQYW2
     DependsOn:
-      - NoDNSRestAPIDomainName
+      - CloudFrontDistribution
 
 Outputs: 
-  DNSRestAPIDomain:
+  RestAPIDomain:
     Condition: DNSExists
-    Value: !Ref DNSRestAPIDomainName
+    Value: !Ref RestAPIDomainName
     Export:
       Name: !Sub ${AWS::StackName}-RestAPIDomainName
-  NoDNSRestAPIDomain:
+  CertificateId:
     Condition: NotDNSExists
-    Value: !Ref NoDNSRestAPIDomainName
-    Export:
-      Name: !Sub ${AWS::StackName}-RestAPIDomainName
-  NoDNSCertificateId:
-    Condition: NotDNSExists
-    Value: !Ref Certificate
+    Value: !If [NotDNSExists, !Ref Certificate, !Ref certificateId]
     Export:
       Name: !Sub ${AWS::StackName}-CertificateID
-  DNSCertificateId:
-    Condition: DNSExists
-    Value: !Ref certificateId
-    Export:
-      Name: !Sub ${AWS::StackName}-CertificateID
-  NoDNSHostedZoneId:
+  HostedZoneId:
     Condition: NotDNSExists
-    Value: !Ref HostedZone
-    Export:
-      Name: !Sub ${AWS::StackName}-HostedZoneID
-  DNSHostedZoneId:
-    Condition: DNSExists
-    Value: !Ref hostedZoneId
+    Value: !If [NotDNSExists, !Ref HostedZone, !Ref hostedZoneId]
     Export:
       Name: !Sub ${AWS::StackName}-HostedZoneID

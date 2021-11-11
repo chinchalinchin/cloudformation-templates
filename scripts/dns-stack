@@ -72,14 +72,16 @@ then
                          ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
                          ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
-                         ParameterKey=DNS,ParameterValue=true
+                         ParameterKey=DNS,ParameterValue=true \
+                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK
     else
         aws cloudformation create-stack \
             --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
             --template-body file://dns.yml \
             --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                          ParameterKey=domain,ParameterValue=$DOMAIN \
-                         ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
+                         ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK
     fi
 
 elif [ "$ACTION" == "update" ]
@@ -94,14 +96,16 @@ then
                          ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
                          ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
-                         ParameterKey=DNS,ParameterValue=true
+                         ParameterKey=DNS,ParameterValue=true \
+                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK
     else
         aws cloudformation update-stack \
             --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
             --template-body file://dns.yml \
             --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                          ParameterKey=domain,ParameterValue=$DOMAIN \
-                         ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
+                         ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK
     fi
 elif [ "$ACTION" == "delete" ]
 then

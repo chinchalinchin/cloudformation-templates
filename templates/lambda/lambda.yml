@@ -228,32 +228,6 @@ Resources:
         - Key: Name 
           Value: !Sub ${AWS::StackName}-LambdaEpsilon
 
-  # PipelineLambdaPolicy:
-  #   Type: AWS::IAM::Policy
-  #   Properties:
-  #     PolicyName: !Sub pipeline-lambda-${environmentName}-policy
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: UpdateLambdaFunction
-  #           Effect: Allow
-  #           Action: 
-  #             - "lambda:UpdateFunctionCode"
-  #           Resource:
-  #             - !GetAtt LambdaEpsilon.Arn
-  #             - !GetAtt LambdaGamma.Arn
-  #             - !GetAtt LambdaDelta.Arn
-  #             - !GetAtt LambdaBeta.Arn
-  #             - !GetAtt LambdaAlpha.Arn
-  #     Users: 
-  #       - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
-  #   DependsOn:
-  #     - LambdaEpsilon
-  #     - LambdaGamma
-  #     - LambdaDelta
-  #     - LambdaBeta
-  #     - LambdaAlpha
-
 Outputs:
   LambdaAlphaArn:
     Value: !GetAtt LambdaAlpha.Arn

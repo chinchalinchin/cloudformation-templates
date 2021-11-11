@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'The final stack of the InnoLab environment. This stack pulls resource IDs and ARNs from the other stacks and gives the innolab-pipeline user all the necessary, but restrictive, permissions to push and update AWS resources.'
+
+Parameters:
+  # Stack Parameters
+  functionName:
+    Type: String
+    Default: innolab-lambda
+  applicationName:
+    Type: String
+    Default: innolab
+  # Stack Dependencies
+  userStack:
+    Type: String
+    Default: InnoLab-UserStack
+
+Resources:
+  PipelineLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub pipeline-lambda-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: UpdateLambdaFunction
+            Effect: Allow
+            Action: 
+              - "lambda:UpdateFunctionCode"
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${functionName}-*-*"
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
+  
+  PipelineECRPolicy:
+    Type: AWS::IAM::Policy
+    Description: Policy to allow pipeline to push and pull from ECR
+    Properties:
+      PolicyName: pipeline-ecr-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: RepositoryPermissions
+            Effect: Allow
+            Action:
+              - "ecr:GetAuthorizationToken"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:GetRepositoryPolicy"
+              - "ecr:DescribeRepositories"
+              - "ecr:ListImages"
+              - "ecr:DescribeImages"
+              - "ecr:BatchGetImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
+              - "ecr:PutImage"
+            Resource: 
+              - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repositry/${functionName}-*"
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
+
+  PipelineBucketPolicy:
+    Type: AWS::IAM::Policy
+    Description: Policy to allow pipeline to push and pull from ECR
+    Properties:
+      PolicyName: !Sub ${applicationName}-pipeline-bucket-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: piplineCrudOps
+            Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+            Resource: 
+                - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment/*"
+          - Sid: pipelineReadOp
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+            Resource: 
+              - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment"
+          - Sid: cloudfrontInvalidateOp
+            Effect: Allow
+            Action:
+              - "cloudfront:CreateInvalidation"
+            Resource:
+              - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName

@@ -13,10 +13,11 @@ aws cloudformation create-stack
 | Stack  |  Dependency |
 | ------ | ----------- |
 | UserStack | None |
-| ECRStack | UserStack | 
+| PolicyStack | UserStack |
+| ECRStack | None | 
 | VPCStack-$ENV | None | 
-| DNSStack-$ENV | None |
-| FrontendStack-$ENV | DNSStack-$ENV, UserStack |
+| FrontendStack-$ENV | UserStack |
+| DNSStack-$ENV | FrontendStack-$ENV |
 | RDSStack-$ENV | VPCStack-$ENV | 
 | LambdaStack-$ENV | VPCStack-$ENV, ECRStack, UserStack |
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
@@ -29,9 +30,10 @@ A more detailed version of what follows can be found on the [Confluence page](ht
 cp .sample.env .env
 # configure stack names and RDS credentials in .env file 
 source .env
-./scripts/users-stack
+./scripts/user-stack
+./scripts/policy-stack 
+./scripts/frontend-stack --environment <Dev | Prod | Test | Staging> 
 ./scripts/dns-stack [--dns-exists]
-./scripts/frontend-stack --environment <Dev | Prod | Test | Staging>
 ./scripts/vpc-stack --environment <Dev | Prod | Test | Staging>
 ./scripts/rds-stack --environment <Dev | Prod | Test | Staging>
 # Pass RDS Host Url to SecretManager

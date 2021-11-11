@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     user-stack --action <create | update | delete>
+# >$     policy-stack --action <create | update | delete>
 #
 #   NOTE: ``--action`` defaults to `create` if not supplied.
 
@@ -43,33 +43,35 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/iam/user.yml ./user.yml
+cp $PROJECT_DIR/templates/iam/policies.yml ./policies.yml
 
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "$USER_STACK" \
-        --template-body file://user.yml \
+        --stack-name "$POLICY_STACK" \
         --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
+        --template-body file://policies.yml \
+        --parameters ParameterKey=applicationName,ParameterValue=${APPLICATION,,} \
+                     ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                     ParameterKey=userStack,ParameterValue=$USER_STACK
         
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "$USER_STACK" \
-        --template-body file://user.yml \
+        --stack-name "$POLICY_STACK" \
+        --template-body file://policies.yml \
         --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
+        --parameters ParameterKey=applicationName,ParameterValue=${APPLICATION,,} \
+                     ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                     ParameterKey=userStack,ParameterValue=$USER_STACK
 
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "$USER_STACK"
+        --stack-name "$POLICY_STACK"
 else
     log "Action not understood."
     exit 1
 fi
     
-rm ./user.yml
+rm ./policies.yml
