@@ -1,14 +1,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "A stack containing the resources to serve the CCC-Frontend-${ENV} assets. This stack will provision "
+Description: "A stack containing the resources to serve the InnoLab-Frontend-${ENV} assets. This stack will provision "
 
 Parameters:
-  domain:
-    Type: String
-    Default: makpar-innovation.com
-  subdomain:
-    Type: String
-    Default: perdiem
   environmentName:
     Type: String
     Default: Dev

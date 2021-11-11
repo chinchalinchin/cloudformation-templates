@@ -102,6 +102,7 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
+          POSTGRES_DB: !Ref dbName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
@@ -133,6 +134,7 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
+          POSTGRES_DB: !Ref dbName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
@@ -165,6 +167,7 @@ Resources:
       MemorySize: 4000 
       Environment:
         Variables:
+          POSTGRES_DB: !Ref dbName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
@@ -196,6 +199,7 @@ Resources:
             - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
+          POSTGRES_DB: !Ref dbName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
