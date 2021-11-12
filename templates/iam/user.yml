@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'A stack containing a dummy account for pipeline, execution role for Lambda, and other IAM resources needed for the comet-code-challenge'
+Description: 'The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the applicaiton will build. This stack does not map to an ${environmentName} environment; it's resources are available stacks. It contains a dummy account for pipeline, execution role for Lambda and the resources necessary for a Cognito based OAuth authentication flow.'
 
 Parameters:
   pipelineUser:
