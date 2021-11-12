@@ -52,7 +52,8 @@ then
         --template-body file://user.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
+                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER
         
 elif [ "$ACTION" == "update" ]
 then
@@ -61,7 +62,8 @@ then
         --template-body file://user.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN
+                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER
 
 elif [ "$ACTION" == "delete" ]
 then

@@ -25,7 +25,7 @@ Parameters:
     Default: ${AWS::NoValue}
   hostedZoneId:
     Type: String
-    Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do nto need this paramter."
+    Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do not need this paramter."
     Default: ${AWS::NoValue}    
   frontendStack:
     Type: String
@@ -115,8 +115,8 @@ Resources:
               domainName: !Ref domain
           Type: A
           AliasTarget:
-            HostedZoneId: !GetAtt DNSRestAPIDomainName.DistributionHostedZoneId
-            DNSName: !GetAtt DNSRestAPIDomainName.DistributionDomainName
+            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
     DependsOn:
       - RestAPIDomainName
 
@@ -182,7 +182,8 @@ Resources:
         DefaultRootObject: 'index.html'
         IPV6Enabled: true
         Logging:
-          Bucket: !GetAtt FrontendBucketLogs.DomainName
+          Bucket: 
+            Fn::ImportValue: !Sub ${frontendStack}-FrontendLogBucketDomain
           IncludeCookies: false
           Prefix: 'cdn/'
 

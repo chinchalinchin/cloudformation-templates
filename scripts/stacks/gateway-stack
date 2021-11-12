@@ -57,9 +57,14 @@ then
         --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                     ParameterKey=alphaEndpoint,ParameterValue=$ALPHA_ENDPOINT \
+                     ParameterKey=alphaParam,ParameterValue=$ALPHA_PARAM \
+                     ParameterKey=betaEndpoint,ParameterValue=$BETA_ENDPOINT \
+                     ParameterKey=betaEndpoint,ParameterValue=$BETA_PARAM \
+                     ParameterKey=gammaEndpoint,ParameterValue=$GAMMA_ENDPOINT \
+                     ParameterKey=deltaEndpoint,ParameterValue=$DELTA_ENDPOINT \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStack,ParameterValue="${USER_STACK}" \
-                     ParameterKey=dnsStack,ParameterValue="${DNS_STACK}-${ENVIRONMENT}"
+                     ParameterKey=userStack,ParameterValue="${USER_STACK}" 
 
 elif [ "$ACTION" == "update" ]
 then
@@ -67,9 +72,14 @@ then
         --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                     ParameterKey=alphaEndpoint,ParameterValue=$ALPHA_ENDPOINT \
+                     ParameterKey=alphaParam,ParameterValue=$ALPHA_PARAM \
+                     ParameterKey=betaEndpoint,ParameterValue=$BETA_ENDPOINT \
+                     ParameterKey=betaEndpoint,ParameterValue=$BETA_PARAM \
+                     ParameterKey=gammaEndpoint,ParameterValue=$GAMMA_ENDPOINT \
+                     ParameterKey=deltaEndpoint,ParameterValue=$DELTA_ENDPOINT \
                      ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStack,ParameterValue="${USER_STACK}" \
-                     ParameterKey=dnsStack,ParameterValue="${DNS_STACK}-${ENVIRONMENT}"
+                     ParameterKey=userStack,ParameterValue="${USER_STACK}" 
 
 
 elif [ "$ACTION" == "delete" ]

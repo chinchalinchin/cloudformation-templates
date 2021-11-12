@@ -73,8 +73,8 @@ then
                          ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                          ParameterKey=DNS,ParameterValue=true \
-                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK \
-                         ParameterKey=gatewayStack,ParameterValue=$GATEWAY_STACK
+                         ParameterKey=frontendStack,ParameterValue="$FRONTEND_STACK-$ENVIRONMENT" \
+                         ParameterKey=gatewayStack,ParameterValue="$GATEWAY_STACK-$ENVIRONMENT"
     else
         aws cloudformation create-stack \
             --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
@@ -82,8 +82,8 @@ then
             --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                          ParameterKey=domain,ParameterValue=$DOMAIN \
                          ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK \
-                         ParameterKey=gatewayStack,ParameterValue=$GATEWAY_STACK
+                         ParameterKey=frontendStack,ParameterValue="$FRONTEND_STACK-$ENVIRONMENT" \
+                         ParameterKey=gatewayStack,ParameterValue="$GATEWAY_STACK-$ENVIRONMENT"
     fi
 
 elif [ "$ACTION" == "update" ]
@@ -99,8 +99,8 @@ then
                          ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                          ParameterKey=DNS,ParameterValue=true \
-                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK \
-                         ParameterKey=gatewayStack,ParameterValue=$GATEWAY_STACK
+                         ParameterKey=frontendStack,ParameterValue="$FRONTEND_STACK-$ENVIRONMENT" \
+                         ParameterKey=gatewayStack,ParameterValue="$GATEWAY_STACK-$ENVIRONMENT"
     else
         aws cloudformation update-stack \
             --stack-name "${DNS_STACK}-${ENVIRONMENT}" \
@@ -108,8 +108,8 @@ then
             --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                          ParameterKey=domain,ParameterValue=$DOMAIN \
                          ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                         ParameterKey=frontendStack,ParameterValue=$FRONTEND_STACK \
-                         ParameterKey=gatewayStack,ParameterValue=$GATEWAY_STACK
+                         ParameterKey=frontendStack,ParameterValue="$FRONTEND_STACK-$ENVIRONMENT" \
+                         ParameterKey=gatewayStack,ParameterValue="$GATEWAY_STACK-$ENVIRONMENT"
     fi
 elif [ "$ACTION" == "delete" ]
 then

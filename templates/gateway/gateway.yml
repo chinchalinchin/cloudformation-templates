@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the ${applicationName}-LambdaStack-${environmentName} into endpoints. In addition, it attaches a Lambda authorizer using the User Pool from the ${applicationName}-UserStack."
+Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the ${applicationName}-LambdaStack-${environmentName} into endpoints. In addition, it attaches a Lambda authorizer using the User Pool from the ${applicationName}-UserStack. The alphaEndpoint and betaEndpoint are set up by default with path parameters and exposed as GETs. The deltaEndpoint and gammaEndpoint are exposed as POSTs. The epsilonEndpoint is reserved for token generation. A mock endpoint on /verify provides a method for validating the status of a given token."
 
 Parameters:
   # OPTIONAL, DEFAULTS TO DEV ENVIRONMENT
@@ -12,10 +12,6 @@ Parameters:
     Type: String
     Description: "Defaults to InnoLab-UserStack"
     Default: InnoLab-UserStack
-  dnsStack:
-    Type: String
-    Description: "Defaults to InnoLab-DNSStack-Dev"
-    Default: InnoLab-DNSStack-Dev
   lambdaStack:
     Type: String
     Description: "Defaults to InnoLab-LambdaStack-Dev"
@@ -23,18 +19,31 @@ Parameters:
   # ENDPOINT PATHS, DEFAULTS
   alphaEndpoint:
     Type: String
+    Description: Root endpoint name for Lambda Alpha hook
     Default: alpha
+  alphaParam:
+    Type: String
+    Description: Path parameter name for Lambda Alpha hook
+    Default: alpha_param
   betaEndpoint:
     Type: String
+    Description: Root endpoint name for Lambda Beta hook
     Default: beta
+  betaParam:
+    Type: String
+    Description: Path parameter name for Lambda Beta hook
+    Default: beta_param
   gammaEndpoint:
     Type: String
-    Default: itinerary
+    Description: Endpoint name for Lambda Gamma Hook
+    Default: gamma
   deltaEndpoint:
     Type: String
-    Default: per-diem
+    Description: Endpoint name for Lambda Delta hook
+    Default: delta
   epsilonEndpoint:
     Type: String
+    Description: Endpoint name for Lambda Epsilon hook
     Default: token
 
 Resources:
@@ -80,16 +89,7 @@ Resources:
       - BetaParamResourceMethod
       - DeltaResourceMethod
       - EpsilonResourceMethod
-
-  RestAPIBasePathMapping:
-    Type: 'AWS::ApiGateway::BasePathMapping'
-    Properties:
-      DomainName: 
-        Fn::ImportValue: !Sub "${dnsStack}-RestAPIDomainName"
-      RestApiId: !Ref RestAPI
-      Stage: !Ref environmentName
-    DependsOn:
-      - RestAPIDeployment
+      - VerifyResourceMethod
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
@@ -116,7 +116,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref AlphaRootResource
-      PathPart: "{alpha_param}"
+      PathPart: !Sub "{${alphaParam}}"
     DependsOn:
       - RestAPI
       - AlphaRootResource
@@ -136,7 +136,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref BetaRootResource
-      PathPart: "{beta_param}"
+      PathPart: !Sub "{${betaParam}}"
     DependsOn:
       - RestAPI
 
@@ -149,6 +149,15 @@ Resources:
       PathPart: !Ref deltaEndpoint
     DependsOn:
       - RestAPI
+  
+  GammaResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:   
+      RestApiId: !Ref RestAPI
+      ParentId: !GetAtt RestAPI.RootResourceId
+      PathPart: !Ref gammaEndpoint
+    DependsOn:
+      - RestAPI
 
   # Token Endpoint
   EpsilonResource:
@@ -159,14 +168,14 @@ Resources:
       PathPart: !Ref epsilonEndpoint
     DependsOn:
       - RestAPI
-  
-  GammaResource:
+
+  VerifyResource:
     Type: 'AWS::ApiGateway::Resource'
-    Properties:   
+    Properties:
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: !Ref gammaEndpoint
-    DependsOn:
+      PathPart: verify
+    DependsOn: 
       - RestAPI
 
   # Mock Response for root method to return 400 status code
@@ -489,7 +498,8 @@ Resources:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref GammaResource
       HttpMethod: POST
-      AuthorizationType: NONE
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
         Type: AWS_PROXY
         # INTEGRATION HTTP METHOD MUST BE POST
@@ -584,6 +594,71 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn:
       - EpsilonResource
+
+  # Mock Response to verify user token
+  VerifyResourceMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref VerifyResource
+      HttpMethod: GET
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+    DependsOn:
+      - VerifyResource
+  
+  VerifyCORS:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref VerifyResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            # method.response.header.Access-Control-Allow-Methods: "'*'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: 
+      - VerifyResource
 
   LambdaAlphaParamApiGatewayInvoke:
     Type: AWS::Lambda::Permission
