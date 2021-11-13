@@ -53,7 +53,9 @@ then
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
                      ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER
+                     ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER \
+                     ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
         
 elif [ "$ACTION" == "update" ]
 then
@@ -63,7 +65,9 @@ then
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
                      ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER
+                     ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER \
+                     ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
 
 elif [ "$ACTION" == "delete" ]
 then

@@ -3,5 +3,25 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: ""
 
 Parameters:
+  applicationName:
+    Type: String
+    Default: innolab
 
 Resources:
+  FrontendRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-frontend"
+      RepositoryDescription: "A repository for the React application"
+
+  BackendRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-backend"
+      RepositoryDescription: "Repository for lambda functions"
+      
+  TestingRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-test-harness"
+      RepositoryDescription: "A repository for testing harness"
