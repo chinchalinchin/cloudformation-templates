@@ -86,9 +86,9 @@ Resources:
             Resource:
               - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
       Users: 
-        - !Ref PipelineUser
+        - !Ref BitbucketPipelineUser
 
-  AWSPipelineRole:
+  CodePipelineRole:
       Type: AWS::IAM::Role
       Description: Role to allow Innolab Lambdas to access other AWS Services
       Properties:
@@ -99,25 +99,13 @@ Resources:
               Principal:
                 Service:
                   - "codepipeline.amazonaws.com"
-                  - "cloudformation.amazonaws.com"
               Action: 
                 - "sts:AssumeRole"
         Policies:
-          - PolicyName: !Sub ${applicationName}-codebuild-role-policy
+          - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
             PolicyDocument:
               Version: "2012-10-17"
               Statement:
-                - Action:
-                  - iam:PassRole
-                  Resource: "*"
-                  Effect: Allow
-                  Condition:
-                    StringEqualsIfExists:
-                      iam:PassedToService:
-                      - cloudformation.amazonaws.com
-                      - elasticbeanstalk.amazonaws.com
-                      - ec2.amazonaws.com
-                      - ecs-tasks.amazonaws.com
                 - Action:
                   - codecommit:CancelUploadArchive
                   - codecommit:GetBranch
@@ -141,46 +129,15 @@ Resources:
                   Resource: "*"
                   Effect: Allow
                 - Action:
-                  - elasticbeanstalk:*
-                  - ec2:*
-                  - elasticloadbalancing:*
-                  - autoscaling:*
                   - cloudwatch:*
                   - s3:*
-                  - sns:*
-                  - cloudformation:*
                   - rds:*
-                  - sqs:*
-                  - ecs:*
                   Resource: "*"
                   Effect: Allow
                 - Action:
                   - lambda:InvokeFunction
                   - lambda:ListFunctions
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - opsworks:CreateDeployment
-                  - opsworks:DescribeApps
-                  - opsworks:DescribeCommands
-                  - opsworks:DescribeDeployments
-                  - opsworks:DescribeInstances
-                  - opsworks:DescribeStacks
-                  - opsworks:UpdateApp
-                  - opsworks:UpdateStack
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - cloudformation:CreateStack
-                  - cloudformation:DeleteStack
-                  - cloudformation:DescribeStacks
-                  - cloudformation:UpdateStack
-                  - cloudformation:CreateChangeSet
-                  - cloudformation:DeleteChangeSet
-                  - cloudformation:DescribeChangeSet
-                  - cloudformation:ExecuteChangeSet
-                  - cloudformation:SetStackPolicy
-                  - cloudformation:ValidateTemplate
+                  - lambda:UpdateFunctionCode
                   Resource: "*"
                   Effect: Allow
                 - Action:
@@ -192,40 +149,18 @@ Resources:
                   Effect: Allow
                 - Effect: Allow
                   Action:
-                  - devicefarm:ListProjects
-                  - devicefarm:ListDevicePools
-                  - devicefarm:GetRun
-                  - devicefarm:GetUpload
-                  - devicefarm:CreateUpload
-                  - devicefarm:ScheduleRun
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - servicecatalog:ListProvisioningArtifacts
-                  - servicecatalog:CreateProvisioningArtifact
-                  - servicecatalog:DescribeProvisioningArtifact
-                  - servicecatalog:DeleteProvisioningArtifact
-                  - servicecatalog:UpdateProduct
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - cloudformation:ValidateTemplate
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - ecr:DescribeImages
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - states:DescribeExecution
-                  - states:DescribeStateMachine
-                  - states:StartExecution
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - appconfig:StartDeployment
-                  - appconfig:StopDeployment
-                  - appconfig:GetDeployment
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:GetRepositoryPolicy"
+                  - "ecr:DescribeRepositories"
+                  - "ecr:ListImages"
+                  - "ecr:DescribeImages"
+                  - "ecr:BatchGetImage"
+                  - "ecr:InitiateLayerUpload"
+                  - "ecr:UploadLayerPart"
+                  - "ecr:CompleteLayerUpload"
+                  - "ecr:PutImage"
                   Resource: "*"
 
   LambdaExecutor:
@@ -258,146 +193,7 @@ Resources:
     DependsOn:
       - CognitoUserPool
 
-    AWSPipelineRole:
-      Type: AWS::IAM::Role
-      Description: Role to allow Innolab Lambdas to access other AWS Services
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - "codepipeline.amazonaws.com"
-                  - "cloudformation.amazonaws.com"
-              Action: 
-                - "sts:AssumeRole"
-        Policies:
-          - PolicyName: CognitoTokenPolicy
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Action:
-                  - iam:PassRole
-                  Resource: "*"
-                  Effect: Allow
-                  Condition:
-                    StringEqualsIfExists:
-                      iam:PassedToService:
-                      - cloudformation.amazonaws.com
-                      - elasticbeanstalk.amazonaws.com
-                      - ec2.amazonaws.com
-                      - ecs-tasks.amazonaws.com
-                - Action:
-                  - codecommit:CancelUploadArchive
-                  - codecommit:GetBranch
-                  - codecommit:GetCommit
-                  - codecommit:GetRepository
-                  - codecommit:GetUploadArchiveStatus
-                  - codecommit:UploadArchive
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - codedeploy:CreateDeployment
-                  - codedeploy:GetApplication
-                  - codedeploy:GetApplicationRevision
-                  - codedeploy:GetDeployment
-                  - codedeploy:GetDeploymentConfig
-                  - codedeploy:RegisterApplicationRevision
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - codestar-connections:UseConnection
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - elasticbeanstalk:*
-                  - ec2:*
-                  - elasticloadbalancing:*
-                  - autoscaling:*
-                  - cloudwatch:*
-                  - s3:*
-                  - sns:*
-                  - cloudformation:*
-                  - rds:*
-                  - sqs:*
-                  - ecs:*
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - lambda:InvokeFunction
-                  - lambda:ListFunctions
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - opsworks:CreateDeployment
-                  - opsworks:DescribeApps
-                  - opsworks:DescribeCommands
-                  - opsworks:DescribeDeployments
-                  - opsworks:DescribeInstances
-                  - opsworks:DescribeStacks
-                  - opsworks:UpdateApp
-                  - opsworks:UpdateStack
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - cloudformation:CreateStack
-                  - cloudformation:DeleteStack
-                  - cloudformation:DescribeStacks
-                  - cloudformation:UpdateStack
-                  - cloudformation:CreateChangeSet
-                  - cloudformation:DeleteChangeSet
-                  - cloudformation:DescribeChangeSet
-                  - cloudformation:ExecuteChangeSet
-                  - cloudformation:SetStackPolicy
-                  - cloudformation:ValidateTemplate
-                  Resource: "*"
-                  Effect: Allow
-                - Action:
-                  - codebuild:BatchGetBuilds
-                  - codebuild:StartBuild
-                  - codebuild:BatchGetBuildBatches
-                  - codebuild:StartBuildBatch
-                  Resource: "*"
-                  Effect: Allow
-                - Effect: Allow
-                  Action:
-                  - devicefarm:ListProjects
-                  - devicefarm:ListDevicePools
-                  - devicefarm:GetRun
-                  - devicefarm:GetUpload
-                  - devicefarm:CreateUpload
-                  - devicefarm:ScheduleRun
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - servicecatalog:ListProvisioningArtifacts
-                  - servicecatalog:CreateProvisioningArtifact
-                  - servicecatalog:DescribeProvisioningArtifact
-                  - servicecatalog:DeleteProvisioningArtifact
-                  - servicecatalog:UpdateProduct
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - cloudformation:ValidateTemplate
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - ecr:DescribeImages
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - states:DescribeExecution
-                  - states:DescribeStateMachine
-                  - states:StartExecution
-                  Resource: "*"
-                - Effect: Allow
-                  Action:
-                  - appconfig:StartDeployment
-                  - appconfig:StopDeployment
-                  - appconfig:GetDeployment
-                  Resource: "*"
-
+    
   APILogger:
     Type: AWS::IAM::Role
     Description: Role to allow API Gateway to push logs to CloudWatch
@@ -526,12 +322,9 @@ Resources:
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: !Sub "/${applicationName}/"
-      UserName: pconfrancesco
-  DeveloperAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties: 
-      UserName: !Ref IAMPeter
-  
+      UserName: pcofrancesco
+
+
   CognitoTariq:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
@@ -578,7 +371,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AdministratorAccess
       Path: !Sub "/${applicationName}/"
-      UserName: gmooore
+      UserName: gmoore
 
   CognitoThomas:
     Type: "AWS::Cognito::UserPoolUser"
@@ -648,7 +441,7 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: mpinardi
   
-  PhungN:
+  CognitoPhung:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "pngo@makpar.com"
@@ -696,24 +489,44 @@ Resources:
           Value: "Ian McNutt"
     DependsOn:
       - CognitoUserPool
+  IAMIan:
+    Type: AWS::IAM::User
+    Properties:
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: imcnutt
 
 
 Outputs:
-  PipelineUserArn:
-    Value: !GetAtt PipelineUser.Arn
+  BitbucketPipelineUserArn:
+    Value: !GetAtt BitbucketPipelineUser.Arn
     Description: ARN for BitBucket Pipeline User
     Export:
-      Name: !Sub ${AWS::StackName}-PipelineUserArn
-  PipelineUserName:
+      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserArn
+  BitbucketPipelineUserName:
     Value: !Ref pipelineUser
     Description: Username for BitBucket Pipeline User
     Export:
-      Name: !Sub ${AWS::StackName}-PipelineUserName
+      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserName
   LambdaExecutorArn:
     Value: !GetAtt LambdaExecutor.Arn
     Description: ARN for Lambda Execution Role
     Export:
       Name: !Sub ${AWS::StackName}-LambdaExecutorArn
+  CodePipelineRoleArn:
+    Value: !GetAtt CodePipelineRole.Arn
+    Description: ARN for CodePipeline role
+    Export:
+      Name: !Sub ${AWS::StackName}-CodePipelineRoleArn
   LoggerRoleArn:
     Value: !GetAtt APILogger.Arn
     Description: ARN for API Logger Role

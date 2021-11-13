@@ -60,14 +60,16 @@ then
     aws cloudformation create-stack \
         --stack-name "${DEVOPS_STACK}-${ENVIRONMENT}" \
         --template-body file://devops.yml \
-        --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION 
+        --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION  \
+        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${DEVOPS_STACK}-${ENVIRONMENT}" \
         --template-body file://devops.yml \
-        --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION
+        --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
+        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
          
 elif [ "$ACTION" == "delete" ]
 then

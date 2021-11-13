@@ -6,6 +6,10 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
+  
+  userStack:
+    Type: String
+    Default: InnoLab-UserStack
 
 Resources:
   FrontendRepo:
@@ -25,3 +29,36 @@ Resources:
     Properties:
       RepositoryName: !Sub "${applicationName}-test-harness"
       RepositoryDescription: "A repository for testing harness"
+
+  PipelineArtifacts:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub "${applicationName}-pipeline-artifacts"
+      
+  FrontendPipelineDev:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn:
+        Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+          - Name: Source
+            InputArtifacts: []
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Version: 1
+              Provider: CodeComit
+            OutputArtifacts:
+            - Name: SourceCode    
+            Configuration:
+              RepositoryName: !GetAtt FrontendRepo.Name
+              BranchName: Dev
+              PollForSourceChanges: true
+            RunOrder: 1
