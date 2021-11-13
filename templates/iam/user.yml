@@ -28,13 +28,14 @@ Parameters:
     Type: String
 
 Resources:
-  PipelineUser:
+
+  BitbucketPipelineUser:
     Type: AWS::IAM::User
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
 
-  PipelinePolicy:
+  BitbucketPipelinePolicy:
     Type: AWS::IAM::Policy
     Properties:
       PolicyName: !Sub pipeline-${applicationName}-policy
@@ -117,7 +118,7 @@ Resources:
     DependsOn:
       - CognitoUserPool
 
-    PipelineRole:
+    AWSPipelineRole:
       Type: AWS::IAM::Role
       Description: Role to allow Innolab Lambdas to access other AWS Services
       Properties:
