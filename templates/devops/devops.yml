@@ -62,3 +62,18 @@ Resources:
               BranchName: Dev
               PollForSourceChanges: true
             RunOrder: 1
+        - Name: Build   
+          Actions:
+          - Name: CodeBuild
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Provider: CodeBuild
+              Version: '1'
+            InputArtifacts:
+            - Name: SourceCode
+            OutputArtifacts:
+            - Name: PublicFiles
+148          Configuration: 
+149            ProjectName: !Ref CodeBuildProject
+150          RunOrder: 1
