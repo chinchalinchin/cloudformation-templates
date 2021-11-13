@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the applicaiton will build. This stack does not map to an ${environmentName} environment; it's resources are available stacks. It contains a dummy account for pipeline, execution role for Lambda and the resources necessary for a Cognito based OAuth authentication flow.'
+Description: "The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the applicaiton will build. This stack does not map to an ${environmentName} environment; it's resources are available stacks. It contains a dummy account for pipeline, execution role for Lambda and the resources necessary for a Cognito based OAuth authentication flow."
 
 Parameters:
   pipelineUser:
     Type: String
-    Default: innolab-pipeline
+    Default: ccc-pipeline
   
   # domain and subdomain are used to register callbacks with UserPoolClients
   domain:
@@ -14,7 +14,7 @@ Parameters:
   
   subdomain:
     Type: String
-    Default: laboratory
+    Default: ccc
 
 Resources:
   PipelineUser:
@@ -73,7 +73,7 @@ Resources:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      Domain: "makpar-innovation"
+      Domain: "ccc-innovation"
     DependsOn:
       - CognitoUserPool
 

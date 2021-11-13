@@ -1,0 +1,84 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_NAME="devops-stack"
+SCRIPT_DES=$''
+PROJECT_DIR=$SCRIPT_DIR/../..
+source $PROJECT_DIR/.env
+
+# Example Usage:
+# >$     devops-stack --environment <Dev | Prod | Test | Staging> \
+#                   --action <create | update | delete> 
+
+#   NOTE: ``--action`` defaults to `create` if not supplied
+#   NOTE: if the hosted zone and certificate have already been configured, 
+#           pass in the ``--dns-exists`` flag. Ensure the *CERTIFICATE_ID*
+#           and *HOSTED_ZONE_ID* have been set in the */env/.env* file if
+#           this is the case.
+
+function log(){
+    echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
+}
+
+function help(){
+    echo -e "\n\e[4m$SCRIPT_NAME\e[0m\n\n\t$SCRIPT_DES" 
+}
+
+while [[ $# -gt 0 ]]; do
+       key="$1"
+       case $key in
+                --action)
+                    ACTION="$2"
+                    shift
+                    shift 
+                    ;;
+                --help)
+                    help
+                    exit 0
+                    ;;
+                --environment)
+                    ENVIRONMENT="$2"
+                    shift
+                    shift
+                    ;;
+                *)
+                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+                    exit 1
+                    ;;
+       esac
+done
+
+if [ -z "$ACTION" ]
+then
+    ACTION="create"
+fi
+
+cp $PROJECT_DIR/templates/devops/devops.yml ./devops.yml
+
+if [ "$ACTION" == "create" ]
+then
+    aws cloudformation create-stack \
+        --stack-name "${DEVOPS_STACK}-${ENVIRONMENT}" \
+        --template-body file://devops.yml \
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                        ParameterKey=domain,ParameterValue=$DOMAIN \
+                        ParameterKey=subdomain,ParameterValue=$SUBDOMAIN 
+
+
+elif [ "$ACTION" == "update" ]
+then
+    aws cloudformation update-stack \
+        --stack-name "${DEVOPS_STACK}-${ENVIRONMENT}" \
+        --template-body file://devops.yml \
+        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                        ParameterKey=domain,ParameterValue=$DOMAIN \
+                        ParameterKey=subdomain,ParameterValue=$SUBDOMAIN 
+elif [ "$ACTION" == "delete" ]
+then
+    aws cloudformation delete-stack \
+        --stack-name "${DEVOPS_STACK}-${ENVIRONMENT}"
+else
+    log "Action not understood"
+fi
+
+rm ./devops.yml

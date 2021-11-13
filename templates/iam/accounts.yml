@@ -9,6 +9,10 @@ Parameters:
   password:
     Type: String
   
+  applicationName:
+    Type: String
+    Default: innolab
+
   type:
     Type: String
     Default: Dev
@@ -46,6 +50,7 @@ Resources:
         PasswordResetRequired: True
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/PowerUserAccess
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: /ccc
       UserName: !Ref username
   
@@ -95,6 +100,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
         - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: /ccc
       UserName: !Ref username
 

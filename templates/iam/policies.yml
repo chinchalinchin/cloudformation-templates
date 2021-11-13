@@ -19,7 +19,7 @@ Resources:
   PipelineLambdaPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub pipeline-lambda-policy
+      PolicyName: !Sub pipeline-${applicationName}-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -29,17 +29,6 @@ Resources:
               - "lambda:UpdateFunctionCode"
             Resource:
               - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${functionName}-*-*"
-      Users: 
-        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
-  
-  PipelineECRPolicy:
-    Type: AWS::IAM::Policy
-    Description: Policy to allow pipeline to push and pull from ECR
-    Properties:
-      PolicyName: pipeline-ecr-policy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
           - Sid: RepositoryPermissions
             Effect: Allow
             Action:
@@ -57,17 +46,6 @@ Resources:
               - "ecr:PutImage"
             Resource: 
               - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repositry/${functionName}-*"
-      Users: 
-        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
-
-  PipelineBucketPolicy:
-    Type: AWS::IAM::Policy
-    Description: Policy to allow pipeline to push and pull from ECR
-    Properties:
-      PolicyName: !Sub ${applicationName}-pipeline-bucket-policy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
           - Sid: piplineCrudOps
             Effect: Allow
             Action:
@@ -86,7 +64,5 @@ Resources:
             Effect: Allow
             Action:
               - "cloudfront:CreateInvalidation"
-            Resource:
-              - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
       Users: 
         - Fn::ImportValue: !Sub ${userStack}-PipelineUserName

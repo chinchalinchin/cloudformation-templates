@@ -18,23 +18,23 @@ Parameters:
     Default: Dev
   functionName:
     Type: String
-    Default: innolab-lambda
+    Default: ccc-lambda
   applicationName:
     Type: String
-    Default: InnoLab
+    Default: CCC
   dbName:
     Type: String
-    Default: InnoLab
+    Default: CCC
   # Stack Dependencies
   userStack:
     Type: String
-    Default: InnoLab-UserStack
+    Default: CCC-UserStack
   ecrStack:
     Type: String
-    Default: InnoLab-ECRStack
+    Default: CCC-ECRStack
   vpcStack:
     Type: String
-    Default: InnoLab-VPCStack-Dev
+    Default: CCC-VPCStack-Dev
 
 Conditions:
   CreateOneComponent: !Equals
@@ -104,7 +104,7 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -136,7 +136,7 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -169,7 +169,7 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -201,7 +201,7 @@ Resources:
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
