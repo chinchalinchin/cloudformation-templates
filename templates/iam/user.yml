@@ -5,7 +5,7 @@ Description: "The first stack of the ${applicationName} application; this stack 
 Parameters:
   pipelineUser:
     Type: String
-    Default: ccc-pipeline
+    Default: innolab-pipeline
   
   # domain and subdomain are used to register callbacks with UserPoolClients
   domain:
@@ -14,7 +14,11 @@ Parameters:
   
   subdomain:
     Type: String
-    Default: ccc
+    Default: laboratory
+
+  applicationName:
+    Type: String
+    Default: innolab
 
 Resources:
   PipelineUser:
@@ -22,6 +26,57 @@ Resources:
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
+
+   PipelinePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub pipeline-${applicationName}-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: UpdateLambdaFunction
+            Effect: Allow
+            Action: 
+              - "lambda:UpdateFunctionCode"
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${functionName}-*-*"
+          - Sid: RepositoryPermissions
+            Effect: Allow
+            Action:
+              - "ecr:GetAuthorizationToken"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:GetRepositoryPolicy"
+              - "ecr:DescribeRepositories"
+              - "ecr:ListImages"
+              - "ecr:DescribeImages"
+              - "ecr:BatchGetImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
+              - "ecr:PutImage"
+            Resource: 
+              - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repositry/${functionName}-*"
+          - Sid: piplineCrudOps
+            Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+            Resource: 
+                - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment/*"
+          - Sid: pipelineReadOp
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+            Resource: 
+              - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment"
+          - Sid: cloudfrontInvalidateOp
+            Effect: Allow
+            Action:
+              - "cloudfront:CreateInvalidation"
+      Users: 
+        - Fn::ImportValue: !Sub ${userStack}-PipelineUserName
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -149,7 +204,7 @@ Resources:
     DependsOn:
       - CognitoUserPool
 
-  PeterC:
+  CognitoPeter:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "pcofrancesco@makpar.com"
@@ -160,11 +215,32 @@ Resources:
         - Name: "email"
           Value: "pcofrancesco@makpar.com"
         - Name: "name"
-          Value: "SaltPeter"
+          Value: "Peter Confrancesco"
     DependsOn:
       - CognitoUserPool
+  IAMPeter:
+    Type: AWS::IAM::User
+    Condition: Developer
+    Properties:
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
+        - arn:aws:iam::aws:policy/CloudFrontFullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+      Path: !Sub "/${applicationName}"
+      UserName: pconfrancesco
   
-  TariqI:
+  CognitoTariq:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "tislam@makpar.com"
@@ -175,9 +251,19 @@ Resources:
         - Name: "email"
           Value: "tislam@makpar.com"
         - Name: "name"
-          Value: "Tariq"
+          Value: "Tariq Islam"
+  IAMTariq:
+    Type: AWS::IAM::User
+    Properties:
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: !Sub "/${applicationName}"
+      UserName: tislam
 
-  GrantM:
+  CognitoGrant:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "gmoore@makpar.com"
@@ -188,26 +274,21 @@ Resources:
         - Name: "email"
           Value: "gmoore@makpar.com"
         - Name: "name"
-          Value: "MooreForYourMoney"
+          Value: "Grant Moore"
     DependsOn:
         - CognitoUserPool
-  
-  JustinS:
-    Type: "AWS::Cognito::UserPoolUser"
+  IAMGrant:
+    Type: AWS::IAM::User
     Properties:
-      Username: "jstauffer@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "jstauffer@makpar.com"
-        - Name: "name"
-          Value: "JustinTime"
-    DependsOn:
-      - CognitoUserPool
+      LoginProfile:
+        Password: !Ref password
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: !Sub "/${applicationName}"
+      UserName: gmooore
 
-  ThomasK:
+  CognitoThomas:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "tklock@makpar.com"
@@ -218,11 +299,31 @@ Resources:
         - Name: "email"
           Value: "tklock@makpar.com"
         - Name: "name"
-          Value: "KlockedAndLoaded"
+          Value: "Thomas Klock"
     DependsOn:
       - CognitoUserPool
+  IAMThomas:
+    Type: AWS::IAM::User
+    Properties:
+      LoginProfile:
+        Password: !Ref password
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
+        - arn:aws:iam::aws:policy/CloudFrontFullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+      Path: !Sub "/${applicationName}"
+      UserName: tklock
   
-  MattP:
+  CognitoMatt:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
       Username: "mpinardi@baosystems.com"
@@ -233,9 +334,29 @@ Resources:
         - Name: "email"
           Value: "mpinardi@baosystems.com"
         - Name: "name"
-          Value: "MattErsOfOpinion"
+          Value: "Matt Pinardi"
     DependsOn:
       - CognitoUserPool
+  IAMMatt:
+    Type: AWS::IAM::User
+    Properties:
+      LoginProfile:
+        Password: !Ref password
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
+        - arn:aws:iam::aws:policy/CloudFrontFullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+      Path: !Sub "/${applicationName}"
+      UserName: mpinardi
   
   PhungN:
     Type: "AWS::Cognito::UserPoolUser"
