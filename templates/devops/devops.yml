@@ -91,7 +91,7 @@ Resources:
           Id: 
             !Sub ${applicationName}-codepipeline
 
-  FrontendPipeline:
+  FrontendDevPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       Name: !Sub "${applicationName}-frontend-pipeline"
@@ -111,7 +111,7 @@ Resources:
                 Version: 1
                 Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-source"    
+                - Name: !Sub "${applicationName}-frontend-dev-source"    
               Configuration:
                 RepositoryName: !GetAtt FrontendRepo.Name
                 BranchName: Dev
@@ -125,9 +125,93 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-source"
+                - Name: !Sub "${applicationName}-frontend-dev-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-build"
+                - Name: !Sub "${applicationName}-frontend-dev-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+    DependsOn:
+      - CodeBuild
+
+  FrontendStagingPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-frontend-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-frontend-staging-source"    
+              Configuration:
+                RepositoryName: !GetAtt FrontendRepo.Name
+                BranchName: Staging
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-frontend-staging-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-frontend-staging-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+    DependsOn:
+      - CodeBuild
+
+  FrontendProdPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-frontend-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-frontend-prod-source"    
+              Configuration:
+                RepositoryName: !GetAtt FrontendRepo.Name
+                BranchName: Dev
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-frontend-prod-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-frontend-prod-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
     DependsOn:
