@@ -48,7 +48,7 @@ cp .sample.env .env
 ```
 ./scripts/stacks/devops/iam-stack
 ./scripts/stacks/devops/repo-stack
-./scripts/stacks/devops/pipeline-stack 
+./scripts/stacks/devops/pipeline-stack
 ```
 ## Application Stack
 
