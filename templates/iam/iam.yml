@@ -7,14 +7,6 @@ Parameters:
     Type: String
     Default: innolab-pipeline
     Description: Username for the Bitbucket pipeline account
-  domain:
-    Type: String
-    Default: makpar-innovation.com
-    Description: Domain used in the callback registered with the Cognito Auth clients.
-  subdomain:
-    Type: String
-    Default: laboratory
-    Description: Subdomain used in the callback registered with the Cognito Auth clients.
   applicationName:
     Type: String
     Default: innolab
@@ -270,100 +262,6 @@ Resources:
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
 
-  AuthDomain:
-    Type: AWS::Cognito::UserPoolDomain
-    Properties:
-      UserPoolId: !Ref CognitoUserPool
-      Domain: "ccc-innovation"
-    DependsOn:
-      - CognitoUserPool
-
-  CognitoUserPool:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: !Sub ${AWS::StackName}-UserPool
-      UsernameConfiguration:
-        CaseSensitive: false
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireLowercase: true
-          RequireSymbols: true
-          RequireUppercase: true
-          TemporaryPasswordValidityDays: 1
-      Schema:
-        - AttributeDataType: String
-          DeveloperOnlyAttribute: false
-          Mutable: true
-          Name: email
-        - AttributeDataType: String
-          DeveloperOnlyAttribute: false
-          Mutable: true
-          Name: name
-  
-  APIClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      UserPoolId: !Ref CognitoUserPool
-      ClientName: !Sub ${AWS::StackName}-APICognitoClient
-      AllowedOAuthFlows:
-        - implicit
-      AllowedOAuthScopes:
-        - email
-        - openid
-        - profile
-      AllowedOAuthFlowsUserPoolClient: true
-      CallbackURLs:
-        - !Sub "https://${subdomain}-dev.${domain}"
-      ExplicitAuthFlows:
-        - "ALLOW_CUSTOM_AUTH"
-        - "ALLOW_REFRESH_TOKEN_AUTH"
-        - "ALLOW_USER_PASSWORD_AUTH"
-        - "ALLOW_USER_SRP_AUTH"
-      AccessTokenValidity: 60
-      IdTokenValidity: 60
-      RefreshTokenValidity: 30
-      TokenValidityUnits:
-        AccessToken: "minutes"
-        IdToken: "minutes"
-        RefreshToken: "days"
-      SupportedIdentityProviders:
-        - COGNITO
-    DependsOn:
-      - CognitoUserPool
-
-  WebClient: 
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      UserPoolId: !Ref CognitoUserPool
-      ClientName: !Sub ${AWS::StackName}-WebCognitoClient
-      GenerateSecret: true
-      AccessTokenValidity: 60
-      IdTokenValidity: 60
-      RefreshTokenValidity: 30
-      TokenValidityUnits:
-        AccessToken: "minutes"
-        IdToken: "minutes"
-        RefreshToken: "days"
-    DependsOn:
-      - CognitoUserPool
-
-  CognitoPeter:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "pcofrancesco@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "pcofrancesco@makpar.com"
-        - Name: "name"
-          Value: "Peter Confrancesco"
-    DependsOn:
-      - CognitoUserPool
   IAMPeter:
     Type: AWS::IAM::User
     Properties:
@@ -384,18 +282,6 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: pcofrancesco
 
-  CognitoTariq:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "tislam@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "tislam@makpar.com"
-        - Name: "name"
-          Value: "Tariq Islam"
   IAMTariq:
     Type: AWS::IAM::User
     Properties:
@@ -407,20 +293,6 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: tislam
 
-  CognitoGrant:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "gmoore@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "gmoore@makpar.com"
-        - Name: "name"
-          Value: "Grant Moore"
-    DependsOn:
-        - CognitoUserPool
   IAMGrant:
     Type: AWS::IAM::User
     Properties:
@@ -432,20 +304,6 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: gmoore
 
-  CognitoThomas:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "tklock@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "tklock@makpar.com"
-        - Name: "name"
-          Value: "Thomas Klock"
-    DependsOn:
-      - CognitoUserPool
   IAMThomas:
     Type: AWS::IAM::User
     Properties:
@@ -466,20 +324,6 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: tklock
   
-  CognitoMatt:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "mpinardi@baosystems.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "mpinardi@baosystems.com"
-        - Name: "name"
-          Value: "Matt Pinardi"
-    DependsOn:
-      - CognitoUserPool
   IAMMatt:
     Type: AWS::IAM::User
     Properties:
@@ -500,20 +344,6 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: mpinardi
   
-  CognitoPhung:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "pngo@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "pngo@makpar.com"
-        - Name: "name"
-          Value: "Phung Ngo"
-    DependsOn:
-      - CognitoUserPool
   IAMPhung:
     Type: AWS::IAM::User
     Properties:
@@ -534,20 +364,6 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: pngo
 
-  CognitoIan:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "ian.mcnutt@tripointsolutions.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "ian.mcnutt@tripointsolutions.com"
-        - Name: "name"
-          Value: "Ian McNutt"
-    DependsOn:
-      - CognitoUserPool
   IAMIan:
     Type: AWS::IAM::User
     Properties:

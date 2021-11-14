@@ -9,15 +9,21 @@ aws cloudformation create-stack
 
 # Dependencies
 
+## DevOps Stacks
+| Stack | Dependency | 
+| ----- | ---------- |
+| IAMStack | None |
+| RepoStack | None |
+| Pipeline Stack | RepoStack, IAMStack |
 
+## Application Stacks
 | Stack  |  Dependency |
 | ------ | ----------- |
-| UserStack | None |
-| DevOpsStack | UserStack |
+| CognitoStack | None |
 | ECRStack | None | 
 | VPCStack-$ENV | None | 
 | FrontendStack-$ENV | None |
-| RDSStack-$ENV | VPCStack-$ENV, UserStack | 
+| RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
 | LambdaStack-$ENV | VPCStack-$ENV, ECRStack |
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
 | DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |

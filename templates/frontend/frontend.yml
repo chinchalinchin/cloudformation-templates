@@ -21,7 +21,6 @@ Mappings:
     Prod: 
       subdomainEnv: ""
     
-
 Resources:
   FrontendBucketLogs:
     Type: AWS::S3::Bucket

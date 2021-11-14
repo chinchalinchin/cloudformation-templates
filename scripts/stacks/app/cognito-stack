@@ -1,13 +1,13 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="user-stack"
+SCRIPT_NAME="cognito-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../..
+PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     user-stack --action <create | update | delete>
+# >$     cognito-stack --action <create | update | delete>
 #
 #   NOTE: ``--action`` defaults to `create` if not supplied.
 
@@ -43,36 +43,32 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/iam/user.yml ./user.yml
+cp $PROJECT_DIR/templates/cognito/cognito.yml ./cognito.yml
 
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-$USER_STACK" \
-        --template-body file://user.yml \
+        --stack-name "${APPLICATION^}-$COGNITO_STACK" \
+        --template-body file://cognito.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
                      ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER \
-                     ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION 
         
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-$USER_STACK" \
+        --stack-name "${APPLICATION^}-$COGNITO_STACK" \
         --template-body file://user.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
                      ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                     ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER \
-                     ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION 
 
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${APPLICATION^}-$USER_STACK"
+        --stack-name "${APPLICATION^}-$COGNITO_STACK"
 else
     log "Action not understood."
     exit 1

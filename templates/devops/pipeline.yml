@@ -176,9 +176,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-dev-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-              EnvironmentVariables:
-                BRANCH: Dev
-                APPLICATION: !Ref ${applicationName}
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"}]'
     DependsOn:
       - CodeBuild
 
@@ -221,9 +219,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-staging-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-              EnvironmentVariables:
-                BRANCH: Staging
-                APPLICATION: !Ref ${applicationName}
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"}]'
     DependsOn:
       - CodeBuild
 
@@ -266,8 +262,6 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-prod-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-              EnvironmentVariables:
-                BRANCH: Prod
-                APPLICATION: !Ref ${applicationName}
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"}]'
     DependsOn:
       - CodeBuild
