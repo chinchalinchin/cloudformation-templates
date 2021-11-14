@@ -55,7 +55,7 @@ if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
-        --template-body file://devops.yml \
+        --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION  \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" 
@@ -64,7 +64,7 @@ elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
-        --template-body file://devops.yml \
+        --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" 
@@ -77,4 +77,4 @@ else
     log "Action not understood"
 fi
 
-rm ./devops.yml
+rm ./pipeline.yml

@@ -132,7 +132,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-dev-source"    
               Configuration:
                 RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
                 BranchName: Dev
                 PollForSourceChanges: false
         - Name: Build   
@@ -176,7 +176,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-staging-source"    
               Configuration:
                 RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
                 BranchName: Staging
                 PollForSourceChanges: false
         - Name: Build   
@@ -220,7 +220,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-prod-source"    
               Configuration:
                 RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
                 BranchName: Prod
                 PollForSourceChanges: false
         - Name: Build   
