@@ -34,7 +34,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-REPOS=("frontend" "backend" "cloudformation" "docker-images" "test-harness")
+REPOS=("frontend" "backend")
 
 mkdir ./tmp
 cd tmp
@@ -48,19 +48,7 @@ do
             ;;
         frontend)
             BB_REPO="cloudfront-s3"
-            CC_REPO="comet-backend"
-            ;;
-        cloudformation)
-            BB_REPO="cloud-formation"
-            CC_REPO="comet-cloudformation"
-            ;;
-        docker-images)
-            BB_REPO="docker-images"
-            CC_REPO="comet-docker-images"
-            ;;
-        test-harness)
-            BB_REPO="test-harness"
-            CC_REPO="comet-test-harness"  
+            CC_REPO="comet-frontend"
             ;;
     esac
 
@@ -79,5 +67,38 @@ do
         cd ..
     done
 done
+
+REPOS=("cloud-formation" "docker-images" "test-harness")
+
+for repo in ${REPOS[@]}
+do
+    case $repo in
+        cloud-formation)
+            BB_REPO="cloud-formation"
+            CC_REPO="comet-cloudformation"
+            ;;
+        docker-images)
+            BB_REPO="docker-images"
+            CC_REPO="comet-docker-images"
+            ;;
+        test-harness)
+            BB_REPO="test-harness"
+            CC_REPO="comet-test-harness"  
+            ;;
+    esac
+
+    git clone git@bitbucket.org:Makpar/$BB_REPO.git
+    mkdir $CC_REPO
+
+    cd $BB_REPO && git checkout master
+    cd .. && cp -ap ./$BB_REPO/. ./$CC_REPO
+    cd $CC_REPO && git remote remove origin 
+    git remote add origin ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/$CC_REPO
+    git add .
+    git commit -m 'init commit'
+    git push --set-upstream origin master
+    cd ..
+done
+
 
 cd .. && rm -rf ./tmp
