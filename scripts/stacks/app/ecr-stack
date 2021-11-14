@@ -49,7 +49,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/ecr/ecr.yml ./ecr.yml
+cp $PROJECT_DIR/templates/app/ecr.yml ./ecr.yml
 
 if [ "$ACTION" == "create" ]
 then

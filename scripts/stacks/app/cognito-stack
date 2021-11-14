@@ -43,7 +43,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/cognito/cognito.yml ./cognito.yml
+cp $PROJECT_DIR/templates/app/cognito.yml ./cognito.yml
 
 if [ "$ACTION" == "create" ]
 then
@@ -74,4 +74,4 @@ else
     exit 1
 fi
     
-rm ./user.yml
+rm ./cognito.yml

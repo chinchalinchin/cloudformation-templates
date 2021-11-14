@@ -211,7 +211,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Policies:
-        - PolicyName: CognitoTokenPolicy
+        - PolicyName: !Sub "${applicationName}-cognito-token-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -220,9 +220,7 @@ Resources:
                 Action:
                   - "cognito-idp:AdminInitiateAuth"
                 Resource: 
-                  - !GetAtt CognitoUserPool.Arn
-    DependsOn:
-      - CognitoUserPool
+                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
  
   # GATEWAY LOG ROLE
   APILogger:
@@ -380,7 +378,6 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: imcnutt
 
-
 Outputs:
   BitbucketPipelineUserArn:
     Value: !GetAtt BitbucketPipelineUser.Arn
@@ -417,21 +414,6 @@ Outputs:
     Description: ARN for CloudWatch Event roles
     Export:
       Name: !Sub ${AWS::StackName}-CloudWatchEventRoleArn
-  CognitoUserPoolArn:
-    Value: !GetAtt CognitoUserPool.Arn
-    Description: User Pool ARN for Cognito
-    Export:
-      Name: !Sub ${AWS::StackName}-UserPoolArn
-  CognitoUserPoolID:
-    Value: !Ref CognitoUserPool
-    Description: User Pool ID for Cognito
-    Export:
-      Name: !Sub ${AWS::StackName}-UserPoolID
-  CognitoClientID:
-    Value: !Ref APIClient
-    Description: Client ID for API Client
-    Export:
-      Name: !Sub ${AWS::StackName}-APIClientID
   Grant:
     Value: !Ref IAMGrant
     Description: DevOps Engineer

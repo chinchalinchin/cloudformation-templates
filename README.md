@@ -7,7 +7,9 @@ aws cloudformation create-stack
     --parameters ParameterKey=<key>,ParameterValue=<value> ParameterKey=<key>,ParameterValue=<value>
 ```
 
-# Dependencies
+# Cross Stack Dependencies
+
+There are two separate stacksets, the **DevOps** stackset and the **Application** stackset. The **DevOps** stacks needs stood up before the **Aplication** stacks go up.
 
 ## DevOps Stacks
 | Stack | Dependency | 
@@ -23,7 +25,7 @@ aws cloudformation create-stack
 | ECRStack | None | 
 | VPCStack-$ENV | None | 
 | FrontendStack-$ENV | None |
-| RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
+| RDSStack-$ENV | VPCStack-$ENV | 
 | LambdaStack-$ENV | VPCStack-$ENV, ECRStack |
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
 | DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
@@ -33,25 +35,61 @@ aws cloudformation create-stack
 
 A more detailed version of what follows can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/358580264/Sandbox+Environment+Setup)
 
+## Configuration
+
+Before either stackset can be stood up, the *.env* environment file needs setup and configured. Copy the sample into a new file and adjust the variables. See *.sample.env* comments for more information on each variable.
+
 ```
 cp .sample.env .env
-# *: configure application environment in .env file 
-./scripts/stacks/user-stack
-./scripts/stacks/devops-stack
-./scripts/scripts/ecr-stack --components <one | two | three | four | five>
-# *: Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
-./scripts/stacks/frontend-stack --environment <Dev | Prod | Test | Staging> 
-./scripts/stacks/vpc-stack --environment <Dev | Prod | Test | Staging>
-./scripts/stacks/rds-stack --environment <Dev | Prod | Test | Staging>
-# *: Pass RDS Host Url to SecretManager
-./scripts/secrets/rds-host-secret --environment <Dev | Prod | Test | Staging>
-# *: If API key needs provisioned, add it to .env and use ./scripts/secrets/secret-api-key. 
-./scripts/lambda-stack --components <one | two | three | four | five> --environment <Dev | Prod | Test | Staging>
-./scripts/gateway-stack --environment <Dev | Prod | Test | Staging>
-./scripts/stacks/dns-stack [--dns-exists] --environment <Dev | Prod | Test | Staging> 
 ```
 
-NOTE: all scripts have an optional argument ``--action`` with allowable values of `create` or `update`. If `update` is passed through the ``--action`` flag, the script will update the current stack instead of creating a new one.
+## DevOps Stack
+
+```
+./scripts/stacks/devops/iam-stack
+./scripts/stacks/devops/repo-stack
+./scripts/stacks/devops/pipeline-stack 
+```
+## Application Stack
+
+The first two stacks are independent of the application's environment,
+
+```
+./scripts/stacks/app/cognito-stack
+./scripts/stacks/app/ecr-stack --components <one | two | three | four | five>
+```
+
+After these stacks go up, all subsequent stacks are a function of the environment they are being stood up in,
+
+```
+./scripts/stacks/app/vpc-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/frontend-stack --environment <Dev | Prod | Test | Staging> 
+```
+
+At this point, the images for the **Lambda** functions need built for the first time and pushed to ECR.
+
+```
+./scripts/stacks/app/rds-stack --environment <Dev | Prod | Test | Staging>
+```
+
+At this point, the **RDS** host secret needs passed into AWS **SecretManager**. If an API key is required, add it to the *.env* file and use the following scripts,
+
+```
+./scripts/secrets/secret-rds-host --environment <Dev | Prod | Test | Staging>
+./scripts/secrets/secret-api-key --environment <Dev | Prod | Test | Staging>
+```
+
+Then the final stacks can up,
+
+```
+./scripts/stacks/app/lambda-stack --components <one | two | three | four | five> \
+                                  --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/gateway-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/dns-stack [--dns-exists] \
+                                --environment <Dev | Prod | Test | Staging> 
+```
+
+All scripts have an optional argument ``--action`` with allowable values of `create` or `update`. The `action` defaults to `create` if not provided. If `update` is passed through the ``--action`` flag, the script will update. NOTE: Some **CloudFormation** configurations *cannot* be updated while the stack is up.
 
 # Notes
 

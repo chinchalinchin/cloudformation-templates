@@ -53,7 +53,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/vpc/vpc.yml ./vpc.yml
+cp $PROJECT_DIR/templates/app/vpc.yml ./vpc.yml
 
 if [ "$ACTION" == "create" ]
 then

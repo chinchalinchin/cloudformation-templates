@@ -46,7 +46,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/rds/rds.yml ./rds.yml
+cp $PROJECT_DIR/templates/app/rds.yml ./rds.yml
 
 if [ "$ACTION" == "create" ]
 then
@@ -81,9 +81,7 @@ then
                                     --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                                                  ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                                                 ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
-                                                 ParameterKey=userStack,ParameterValue="${APPLICATION^}-${USER_STACK}" 
-
+                                                 ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}" \
@@ -91,8 +89,7 @@ then
                                     --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                                                  ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                                                 ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
-                                                 ParameterKey=userStack,ParameterValue="${APPLICATION^}-${USER_STACK}" 
+                                                 ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}"

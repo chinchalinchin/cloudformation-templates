@@ -45,8 +45,7 @@ for environment in ${ENVIRONMENTS[@]}
                 environment=""
             fi  
 
-            if [[ "$bucket" == ${APPLICATION,,}*${environment,,}*deployment ]] ||\
-                [[ "$bucket" == ${APPLICATION,,}*${environment,,}*logs ]]
+            if [[ "$bucket" == ${APPLICATION,,}* ]] 
             then
                 log "Clearing $bucket S3 bucket"
                 aws s3 rm s3://$bucket --recursive

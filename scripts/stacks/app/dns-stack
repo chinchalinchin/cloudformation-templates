@@ -58,7 +58,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/dns/dns.yml ./dns.yml
+cp $PROJECT_DIR/templates/app/dns.yml ./dns.yml
 
 if [ "$ACTION" == "create" ]
 then

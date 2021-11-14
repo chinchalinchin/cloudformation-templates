@@ -49,7 +49,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/gateway/gateway.yml ./gateway.yml
+cp $PROJECT_DIR/templates/app/gateway.yml ./gateway.yml
 
 if [ "$ACTION" == "create" ]
 then

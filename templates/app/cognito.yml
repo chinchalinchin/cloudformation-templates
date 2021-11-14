@@ -21,7 +21,7 @@ Resources:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      Domain: "ccc-innovation"
+      Domain: !Ref applicationName
     DependsOn:
       - CognitoUserPool
 
@@ -63,7 +63,7 @@ Resources:
         - profile
       AllowedOAuthFlowsUserPoolClient: true
       CallbackURLs:
-        - !Sub "https://${subdomain}-dev.${domain}"
+        - !Sub "https://${subdomain}.${domain}"
       ExplicitAuthFlows:
         - "ALLOW_CUSTOM_AUTH"
         - "ALLOW_REFRESH_TOKEN_AUTH"

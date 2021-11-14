@@ -49,7 +49,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/frontend/frontend.yml ./frontend.yml
+cp $PROJECT_DIR/templates/app/frontend.yml ./frontend.yml
 
 if [ "$ACTION" == "create" ]
 then

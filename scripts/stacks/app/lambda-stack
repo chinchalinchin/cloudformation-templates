@@ -55,7 +55,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/lambda/lambda.yml ./lambda.yml
+cp $PROJECT_DIR/templates/app/lambda.yml ./lambda.yml
 
 if [ "$ACTION" == "create" ]
 then

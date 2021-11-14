@@ -2,7 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Provisions a DB instances with credentials resolved from the SecretManager and deploys it into a private subnet in the ${applicationName}-VPCStack-${environmentName}. A policy is created to allow users to connect to the RDS through IAM"
 
 Parameters:
-  # note: applicationName is used to pull the correct secret
   applicationName:
     Type: String
     Default: InnoLab
@@ -13,9 +12,11 @@ Parameters:
   vpcStack:
     Type: String
     Default: InnoLab-VPCStack-Dev
-  userStack:
-    Type: String
-    Default: InnoLab-UserStack
+
+  ## NOTE: see note below for ``DatabaseConnectPolicy`` resource.
+  # userStack:
+    # Type: String
+    # Default: InnoLab-UserStack
 
 Resources:
   CredentialsBucket:
@@ -56,29 +57,32 @@ Resources:
         - Key: Environment
           Value: !Ref environmentName
   
-  DatabaseConnectPolicy:
-    Type: AWS::IAM::Policy
-    Description: Policy to allow users to connect via AWS CLI
-    Properties:
-      PolicyName: !Sub ${applicationName}-${environmentName}-db-connect-policy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: RepositoryPermissions
-            Effect: Allow
-            Action:
-              - "rds-db:connect"
-            Resource: 
+  ## NOTE: The following policy should theoretically allow IAM users to which it is attached to access
+  #        the RDS through IAM authentication. However, since the RDS is in a private subnet, I am not 
+  #        sure this policy will work...
+  # DatabaseConnectPolicy:
+    # Type: AWS::IAM::Policy
+    # Description: Policy to allow users to connect via AWS CLI
+    # Properties:
+      # PolicyName: !Sub ${applicationName}-${environmentName}-db-connect-policy
+      # PolicyDocument:
+        # Version: "2012-10-17"
+        # Statement:
+          # - Sid: RepositoryPermissions
+            # Effect: Allow
+            # Action:
+              # - "rds-db:connect"
+            # Resource: 
               # NOTE: db-QJLKM6XPHWPIA2MO6QTDQAGNHQ is a regional variable and does not change unless the region is changed.
-              - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:db-QJLKM6XPHWPIA2MO6QTDQAGNHQ/{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
-      Users:
-        - Fn::ImportValue: !Sub "${userStack}-Ian"
-        - Fn::ImportValue: !Sub "${userStack}-Grant"
-        - Fn::ImportValue: !Sub "${userStack}-Thomas"
-        - Fn::ImportValue: !Sub "${userStack}-Peter"
-        - Fn::ImportValue: !Sub "${userStack}-Tariq"
-    DependsOn:
-      - PostgresRDS
+              # - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:db-QJLKM6XPHWPIA2MO6QTDQAGNHQ/{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
+      # Users:
+        # - Fn::ImportValue: !Sub "${iamStack}-Ian"
+        # - Fn::ImportValue: !Sub "${iamStack}-Grant"
+        # - Fn::ImportValue: !Sub "${iamStack}-Thomas"
+        # - Fn::ImportValue: !Sub "${iamStack}-Peter"
+        # - Fn::ImportValue: !Sub "${iamStack}-Tariq"
+    # DependsOn:
+      # - PostgresRDS
 
 Outputs:
   RDSEndpoint:
