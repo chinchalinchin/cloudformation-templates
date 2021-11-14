@@ -94,7 +94,7 @@ Resources:
   FrontendDevPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-frontend-pipeline"
+      Name: !Sub "${applicationName}-frontend-dev-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
       ArtifactStore: 
@@ -136,7 +136,7 @@ Resources:
   FrontendStagingPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-frontend-pipeline"
+      Name: !Sub "${applicationName}-frontend-staging-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
       ArtifactStore: 
@@ -178,7 +178,7 @@ Resources:
   FrontendProdPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-frontend-pipeline"
+      Name: !Sub "${applicationName}-frontend-prod-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
       ArtifactStore: 
@@ -198,7 +198,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-prod-source"    
               Configuration:
                 RepositoryName: !GetAtt FrontendRepo.Name
-                BranchName: Dev
+                BranchName: Prod
                 PollForSourceChanges: false
         - Name: Build   
           Actions:
