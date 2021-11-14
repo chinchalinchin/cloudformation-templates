@@ -8,7 +8,7 @@ Parameters:
     Default: Dev
   applicationName:
     Type: String
-    Default: ccc
+    Default: innolab
 
 Mappings:
   SubEnvDomainMap:

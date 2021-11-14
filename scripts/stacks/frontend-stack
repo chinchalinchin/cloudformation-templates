@@ -58,27 +58,16 @@ then
         --template-body file://frontend.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     # APPLICATION to lower case since S3 bucket name has to be all lowercase
-                     ParameterKey=applicationName,ParameterValue="${APPLICATION,,}" \
-                     ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-$DNS_STACK-$ENVIRONMENT" \
-                     ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION
 
 elif [ "$ACTION" == "update" ]
 then
-    echo "$SUBDOMAIN"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${FRONTEND_STACK}-${ENVIRONMENT}" \
         --template-body file://frontend.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                        # APPLICATION to lower case since S3 bucket name has to be all lowercase
-                     ParameterKey=applicationName,ParameterValue="${APPLICATION,,}" \
-                     ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-$DNS_STACK-$ENVIRONMENT" \
-                     ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION 
 
 elif [ "$ACTION" == "delete" ]
 then

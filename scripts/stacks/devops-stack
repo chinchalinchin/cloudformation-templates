@@ -11,10 +11,6 @@ source $PROJECT_DIR/.env
 #                   --action <create | update | delete> 
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
-#   NOTE: if the hosted zone and certificate have already been configured, 
-#           pass in the ``--dns-exists`` flag. Ensure the *CERTIFICATE_ID*
-#           and *HOSTED_ZONE_ID* have been set in the */env/.env* file if
-#           this is the case.
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
