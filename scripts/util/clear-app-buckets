@@ -1,15 +1,15 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="clear-buckets"
+SCRIPT_NAME="clear-app-buckets"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/..
+PROJECT_DIR=$SCRIPT_DIR/../..
 source $PROJECT_DIR/.env
 
 BUCKETS=$(aws s3 ls | awk -F ' ' '{ for(i=NF; i>=NF; --i) printf "%s ", $i; }')
 
 # Example Usage:
-# >$     clear-buckets --environments Dev,Prod,Staging
+# >$     clear-app-buckets --environments Dev,Prod,Staging
 
 # NOTE: ``--environments`` is a comma separated list with no spaces.
 
@@ -37,18 +37,18 @@ while [[ $# -gt 0 ]]; do
 done
 
 for environment in ${ENVIRONMENTS[@]}
-    do
-        for bucket in ${BUCKETS[@]}
-        do 
-            if [ "${environment,,}" == "prod" ]
-            then
-                environment=""
-            fi  
+do
+    for bucket in ${BUCKETS[@]}
+    do 
+        if [ "${environment,,}" == "prod" ]
+        then
+            environment=""
+        fi  
 
-            if [[ "$bucket" == ${APPLICATION,,}* ]] 
-            then
-                log "Clearing $bucket S3 bucket"
-                aws s3 rm s3://$bucket --recursive
-            fi
-        done
+        if [[ "$bucket" == ${APPLICATION,,}* ]] 
+        then
+            log "Clearing $bucket S3 bucket"
+            aws s3 rm s3://$bucket --recursive
+        fi
+    done
 done

@@ -6,42 +6,14 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
-  
-  userStack:
+  iamStack:
     Type: String
-    Default: InnoLab-UserStack
+    Default: InnoLab-IAMStack
+  repoStack:
+    Type: String
+    Default: InnoLab-RepoStack
 
 Resources:
-  DockerRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-docker-images"
-      RepositoryDescription: "A repository for Docker images"
-
-  CloudFormationRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-cloudformation"
-      RepositoryDescription: "A repository for CloudFormation templates"
-
-  FrontendRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-frontend"
-      RepositoryDescription: "A repository for the React application"
-
-  BackendRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-backend"
-      RepositoryDescription: "A repository for Lambda functions"
-      
-  TestingRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-test-harness"
-      RepositoryDescription: "A repository for testing harness"
-
   PipelineArtifacts:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
@@ -57,7 +29,7 @@ Resources:
         # Type: S3
         # Location: !Ref PipelineArtifacts
       ServiceRole:
-        Fn::ImportValue: !Sub "${userStack}-CodeBuildRoleArn"
+        Fn::ImportValue: !Sub "${iamStack}-CodeBuildRoleArn"
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_MEDIUM
@@ -74,7 +46,7 @@ Resources:
         detail-type:
           - 'CodeCommit Repository State Change'
         resources:
-          - !GetAtt FrontendRepo.Arn
+          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
         detail:
           event:
             - referenceCreated
@@ -86,7 +58,7 @@ Resources:
       Targets:
         - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-dev-pipeline"
           RoleArn: 
-            Fn::ImportValue: !Sub "${userStack}-CloudWatchEventRoleArn"
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
           Id: !Sub ${applicationName}-codepipeline-dev
 
   FrontendStagingEventRule:
@@ -98,7 +70,7 @@ Resources:
         detail-type:
           - 'CodeCommit Repository State Change'
         resources:
-          - !GetAtt FrontendRepo.Arn
+          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
         detail:
           event:
             - referenceCreated
@@ -110,7 +82,7 @@ Resources:
       Targets:
         - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-staging-pipeline"
           RoleArn: 
-            Fn::ImportValue: !Sub "${userStack}-CloudWatchEventRoleArn"
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
           Id:  !Sub ${applicationName}-codepipeline-staging
 
   FrontendProdEventRule:
@@ -122,7 +94,7 @@ Resources:
         detail-type:
           - 'CodeCommit Repository State Change'
         resources:
-          - !GetAtt FrontendRepo.Arn
+          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
         detail:
           event:
             - referenceCreated
@@ -134,7 +106,7 @@ Resources:
       Targets:
         - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-prod-pipeline"
           RoleArn: 
-            Fn::ImportValue: !Sub "${userStack}-CloudWatchEventRoleArn"
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
           Id: !Sub ${applicationName}-codepipeline-prod
 
   FrontendDevPipeline:
@@ -142,7 +114,7 @@ Resources:
     Properties:
       Name: !Sub "${applicationName}-frontend-dev-pipeline"
       RoleArn:
-        Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 
         Type: S3 
         Location: !Ref PipelineArtifacts
@@ -159,7 +131,8 @@ Resources:
               OutputArtifacts:
                 - Name: !Sub "${applicationName}-frontend-dev-source"    
               Configuration:
-                RepositoryName: !GetAtt FrontendRepo.Name
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
                 BranchName: Dev
                 PollForSourceChanges: false
         - Name: Build   
@@ -185,7 +158,7 @@ Resources:
     Properties:
       Name: !Sub "${applicationName}-frontend-staging-pipeline"
       RoleArn:
-        Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 
         Type: S3 
         Location: !Ref PipelineArtifacts
@@ -202,7 +175,8 @@ Resources:
               OutputArtifacts:
                 - Name: !Sub "${applicationName}-frontend-staging-source"    
               Configuration:
-                RepositoryName: !GetAtt FrontendRepo.Name
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
                 BranchName: Staging
                 PollForSourceChanges: false
         - Name: Build   
@@ -228,7 +202,7 @@ Resources:
     Properties:
       Name: !Sub "${applicationName}-frontend-prod-pipeline"
       RoleArn:
-        Fn::ImportValue: !Sub "${userStack}-CodePipelineRoleArn"
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 
         Type: S3 
         Location: !Ref PipelineArtifacts
@@ -245,7 +219,8 @@ Resources:
               OutputArtifacts:
                 - Name: !Sub "${applicationName}-frontend-prod-source"    
               Configuration:
-                RepositoryName: !GetAtt FrontendRepo.Name
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
                 BranchName: Prod
                 PollForSourceChanges: false
         - Name: Build   

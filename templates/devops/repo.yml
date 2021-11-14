@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "A stack for provisioning the CodeCommit repositories where the application components will be housed."
+
+Parameters:
+  applicationName:
+    Type: String
+    Default: innolab
+
+Resources:
+  DockerRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-docker-images"
+      RepositoryDescription: "A repository for Docker images"
+
+  CloudFormationRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-cloudformation"
+      RepositoryDescription: "A repository for CloudFormation templates"
+
+  FrontendRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-frontend"
+      RepositoryDescription: "A repository for a React application"
+
+  BackendRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-backend"
+      RepositoryDescription: "A repository for Lambda functions"
+      
+  TestingRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-test-harness"
+      RepositoryDescription: "A repository for testing harness"
+
+Outputs:
+  DockerRepository:
+    Value: !GetAtt DockerRepo.Name
+    Description: Repository name for Dockerfile repository
+    Export:
+      Name: !Sub ${AWS::StackName}-DockerRepository
+  DockerRepositoryARN:
+    Value: !GetAtt DockerRepo.Arn
+    Description: Repository ARN for Dockerfile repository
+    Export:
+      Name: !Sub ${AWS::StackName}-DockerRepositoryARN
+  DockerRepositorySSHClone:
+    Value: !GetAtt DockerRepo.CloneUrlSsh
+    Description: SSH clone URL for Dockerfile repository
+    Export:
+      Name: !Sub ${AWS::StackName}-DockerCloneSSH
+
+  CloudFormationRepository:
+    Value: !GetAtt CloudFormationRepo.Name
+    Description: Repository name for CloudFormation template repository
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFormationRepository
+  CloudFormationRepositorySSHClone:
+    Value: !GetAtt CloudFormationRepo.CloneUrlSsh
+    Description: SSH clone URL for CloudFormation template repository
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFormationCloneSSH
+  CloudFormationRepositoryARN:
+    Value: !GetAtt CloudFormationRepo.Arn
+    Description: Repository ARN for CloudFormation template repository
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFormationARN
+
+  FrontendRepository:
+    Value: !GetAtt FrontendRepo.Name
+    Description: Repository name for the Frontend React app repository
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendRepository
+  FrontendRepositoryARN:
+    Value: !GetAtt FrontendRepo.Arn
+    Description: Repository ARN for the Frontend React app repository
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendRepositoryARN
+  FrontendRepositorySSHClone:
+    Value: !GetAtt FrontendRepo.CloneUrlSsh
+    Description: Repository name for the Frontend React app repository
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendCloneSSH
+
+  BackendRepository:
+    Value: !GetAtt BackendRepo.Name
+    Description: Repository name for Backend Lambda function repository
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendRepository
+  BackendRepositoryARN:
+    Value: !GetAtt BackendRepo.Arn
+    Description: Repository name for Backend Lambda function repository
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendRepositoryARN
+  BackendCloneSSH:
+    Value: !GetAtt BackendRepo.CloneUrlSsh
+    Description: SSH clone URL for Backend Lambda function repository
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendCloneSSH
+
+  TestingRepository:
+    Value: !GetAtt TestingRepo.Name
+    Description: Repository name for automated testing repository
+    Export:
+      Name: !Sub ${AWS::StackName}-TestingRepository
+  TestingRepositoryARN:
+    Value: !GetAtt TestingRepo.Arn
+    Description: Repository name for automated testing repository
+    Export:
+      Name: !Sub ${AWS::StackName}-TestingRepositoryARN
+  TestingCloneSSH:
+    Value: !GetAtt TestingRepo.CloneUrlSsh
+    Description: Repository name for automated testing repository
+    Export:
+      Name: !Sub ${AWS::StackName}-TestingCloneSSH

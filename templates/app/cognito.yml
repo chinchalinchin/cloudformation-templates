@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the application will build. This stack does not map to anenvironment; it's resources are available to all environment stacks. It contains a dummy account for a Bitbucket pipeline, an execution role for Lambda, services roles for CodeBuild and CodePipeline, and the resources necessary for a Cognito based OAuth authentication flow. NOTE: This stack contains resources for both a Bitbucket and a CodePipeline CI/CD pipeline. If using the CodePipeline, the ${applicationName}-DevOps stack will need stood up in addition to the other stacks"
+Description: "The first stack of the ${applicationName} application. It will provision all the necessary resources for a Cognito OAUTH authentication flow, such as UserPool, UserPoolClients, UserPoolDomain, etc. It will also provision user accounts for the development team and send them emails to reset their Cognito IDP passwords."
 
 Parameters:
   domain:
@@ -28,7 +28,7 @@ Resources:
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub ${AWS::StackName}-UserPool
+      UserPoolName: !Sub ${applicationName}-userpool
       UsernameConfiguration:
         CaseSensitive: false
       AdminCreateUserConfig:
@@ -54,7 +54,7 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      ClientName: !Sub ${AWS::StackName}-APICognitoClient
+      ClientName: !Sub ${applicationName}-api-client
       AllowedOAuthFlows:
         - implicit
       AllowedOAuthScopes:
@@ -85,7 +85,7 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      ClientName: !Sub ${AWS::StackName}-WebCognitoClient
+      ClientName: !Sub ${applicationName}-web-client
       GenerateSecret: true
       AccessTokenValidity: 60
       IdTokenValidity: 60
