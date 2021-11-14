@@ -65,7 +65,7 @@ Resources:
       Source:
         Type: CODEPIPELINE
 
-  RepositoryEventRule:
+  FrontendDevEventRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
@@ -84,12 +84,58 @@ Resources:
           referenceName:
             - Dev
       Targets:
-        - Arn: 
-            !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-pipeline"
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-dev-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${userStack}-CloudWatchEventRoleArn"
-          Id: 
-            !Sub ${applicationName}-codepipeline
+          Id: !Sub ${applicationName}-codepipeline-dev
+
+  FrontendStagingEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - !GetAtt FrontendRepo.Arn
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Staging
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-staging-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${userStack}-CloudWatchEventRoleArn"
+          Id:  !Sub ${applicationName}-codepipeline-staging
+
+  FrontendProdEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - !GetAtt FrontendRepo.Arn
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Prod
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-prod-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${userStack}-CloudWatchEventRoleArn"
+          Id: !Sub ${applicationName}-codepipeline-prod
 
   FrontendDevPipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -130,6 +176,9 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-dev-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
+              EnvironmentVariables:
+                BRANCH: Dev
+                APPLICATION: !Ref ${applicationName}
     DependsOn:
       - CodeBuild
 
@@ -172,6 +221,9 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-staging-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
+              EnvironmentVariables:
+                BRANCH: Staging
+                APPLICATION: !Ref ${applicationName}
     DependsOn:
       - CodeBuild
 
@@ -214,5 +266,8 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-prod-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
+              EnvironmentVariables:
+                BRANCH: Prod
+                APPLICATION: !Ref ${applicationName}
     DependsOn:
       - CodeBuild
