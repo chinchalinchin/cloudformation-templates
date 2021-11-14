@@ -11,9 +11,9 @@ Parameters:
       - four
       - five
     Default: five
-  functionName:
+  applicationName:
     Type: String
-    Default: innolab-lambda
+    Default: innolab
   userStack:
     Type: String
     Default: InnoLab-UserStack
@@ -68,7 +68,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: !Sub "${functionName}-alpha"
+      RepositoryName: !Sub "${applicationName}-lambda-alpha"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -91,7 +91,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: !Sub "${functionName}-beta"
+      RepositoryName: !Sub "${applicationName}-lambda-beta"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -114,7 +114,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: !Sub "${functionName}-gamma"
+      RepositoryName: !Sub "${applicationName}-lambda-gamma"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -137,7 +137,7 @@ Resources:
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
-      RepositoryName: !Sub "${functionName}-delta"
+      RepositoryName: !Sub "${applicationName}-lambda-delta"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -160,7 +160,7 @@ Resources:
     Properties:
       ImageScanningConfiguration:
         ScanOnPush: true
-      RepositoryName: !Sub "${functionName}-epsilon"
+      RepositoryName: !Sub "${applicationName}-lambda-epsilon"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:

@@ -16,15 +16,12 @@ Parameters:
   environmentName:
     Type: String
     Default: Dev
-  functionName:
-    Type: String
-    Default: ccc-lambda
   applicationName:
     Type: String
-    Default: CCC
+    Default: innolab
   dbName:
     Type: String
-    Default: CCC
+    Default: innolab
   # Stack Dependencies
   userStack:
     Type: String
@@ -78,11 +75,11 @@ Conditions:
   CreateEpsilonComponent: !Condition CreateFiveComponents
 
 Resources:
-  LambdaAlpha: # search by naics code / retrieve all data
+  LambdaAlpha: 
     Type: AWS::Lambda::Function
     Condition: CreateAlphaComponent
     Properties:
-      FunctionName: !Sub ${functionName}-alpha-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-alpha-${environmentName}
       Code: 
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
@@ -100,21 +97,21 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          POSTGRES_DB: !Ref dbName
+          POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaAlpha
 
-  LambdaBeta: # get all naics codes
+  LambdaBeta: 
     Type: AWS::Lambda::Function
     Condition: CreateBetaComponent
     Properties:
-      FunctionName: !Sub ${functionName}-beta-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-beta-${environmentName}
       Code: 
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
@@ -132,11 +129,11 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          POSTGRES_DB: !Ref dbName
+          POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
@@ -146,7 +143,7 @@ Resources:
     Type: AWS::Lambda::Function
     Condition: CreateGammaComponent
     Properties:
-      FunctionName: !Sub ${functionName}-gamma-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-gamma-${environmentName}
       Code: 
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
@@ -165,21 +162,21 @@ Resources:
       MemorySize: 4000 
       Environment:
         Variables:
-          POSTGRES_DB: !Ref dbName
+          POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaGamma
 
-  LambdaDelta: # user authentication verification
+  LambdaDelta:
     Type: AWS::Lambda::Function
     Condition: CreateDeltaComponent
     Properties:
-      FunctionName: !Sub ${functionName}-delta-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-delta-${environmentName}
       Code: 
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
@@ -197,21 +194,21 @@ Resources:
             - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          POSTGRES_DB: !Ref dbName
+          POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
+          # API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LambdaDelta
 
-  LambdaEpsilon: # token endpoint
+  LambdaEpsilon: # token lambda
     Type: AWS::Lambda::Function
     Condition: CreateEpsilonComponent
     Properties: 
-      FunctionName: !Sub ${functionName}-epsilon-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-epsilon-${environmentName}
       Code:
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"

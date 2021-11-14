@@ -57,7 +57,7 @@ then
               --stack-name "${ECR_STACK}" \
               --template-body file://ecr.yml \
               --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                            ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                            ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=userStack,ParameterValue=$USER_STACK \
               --capabilities CAPABILITY_NAMED_IAM
 elif [ "$ACTION" == "update" ]
@@ -66,7 +66,7 @@ then
               --stack-name "${ECR_STACK}" \
               --template-body file://ecr.yml \
               --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                            ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                            ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=userStack,ParameterValue=$USER_STACK \
               --capabilities CAPABILITY_NAMED_IAM
 elif [ "$ACTION" == "delete" ]
