@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: !Sub "The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the application will build. This stack does not map to anenvironment; it's resources are available to all environment stacks. It contains a dummy account for a Bitbucket pipeline, an execution role for Lambda, services roles for CodeBuild and CodePipeline, and the resources necessary for a Cognito based OAuth authentication flow. NOTE: This stack contains resources for both a Bitbucket and a CodePipeline CI/CD pipeline. If using the CodePipeline, the ${applicationName}-DevOps stack will need stood up in addition to the other stacks"
+Description: "The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the application will build. This stack does not map to anenvironment; it's resources are available to all environment stacks. It contains a dummy account for a Bitbucket pipeline, an execution role for Lambda, services roles for CodeBuild and CodePipeline, and the resources necessary for a Cognito based OAuth authentication flow. NOTE: This stack contains resources for both a Bitbucket and a CodePipeline CI/CD pipeline. If using the CodePipeline, the ${applicationName}-DevOps stack will need stood up in addition to the other stacks"
 
 Parameters:
   pipelineUser:
     Type: String
     Default: innolab-pipeline
-    Descriptoin: Username for the Bitbucket pipeline account
+    Description: Username for the Bitbucket pipeline account
   domain:
     Type: String
     Default: makpar-innovation.com
@@ -15,16 +15,17 @@ Parameters:
     Type: String
     Default: laboratory
     Description: Subdomain used in the callback registered with the Cognito Auth clients.
-
   applicationName:
     Type: String
     Default: innolab
-
+    Description: Namespace for the application resources
   masterPassword:
     Type: String
+    Description: Initial password for IAM users before required password reset.
 
 Resources:
 
+  ## BITBUCKET PIPELINE USER & POLICY
   BitbucketPipelineUser:
     Type: AWS::IAM::User
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
@@ -84,6 +85,8 @@ Resources:
       Users: 
         - !Ref BitbucketPipelineUser
 
+  ## SERVICE ROLES
+  # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
       Type: AWS::IAM::Role
       Description: Role to allow Innolab Pipeline to access other AWS Services
@@ -149,54 +152,56 @@ Resources:
                   Resource: 
                     - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
 
-    CodeBuildRole:
-      Type: AWS::IAM::Role
-      Description: Role to allow Innolab Pipeline's CodeBuild stage to access other AWS Services
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - "codebuild.amazonaws.com"
-              Action: 
-                - "sts:AssumeRole"
-        Policies:
-          - PolicyName: !Sub ${applicationName}-codebuild-role-policy
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Action:
-                    - logs:CreateLogGroup
-                    - logs:CreateLogStream
-                    - logs:PutLogEvents
-                  Effect: Allow
-                  Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${applicationName}-*
-                - Action:
-                    - s3:PutObject
-                    - s3:GetObject
-                    - s3:GetObjectVersion
-                    - s3:GetBucketAcl
-                    - s3:GetBucketLocation
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:s3:::${applicationName}-*"
-                - Action:
-                    - codebuild:CreateReportGroup
-                    - codebuild:CreateReport
-                    - codebuild:UpdateReport
-                    - codebuild:BatchPutTestCases
-                    - codebuild:BatchPutCodeCoverages
-                  Effect: Allow
-                  Resource:
-                    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${applicationName}*"
-                - Action:
-                    - secretsmanager:GetSecretValue
-                  Effect: Allow
-                  Resource:
-                    - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+  # CODEBUILD SERVICE ROLE
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Description: Role to allow Innolab Pipeline's CodeBuild stage to access other AWS Services
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-codebuild-role-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${applicationName}-*
+              - Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:s3:::${applicationName}-*"
+              - Action:
+                  - codebuild:CreateReportGroup
+                  - codebuild:CreateReport
+                  - codebuild:UpdateReport
+                  - codebuild:BatchPutTestCases
+                  - codebuild:BatchPutCodeCoverages
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${applicationName}*"
+              - Action:
+                  - secretsmanager:GetSecretValue
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
 
+  # LAMBDA FUNCTION ROLE
   LambdaExecutor:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Lambdas to access other AWS Services
@@ -227,6 +232,7 @@ Resources:
     DependsOn:
       - CognitoUserPool
  
+  # GATEWAY LOG ROLE
   APILogger:
     Type: AWS::IAM::Role
     Description: Role to allow API Gateway to push logs to CloudWatch
@@ -242,6 +248,27 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  CloudWatchEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: 
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com            
+      Policies:
+        - PolicyName: !Sub "${applicationName}-cloudwatch-event-pipeline-execution"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: codepipeline:StartPipelineExecution
+                Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
 
   AuthDomain:
     Type: AWS::Cognito::UserPoolDomain
@@ -569,6 +596,11 @@ Outputs:
     Description: ARN for API Logger Role
     Export:
       Name: !Sub ${AWS::StackName}-LoggerArn
+  CloudWatchEventRoleArn:
+    Value: !GetAtt CloudWatchEventRole.Arn
+    Description: ARN for CloudWatch Event roles
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudWatchEventRoleArn
   CognitoUserPoolArn:
     Value: !GetAtt CognitoUserPool.Arn
     Description: User Pool ARN for Cognito

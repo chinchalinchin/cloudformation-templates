@@ -58,23 +58,23 @@ cp $PROJECT_DIR/templates/devops/devops.yml ./devops.yml
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-${DEVOPS_STACK}-${ENVIRONMENT}" \
+        --stack-name "${APPLICATION^}-${DEVOPS_STACK}" \
         --template-body file://devops.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION  \
-        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
+        --parameters ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-${DEVOPS_STACK}-${ENVIRONMENT}" \
+        --stack-name "${APPLICATION^}-${DEVOPS_STACK}" \
         --template-body file://devops.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
-        --parameters ParameterKey=userStack,ParameterValue=$USER_STACK
+        --parameters ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
          
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${APPLICATION^}-${DEVOPS_STACK}-${ENVIRONMENT}"
+        --stack-name "${APPLICATION^}-${DEVOPS_STACK}"
 else
     log "Action not understood"
 fi
