@@ -20,10 +20,6 @@ Parameters:
     Type: String
     Default: innolab
 
-  functionName:
-    Type: String
-    Default: innolab-lambda
-
   masterPassword:
     Type: String
 
@@ -47,7 +43,7 @@ Resources:
             Action: 
               - "lambda:UpdateFunctionCode"
             Resource:
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${functionName}-*-*"
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
           - Sid: RepositoryPermissions
             Effect: Allow
             Action:
@@ -64,7 +60,7 @@ Resources:
               - "ecr:CompleteLayerUpload"
               - "ecr:PutImage"
             Resource: 
-              - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repositry/${functionName}-*"
+              - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
           - Sid: piplineCrudOps
             Effect: Allow
             Action:
@@ -90,7 +86,7 @@ Resources:
 
   CodePipelineRole:
       Type: AWS::IAM::Role
-      Description: Role to allow Innolab Lambdas to access other AWS Services
+      Description: Role to allow Innolab Pipeline to access other AWS Services
       Properties:
         AssumeRolePolicyDocument:
           Version: "2012-10-17"
@@ -107,61 +103,95 @@ Resources:
               Version: "2012-10-17"
               Statement:
                 - Action:
-                  - codecommit:CancelUploadArchive
-                  - codecommit:GetBranch
-                  - codecommit:GetCommit
-                  - codecommit:GetRepository
-                  - codecommit:GetUploadArchiveStatus
-                  - codecommit:UploadArchive
+                    - codecommit:CancelUploadArchive
+                    - codecommit:GetBranch
+                    - codecommit:GetCommit
+                    - codecommit:GetRepository
+                    - codecommit:GetUploadArchiveStatus
+                    - codecommit:UploadArchive
+                  Effect: Allow
+                  Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+                - Action:
+                    - cloudwatch:*
                   Resource: "*"
                   Effect: Allow
                 - Action:
-                  - codedeploy:CreateDeployment
-                  - codedeploy:GetApplication
-                  - codedeploy:GetApplicationRevision
-                  - codedeploy:GetDeployment
-                  - codedeploy:GetDeploymentConfig
-                  - codedeploy:RegisterApplicationRevision
+                    - s3:*
+                  Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:s3:::${applicationName}-*"
+                - Action:
+                    - lambda:UpdateFunctionCode
+                  Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+                - Action:
+                    - codebuild:BatchGetBuilds
+                    - codebuild:StartBuild
+                    - codebuild:BatchGetBuildBatches
+                    - codebuild:StartBuildBatch
                   Resource: "*"
                   Effect: Allow
                 - Action:
-                  - codestar-connections:UseConnection
-                  Resource: "*"
+                    - "ecr:GetAuthorizationToken"
+                    - "ecr:BatchCheckLayerAvailability"
+                    - "ecr:GetDownloadUrlForLayer"
+                    - "ecr:GetRepositoryPolicy"
+                    - "ecr:DescribeRepositories"
+                    - "ecr:ListImages"
+                    - "ecr:DescribeImages"
+                    - "ecr:BatchGetImage"
+                    - "ecr:InitiateLayerUpload"
+                    - "ecr:UploadLayerPart"
+                    - "ecr:CompleteLayerUpload"
+                    - "ecr:PutImage"
                   Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+
+    CodeBuildRole:
+      Type: AWS::IAM::Role
+      Description: Role to allow Innolab Pipeline's CodeBuild stage to access other AWS Services
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - "codebuild.amazonaws.com"
+              Action: 
+                - "sts:AssumeRole"
+        Policies:
+          - PolicyName: !Sub ${applicationName}-codebuild-role-policy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
                 - Action:
-                  - cloudwatch:*
-                  - s3:*
-                  - rds:*
-                  Resource: "*"
+                    - codecommit:CancelUploadArchive
+                    - codecommit:GetBranch
+                    - codecommit:GetCommit
+                    - codecommit:GetRepository
+                    - codecommit:GetUploadArchiveStatus
+                    - codecommit:UploadArchive
                   Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
                 - Action:
-                  - lambda:InvokeFunction
-                  - lambda:ListFunctions
-                  - lambda:UpdateFunctionCode
-                  Resource: "*"
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
                   Effect: Allow
+                  Resource: !Sub arn:aws:logs:us-east-1:012296628633:log-group:/aws/codebuild/${applicationName}-*
                 - Action:
-                  - codebuild:BatchGetBuilds
-                  - codebuild:StartBuild
-                  - codebuild:BatchGetBuildBatches
-                  - codebuild:StartBuildBatch
-                  Resource: "*"
+                    - s3:PutObject
+                    - s3:GetObject
+                    - s3:GetObjectVersion
+                    - s3:GetBucketAcl
+                    - s3:GetBucketLocation
                   Effect: Allow
-                - Effect: Allow
-                  Action:
-                  - "ecr:GetAuthorizationToken"
-                  - "ecr:BatchCheckLayerAvailability"
-                  - "ecr:GetDownloadUrlForLayer"
-                  - "ecr:GetRepositoryPolicy"
-                  - "ecr:DescribeRepositories"
-                  - "ecr:ListImages"
-                  - "ecr:DescribeImages"
-                  - "ecr:BatchGetImage"
-                  - "ecr:InitiateLayerUpload"
-                  - "ecr:UploadLayerPart"
-                  - "ecr:CompleteLayerUpload"
-                  - "ecr:PutImage"
-                  Resource: "*"
+                  Resource: 
+                    - !Sub "arn:aws:s3:::${applicationName}-*"
 
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -192,8 +222,7 @@ Resources:
                   - !GetAtt CognitoUserPool.Arn
     DependsOn:
       - CognitoUserPool
-
-    
+ 
   APILogger:
     Type: AWS::IAM::Role
     Description: Role to allow API Gateway to push logs to CloudWatch
@@ -323,7 +352,6 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: pcofrancesco
-
 
   CognitoTariq:
     Type: "AWS::Cognito::UserPoolUser"
@@ -527,6 +555,11 @@ Outputs:
     Description: ARN for CodePipeline role
     Export:
       Name: !Sub ${AWS::StackName}-CodePipelineRoleArn
+  CodeBuildRoleArn:
+    Value: !GetAtt CodeBuildRole.Arn
+    Description: ARN for CodeBuild role
+    Export:
+      Name: !Sub ${AWS::StackName}-CodeBuildRoleArn
   LoggerRoleArn:
     Value: !GetAtt APILogger.Arn
     Description: ARN for API Logger Role
