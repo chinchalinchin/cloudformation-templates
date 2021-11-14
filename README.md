@@ -13,11 +13,11 @@ aws cloudformation create-stack
 | Stack  |  Dependency |
 | ------ | ----------- |
 | UserStack | None |
+| DevOpsStack | UserStack |
 | ECRStack | None | 
 | VPCStack-$ENV | None | 
 | FrontendStack-$ENV | None |
-| PolicyStack | UserStack |
-| RDSStack-$ENV | VPCStack-$ENV | 
+| RDSStack-$ENV | VPCStack-$ENV, UserStack | 
 | LambdaStack-$ENV | VPCStack-$ENV, ECRStack |
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
 | DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
@@ -25,20 +25,20 @@ aws cloudformation create-stack
 
 # Steps
 
-A more detailed version of what follows can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/356483073/AWS+Resource+and+CI+CD+Setup+Walk-Thru)
+A more detailed version of what follows can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/358580264/Sandbox+Environment+Setup)
 
 ```
 cp .sample.env .env
 # *: configure application environment in .env file 
 ./scripts/stacks/user-stack
-./scripts/stacks/policy-stack 
+./scripts/stacks/devops-stack
+./scripts/scripts/ecr-stack --components <one | two | three | four | five>
+# *: Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
 ./scripts/stacks/frontend-stack --environment <Dev | Prod | Test | Staging> 
 ./scripts/stacks/vpc-stack --environment <Dev | Prod | Test | Staging>
 ./scripts/stacks/rds-stack --environment <Dev | Prod | Test | Staging>
 # *: Pass RDS Host Url to SecretManager
 ./scripts/secrets/rds-host-secret --environment <Dev | Prod | Test | Staging>
-./scripts/scripts/ecr-stack --components <one | two | three | four | five>
-# *: Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
 # *: If API key needs provisioned, add it to .env and use ./scripts/secrets/secret-api-key. 
 ./scripts/lambda-stack --components <one | two | three | four | five> --environment <Dev | Prod | Test | Staging>
 ./scripts/gateway-stack --environment <Dev | Prod | Test | Staging>

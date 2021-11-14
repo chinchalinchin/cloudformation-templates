@@ -1,20 +1,20 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the applicaiton will build. This stack does not map to an ${environmentName} environment; it's resources are available stacks. It contains a dummy account for pipeline, execution role for Lambda and the resources necessary for a Cognito based OAuth authentication flow."
+Description: !Sub "The first stack of the ${applicationName} application; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM and authentication configuration on which the application will build. This stack does not map to anenvironment; it's resources are available to all environment stacks. It contains a dummy account for a Bitbucket pipeline, an execution role for Lambda, services roles for CodeBuild and CodePipeline, and the resources necessary for a Cognito based OAuth authentication flow. NOTE: This stack contains resources for both a Bitbucket and a CodePipeline CI/CD pipeline. If using the CodePipeline, the ${applicationName}-DevOps stack will need stood up in addition to the other stacks"
 
 Parameters:
   pipelineUser:
     Type: String
     Default: innolab-pipeline
-  
-  # domain and subdomain are used to register callbacks with UserPoolClients
+    Descriptoin: Username for the Bitbucket pipeline account
   domain:
     Type: String
     Default: makpar-innovation.com
-  
+    Description: Domain used in the callback registered with the Cognito Auth clients.
   subdomain:
     Type: String
     Default: laboratory
+    Description: Subdomain used in the callback registered with the Cognito Auth clients.
 
   applicationName:
     Type: String
@@ -584,3 +584,38 @@ Outputs:
     Description: Client ID for API Client
     Export:
       Name: !Sub ${AWS::StackName}-APIClientID
+  Grant:
+    Value: !Ref IAMGrant
+    Description: DevOps Engineer
+    Export: 
+      Name: !Sub ${AWS::StackName}-Grant
+  Tariq:
+    Value: !Ref IAMTariq
+    Description: Solutions Architect
+    Export:
+      Name: !Sub ${AWS::StackName}-Tariq
+  Peter:
+    Value: !Ref IAMPeter
+    Description: Full Stack Developer
+    Export:
+      Name: !Sub ${AWS::StackName}-Peter
+  Thomas:
+    Value: !Ref IAMThomas
+    Description: Full Stack Developer
+    Export:
+      Name: !Sub ${AWS::StackName}-Thomas
+  Phung:
+    Value: !Ref IAMPhung
+    Description: UX/UI Developer
+    Export:
+      Name: !Sub ${AWS::StackName}-Phung
+  Matt:
+    Value: !Ref IAMMatt
+    Description: Automation Tester
+    Export:
+      Name: !Sub ${AWS::StackName}-Matt
+  Ian:
+    Value: !Ref IAMIan
+    Description: Database Administrator
+    Export:
+      Name: !Sub ${AWS::StackName}-Ian

@@ -12,6 +12,18 @@ Parameters:
     Default: InnoLab-UserStack
 
 Resources:
+  DockerRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-docker-images"
+      RepositoryDescription: "A repository for Docker images"
+
+  CloudFormationRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-cloudformation"
+      RepositoryDescription: "A repository for CloudFormation templates"
+
   FrontendRepo:
     Type: AWS::CodeCommit::Repository
     Properties:
@@ -22,7 +34,7 @@ Resources:
     Type: AWS::CodeCommit::Repository
     Properties:
       RepositoryName: !Sub "${applicationName}-backend"
-      RepositoryDescription: "Repository for lambda functions"
+      RepositoryDescription: "A repository for Lambda functions"
       
   TestingRepo:
     Type: AWS::CodeCommit::Repository

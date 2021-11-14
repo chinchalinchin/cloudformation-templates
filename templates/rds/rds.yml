@@ -13,8 +13,18 @@ Parameters:
   vpcStack:
     Type: String
     Default: InnoLab-VPCStack-Dev
+  userStack:
+    Type: String
+    Default: InnoLab-UserStack
 
 Resources:
+  CredentialsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub "${applicationName}-credentials"
+
   PostgresRDS:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -62,12 +72,11 @@ Resources:
               # NOTE: db-QJLKM6XPHWPIA2MO6QTDQAGNHQ is a regional variable and does not change unless the region is changed.
               - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:db-QJLKM6XPHWPIA2MO6QTDQAGNHQ/{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
       Users:
-        - ian.mcnutt
-        - matt.alston
-        - grant.moore
-        - thomas.klock
-        - peter.cofrancesco
-        - tariq.islam
+        - Fn::ImportValue: !Sub "${userStack}-Ian"
+        - Fn::ImportValue: !Sub "${userStack}-Grant"
+        - Fn::ImportValue: !Sub "${userStack}-Thomas"
+        - Fn::ImportValue: !Sub "${userStack}-Peter"
+        - Fn::ImportValue: !Sub "${userStack}-Tariq"
     DependsOn:
       - PostgresRDS
 

@@ -54,7 +54,7 @@ cp $PROJECT_DIR/templates/gateway/gateway.yml ./gateway.yml
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
+        --stack-name "${APPLICATION^}-${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=alphaEndpoint,ParameterValue=$ALPHA_ENDPOINT \
@@ -63,13 +63,13 @@ then
                      ParameterKey=betaEndpoint,ParameterValue=$BETA_PARAM \
                      ParameterKey=gammaEndpoint,ParameterValue=$GAMMA_ENDPOINT \
                      ParameterKey=deltaEndpoint,ParameterValue=$DELTA_ENDPOINT \
-                     ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStack,ParameterValue="${USER_STACK}" 
+                     ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
+                     ParameterKey=userStack,ParameterValue="${APPLICATION^}-${USER_STACK}" 
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${GATEWAY_STACK}-${ENVIRONMENT}" \
+        --stack-name "${APPLICATION^}-${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=alphaEndpoint,ParameterValue=$ALPHA_ENDPOINT \
@@ -78,14 +78,14 @@ then
                      ParameterKey=betaEndpoint,ParameterValue=$BETA_PARAM \
                      ParameterKey=gammaEndpoint,ParameterValue=$GAMMA_ENDPOINT \
                      ParameterKey=deltaEndpoint,ParameterValue=$DELTA_ENDPOINT \
-                     ParameterKey=lambdaStack,ParameterValue="${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=userStack,ParameterValue="${USER_STACK}" 
+                     ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
+                     ParameterKey=userStack,ParameterValue="${APPLICATION^}-${USER_STACK}" 
 
 
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stackname "${GATEWAY_STACK}-${ENVIRONMENT}"
+        --stackname "${APPLICATION^}-${GATEWAY_STACK}-${ENVIRONMENT}"
 else
     log "Action not understood."
     exit 1

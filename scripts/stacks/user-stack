@@ -48,31 +48,31 @@ cp $PROJECT_DIR/templates/iam/user.yml ./user.yml
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "$USER_STACK" \
+        --stack-name "${APPLICATION^}-$USER_STACK" \
         --template-body file://user.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
                      ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER \
                      ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
         
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "$USER_STACK" \
+        --stack-name "${APPLICATION^}-$USER_STACK" \
         --template-body file://user.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
                      ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
-                     ParameterKey=functionName,ParameterValue=$FUNC_NAME \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=pipelineUser,ParameterValue=$PIPELINE_USER \
                      ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
 
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "$USER_STACK"
+        --stack-name "${APPLICATION^}-$USER_STACK"
 else
     log "Action not understood."
     exit 1
