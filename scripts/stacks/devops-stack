@@ -61,7 +61,7 @@ then
         --stack-name "${APPLICATION^}-${DEVOPS_STACK}" \
         --template-body file://devops.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION  \
-        --parameters ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
+                     ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
 
 elif [ "$ACTION" == "update" ]
 then
@@ -69,7 +69,7 @@ then
         --stack-name "${APPLICATION^}-${DEVOPS_STACK}" \
         --template-body file://devops.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
-        --parameters ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
+                     ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK"
          
 elif [ "$ACTION" == "delete" ]
 then

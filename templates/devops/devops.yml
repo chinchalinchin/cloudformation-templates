@@ -46,7 +46,6 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      AccessControl: Private
       BucketName: !Sub "${applicationName}-pipeline-artifacts"
       
   CodeBuild:
@@ -54,8 +53,9 @@ Resources:
     Properties:
       Name: !Sub "${applicationName}-codebuild"
       Artifacts:
-        Type: S3
-        Location: !Ref PipelineArtifacts
+        Type: CODEPIPELINE
+        # Type: S3
+        # Location: !Ref PipelineArtifacts
       ServiceRole:
         Fn::ImportValue: !Sub "${userStack}-CodeBuildRoleArn"
       Environment:
@@ -63,8 +63,7 @@ Resources:
         ComputeType: BUILD_GENERAL1_MEDIUM
         Image: public.ecr.aws/makpar/pipeline-builder:latest
       Source:
-        Type: S3
-        Location: !Ref PipelineArtifacts 
+        Type: CODEPIPELINE
 
   RepositoryEventRule:
     Type: AWS::Events::Rule
@@ -113,51 +112,12 @@ Resources:
                 Category: Source
                 Owner: AWS
                 Version: 1
-                Provider: CodeComit
+                Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-source-dev"    
+                - Name: !Sub "${applicationName}-frontend-source"    
               Configuration:
                 RepositoryName: !GetAtt FrontendRepo.Name
-                BranchName: Dev
-                PollForSourceChanges: false
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeComit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-source-staging"   
-              Configuration:
-                RepositoryName: !GetAtt FrontendRepo.Name
-                BranchName: Staging
-                PollForSourceChanges: false
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeComit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-source-test"    
-              Configuration:
-                RepositoryName: !GetAtt FrontendRepo.Name
-                BranchName: Test
-                PollForSourceChanges: false
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeComit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-source-prod"    
-              Configuration:
-                RepositoryName: !GetAtt FrontendRepo.Name
-                BranchName: Prod
+                BranchName: Dev|Prod|Test|Staging
                 PollForSourceChanges: false
         - Name: Build   
           Actions:
@@ -168,15 +128,9 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-source-prod"
-                - Name: !Sub "${applicationName}-frontend-source-staging"
-                - Name: !Sub "${applicationName}-frontend-source-test"
-                - Name: !Sub "${applicationName}-frontend-source-dev"
+                - Name: !Sub "${applicationName}-frontend-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-build-prod"
-                - Name: !Sub "${applicationName}-frontend-build-staging"
-                - Name: !Sub "${applicationName}-frontend-build-test"
-                - Name: !Sub "${applicationName}-frontend-build-dev"
+                - Name: !Sub "${applicationName}-frontend-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
     DependsOn:
