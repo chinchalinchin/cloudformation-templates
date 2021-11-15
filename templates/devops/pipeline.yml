@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: ""
+Description: "The top of the DevOps stackset. This stack creates the CI/CD pipelines for the frontend and backend, hooks them into a CodeBuild project configured to use the Docker image 'public.ecr.aws/makpar/pipeline-builder:latest' as a build environment. CloudWatch event rules are used to trigger the pipeline anytime a commit made to the frontend and backend repositories on the environment branches: Dev, Staging, Prod. "
 
 Parameters:
   applicationName:
@@ -19,6 +19,12 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       BucketName: !Sub "${applicationName}-pipeline-artifacts"
+  
+  # PipelineCache:
+    # Type: AWS::S3::Bucket
+    # DeletionPolicy: Delete
+    # Properties:
+      # BucketName: !Sub "${applicationName}-pipeline-cache"
       
   CodeBuild:
     Type: AWS::CodeBuild::Project
@@ -33,9 +39,16 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_MEDIUM
-        Image: public.ecr.aws/makpar/pipeline-builder:latest
+        Image: aws/codebuild/standard:4.0
+        PrivilegedMode: true
       Source:
         Type: CODEPIPELINE
+      Cache:
+        Type: LOCAL
+        Modes: # You can specify one or more cache mode, 
+          - LOCAL_CUSTOM_CACHE
+          - LOCAL_DOCKER_LAYER_CACHE
+          - LOCAL_SOURCE_CACHE
 
   FrontendDevEventRule:
     Type: AWS::Events::Rule
@@ -59,7 +72,7 @@ Resources:
         - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-dev-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-dev
+          Id: !Sub ${applicationName}-codepipeline-frontend-dev
 
   FrontendStagingEventRule:
     Type: AWS::Events::Rule
@@ -83,7 +96,7 @@ Resources:
         - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-staging-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id:  !Sub ${applicationName}-codepipeline-staging
+          Id:  !Sub ${applicationName}-codepipeline-frontend-staging
 
   FrontendProdEventRule:
     Type: AWS::Events::Rule
@@ -107,7 +120,7 @@ Resources:
         - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-prod-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-prod
+          Id: !Sub ${applicationName}-codepipeline-frontend-prod
 
   FrontendDevPipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -238,5 +251,209 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"}]'
+    DependsOn:
+      - CodeBuild
+
+  BackendDevEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Dev
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-backend-dev-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+          Id: !Sub ${applicationName}-codepipeline-backend-dev
+
+  BackendStagingEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Staging
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-backend-staging-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+          Id:  !Sub ${applicationName}-codepipeline-backend-staging
+
+  BackendProdEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Prod
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-backend-prod-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+          Id: !Sub ${applicationName}-codepipeline-backend-prod
+
+  BackendDevPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-backend-dev-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-dev-source"    
+              Configuration:
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
+                BranchName: Dev
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-backend-dev-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-dev-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+    DependsOn:
+      - CodeBuild
+
+  BackendStagingPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-backend-staging-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-staging-source"    
+              Configuration:
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
+                BranchName: Staging
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-backend-staging-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-staging-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+    DependsOn:
+      - CodeBuild
+
+  BackendProdPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-backend-prod-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-prod-source"    
+              Configuration:
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
+                BranchName: Prod
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-backend-prod-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-prod-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
     DependsOn:
       - CodeBuild

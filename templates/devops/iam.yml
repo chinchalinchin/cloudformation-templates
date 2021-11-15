@@ -127,22 +127,6 @@ Resources:
                     - codebuild:StartBuildBatch
                   Resource: "*"
                   Effect: Allow
-                - Action:
-                    - "ecr:GetAuthorizationToken"
-                    - "ecr:BatchCheckLayerAvailability"
-                    - "ecr:GetDownloadUrlForLayer"
-                    - "ecr:GetRepositoryPolicy"
-                    - "ecr:DescribeRepositories"
-                    - "ecr:ListImages"
-                    - "ecr:DescribeImages"
-                    - "ecr:BatchGetImage"
-                    - "ecr:InitiateLayerUpload"
-                    - "ecr:UploadLayerPart"
-                    - "ecr:CompleteLayerUpload"
-                    - "ecr:PutImage"
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
 
   # CODEBUILD SERVICE ROLE
   CodeBuildRole:
@@ -192,7 +176,27 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-
+              - Action:
+                    - "ecr:GetAuthorizationToken"
+                    - "ecr:BatchCheckLayerAvailability"
+                    - "ecr:GetDownloadUrlForLayer"
+                    - "ecr:GetRepositoryPolicy"
+                    - "ecr:DescribeRepositories"
+                    - "ecr:ListImages"
+                    - "ecr:DescribeImages"
+                    - "ecr:BatchGetImage"
+                    - "ecr:InitiateLayerUpload"
+                    - "ecr:UploadLayerPart"
+                    - "ecr:CompleteLayerUpload"
+                    - "ecr:PutImage"
+                  Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+              - Action:
+                    - lambda:UpdateFunctionCode
+                  Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
   # LAMBDA FUNCTION ROLE
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -280,27 +284,27 @@ Resources:
       Path: !Sub "/${applicationName}/"
       UserName: pcofrancesco
 
-  IAMTariq:
-    Type: AWS::IAM::User
-    Properties:
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: tislam
+  # IAMTariq:
+    # Type: AWS::IAM::User
+    # Properties:
+      # LoginProfile:
+        # Password: !Ref masterPassword
+        # PasswordResetRequired: True
+      # ManagedPolicyArns:
+        # - arn:aws:iam::aws:policy/AdministratorAccess
+      # Path: !Sub "/${applicationName}/"
+      # UserName: tislam
 
-  IAMGrant:
-    Type: AWS::IAM::User
-    Properties:
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: gmoore
+  # IAMGrant:
+    # Type: AWS::IAM::User
+    # Properties:
+      # LoginProfile:
+        # Password: !Ref masterPassword
+        # PasswordResetRequired: True
+      # ManagedPolicyArns:
+        # - arn:aws:iam::aws:policy/AdministratorAccess
+      # Path: !Sub "/${applicationName}/"
+      # UserName: gmoore
 
   IAMThomas:
     Type: AWS::IAM::User
@@ -414,38 +418,39 @@ Outputs:
     Description: ARN for CloudWatch Event roles
     Export:
       Name: !Sub ${AWS::StackName}-CloudWatchEventRoleArn
-  Grant:
-    Value: !Ref IAMGrant
-    Description: DevOps Engineer
-    Export: 
-      Name: !Sub ${AWS::StackName}-Grant
-  Tariq:
-    Value: !Ref IAMTariq
-    Description: Solutions Architect
-    Export:
-      Name: !Sub ${AWS::StackName}-Tariq
-  Peter:
-    Value: !Ref IAMPeter
-    Description: Full Stack Developer
-    Export:
-      Name: !Sub ${AWS::StackName}-Peter
-  Thomas:
-    Value: !Ref IAMThomas
-    Description: Full Stack Developer
-    Export:
-      Name: !Sub ${AWS::StackName}-Thomas
-  Phung:
-    Value: !Ref IAMPhung
-    Description: UX/UI Developer
-    Export:
-      Name: !Sub ${AWS::StackName}-Phung
-  Matt:
-    Value: !Ref IAMMatt
-    Description: Automation Tester
-    Export:
-      Name: !Sub ${AWS::StackName}-Matt
-  Ian:
-    Value: !Ref IAMIan
-    Description: Database Administrator
-    Export:
-      Name: !Sub ${AWS::StackName}-Ian
+
+  # Grant:
+    # Value: !Ref IAMGrant
+    # Description: DevOps Engineer
+    # Export: 
+      # Name: !Sub ${AWS::StackName}-Grant
+  # Tariq:
+    # Value: !Ref IAMTariq
+    # Description: Solutions Architect
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Tariq
+  # Peter:
+    # Value: !Ref IAMPeter
+    # Description: Full Stack Developer
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Peter
+  # Thomas:
+    # Value: !Ref IAMThomas
+    # Description: Full Stack Developer
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Thomas
+  # Phung:
+    # Value: !Ref IAMPhung
+    # Description: UX/UI Developer
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Phung
+  # Matt:
+    # Value: !Ref IAMMatt
+    # Description: Automation Tester
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Matt
+  # Ian:
+    # Value: !Ref IAMIan
+    # Description: Database Administrator
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Ian

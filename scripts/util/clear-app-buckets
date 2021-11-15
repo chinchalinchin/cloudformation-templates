@@ -9,9 +9,7 @@ source $PROJECT_DIR/.env
 BUCKETS=$(aws s3 ls | awk -F ' ' '{ for(i=NF; i>=NF; --i) printf "%s ", $i; }')
 
 # Example Usage:
-# >$     clear-app-buckets --environments Dev,Prod,Staging
-
-# NOTE: ``--environments`` is a comma separated list with no spaces.
+# >$     clear-app-buckets
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -24,11 +22,6 @@ function help(){
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        --environments)
-            IFS=',' read -ra ENVIRONMENTS <<< "$2"
-            shift
-            shift
-            ;;
         *)
             log "Input not understood. See \e[3m--help\e[0m for information on using this command."
             exit 1
@@ -36,19 +29,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-for environment in ${ENVIRONMENTS[@]}
-do
-    for bucket in ${BUCKETS[@]}
-    do 
-        if [ "${environment,,}" == "prod" ]
-        then
-            environment=""
-        fi  
 
-        if [[ "$bucket" == ${APPLICATION,,}* ]] 
-        then
-            log "Clearing $bucket S3 bucket"
-            aws s3 rm s3://$bucket --recursive
-        fi
-    done
+for bucket in ${BUCKETS[@]}
+do 
+
+    if [[ "$bucket" == ${APPLICATION,,}* ]] 
+    then
+        log "Clearing $bucket S3 bucket"
+        aws s3 rm s3://$bucket --recursive
+    fi
 done
