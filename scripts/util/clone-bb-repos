@@ -44,11 +44,11 @@ do
     case $repo in
         backend)
             BB_REPO="gateway-lambdas"
-            CC_REPO="comet-backend"
+            CC_REPO="$APPLICATION-backend"
             ;;
         frontend)
             BB_REPO="cloudfront-s3"
-            CC_REPO="comet-frontend"
+            CC_REPO="$APPLICATION-frontend"
             ;;
     esac
 
@@ -75,15 +75,15 @@ do
     case $repo in
         cloud-formation)
             BB_REPO="cloud-formation"
-            CC_REPO="comet-cloudformation"
+            CC_REPO="$APPLICATION-cloudformation"
             ;;
         docker-images)
             BB_REPO="docker-images"
-            CC_REPO="comet-docker-images"
+            CC_REPO="$APPLICATION-docker-images"
             ;;
         test-harness)
             BB_REPO="test-harness"
-            CC_REPO="comet-test-harness"  
+            CC_REPO="$APPLICATION-test-harness"  
             ;;
     esac
 
