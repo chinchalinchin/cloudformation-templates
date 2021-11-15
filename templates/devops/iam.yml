@@ -77,7 +77,6 @@ Resources:
       Users: 
         - !Ref BitbucketPipelineUser
 
-
   ## SERVICE ROLES
   RDSMonitoringRole:
     Type: AWS::IAM::Role
@@ -286,10 +285,10 @@ Resources:
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
 
-  AccessGroup:
+  BasicAccessGroup:
     Type: AWS::IAM::Group
     Properties:
-      GroupName: access-group
+      GroupName: basic-access-group
       Policies:
         - PolicyName: !Sub "${applicationName}-iam-access"
           PolicyDocument:
@@ -314,140 +313,10 @@ Resources:
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
 
-  IAMPeter:
-    Type: AWS::IAM::User
+  DatabaseAdminGroup:
+    Type: AWS::IAM::Group
     Properties:
-      Groups:
-        - access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
-        - arn:aws:iam::aws:policy/CloudFrontFullAccess
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
-        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: pcofrancesco
-    DependsOn:
-      - AccessGroup
-
-  # IAMTariq:
-    # Type: AWS::IAM::User
-    # Properties:
-      # Groups:
-        # - access-group
-      # LoginProfile:
-        # Password: !Ref masterPassword
-        # PasswordResetRequired: True
-      # ManagedPolicyArns:
-        # - arn:aws:iam::aws:policy/AdministratorAccess
-      # Path: !Sub "/${applicationName}/"
-      # UserName: tislam
-      # DependsOn:
-        # - AccessGroup
-
-  # IAMGrant:
-    # Type: AWS::IAM::User
-    # Properties:
-      # Groups:
-        # - access-group
-      # LoginProfile:
-        # Password: !Ref masterPassword
-        # PasswordResetRequired: True
-      # ManagedPolicyArns:
-        # - arn:aws:iam::aws:policy/AdministratorAccess
-      # Path: !Sub "/${applicationName}/"
-      # UserName: gmoore
-      # DependsOn:
-        # - AccessGroup
-
-  IAMThomas:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
-        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: tklock
-    DependsOn:
-      - AccessGroup
-  
-  IAMMatt:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
-        - arn:aws:iam::aws:policy/CloudFrontFullAccess
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
-        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: mpinardi
-    DependsOn:
-      - AccessGroup
-  
-  IAMPhung:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
-        - arn:aws:iam::aws:policy/CloudFrontFullAccess
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
-        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: pngo
-    DependsOn:
-      - AccessGroup
-
-  IAMIan:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
+      GroupName: database-admin-group
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonEC2FullAccess
         - arn:aws:iam::aws:policy/AmazonRDSFullAccess
@@ -455,10 +324,130 @@ Resources:
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+  
+  DeveloperGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: developer-group
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
+        - arn:aws:iam::aws:policy/CloudFrontFullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+
+  IAMTariq:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: tislam
+      DependsOn:
+        - BasicAccessGroup
+
+  IAMGrant:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - access-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: gmoore
+      DependsOn:
+        - BasicAccessGroup
+
+  IAMPeter:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: pcofrancesco
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+
+  IAMThomas:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: tklock
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+  
+  IAMMatt:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: mpinardi
+    DependsOn:
+      - BasicAccessGroup
+  
+  IAMPhung:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: pngo
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+
+  IAMIan:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - database-admin-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
       Path: !Sub "/${applicationName}/"
       UserName: imcnutt
     DependsOn:
-      - AccessGroup
+      - BasicAccessGroup
+      - DatabaseAdminGroup
 
 Outputs:
   BitbucketPipelineUserArn:
