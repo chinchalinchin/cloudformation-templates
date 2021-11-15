@@ -77,7 +77,25 @@ Resources:
       Users: 
         - !Ref BitbucketPipelineUser
 
+
   ## SERVICE ROLES
+  RDSMonitoringRole:
+    Type: AWS::IAM::Role
+    Description: Role to allow monitoring of RDS
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "monitoring.rds.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+      RoleName: !Sub ${applicationName}-rds-monitor
+
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
       Type: AWS::IAM::Role
@@ -417,6 +435,11 @@ Outputs:
     Description: ARN for API Logger Role
     Export:
       Name: !Sub ${AWS::StackName}-LoggerArn
+  RDSMonitorRoleARN:
+    Value: !GetAtt RDSMonitoringRole.Arn
+    Description: ARN for RDS Monitoring role
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSMonitorRoleARN
   CloudWatchEventRoleArn:
     Value: !GetAtt CloudWatchEventRole.Arn
     Description: ARN for CloudWatch Event roles

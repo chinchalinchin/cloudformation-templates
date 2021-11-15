@@ -65,7 +65,7 @@ then
               --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
                             ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                            ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK" \
+                            ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                             ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM
 
@@ -77,7 +77,7 @@ then
               --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
                             ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                            ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK" \
+                            ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                             ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM  
               

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Conditionally provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline user from the ${applicationName}-UserStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-ECRStack.'
+Description: 'Conditionally provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline user from the ${applicationName}-IAMStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-ECRStack.'
 
 Parameters:
   # Stack Parameters
@@ -23,15 +23,15 @@ Parameters:
     Type: String
     Default: innolab
   # Stack Dependencies
-  userStack:
+  iamStack:
     Type: String
-    Default: CCC-UserStack
+    Default: Innolab-IAMStack
   ecrStack:
     Type: String
-    Default: CCC-ECRStack
+    Default: Innolab-ECRStack
   vpcStack:
     Type: String
-    Default: CCC-VPCStack-Dev
+    Default: Innolab-VPCStack-Dev
 
 Conditions:
   CreateOneComponent: !Equals
@@ -88,7 +88,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -120,7 +120,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -152,7 +152,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -185,7 +185,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -217,11 +217,11 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role:
-        Fn::ImportValue: !Sub ${userStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
       Environment:
         Variables:
           CLIENT_ID: 
-            Fn::ImportValue: !Sub ${userStack}-APIClientID
+            Fn::ImportValue: !Sub ${iamStack}-APIClientID
       Timeout: 180
       Tags:
         - Key: Name 

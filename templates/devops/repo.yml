@@ -8,6 +8,13 @@ Parameters:
     Default: innolab
 
 Resources:
+  CredentialsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub "${applicationName}-credentials"
+      
   DockerRepo:
     Type: AWS::CodeCommit::Repository
     Properties:

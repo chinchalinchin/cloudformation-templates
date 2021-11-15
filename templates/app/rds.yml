@@ -12,6 +12,9 @@ Parameters:
   vpcStack:
     Type: String
     Default: InnoLab-VPCStack-Dev
+  iamStack:
+    Type: String
+    Default: InnoLab-IAMStack
 
   ## NOTE: see note below for ``DatabaseConnectPolicy`` resource.
   # userStack:
@@ -19,13 +22,6 @@ Parameters:
     # Default: InnoLab-UserStack
 
 Resources:
-  CredentialsBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub "${applicationName}-credentials"
-
   PostgresRDS:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -52,7 +48,8 @@ Resources:
       VPCSecurityGroups: 
         - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
       MaxAllocatedStorage: 1000
-      MonitoringRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role"
+      MonitoringRoleArn: 
+        Fn::ImportValue: !Sub ${iamStack}-RDSMonitorRoleARN
       Tags: 
         - Key: Environment
           Value: !Ref environmentName
