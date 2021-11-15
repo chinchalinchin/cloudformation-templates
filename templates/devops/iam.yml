@@ -286,9 +286,39 @@ Resources:
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
 
+  AccessGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: access-group
+      Policies:
+        - PolicyName: !Sub "${applicationName}-iam-access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action: 
+                  - iam:GetAccountPasswordPolicy
+                  - iam:GetAccountSummary
+                Effect: Allow
+                Resource: '*'
+              - Action: 
+                  - iam:ChangePassword
+                  - iam:CreateAccessKey
+                  - iam:DeleteAccessKey
+                  - iam:ListAccessKeys
+                  - iam:UpdateAccessKey
+                  - iam:DeleteSSHPublicKey
+                  - iam:ListSSHPublicKeys
+                  - iam:GetSSHPublicKey
+                  - iam:UpdateSSHPublicKey
+                  - iam:UploadSSHPublicKey
+                Effect: Allow
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
+
   IAMPeter:
     Type: AWS::IAM::User
     Properties:
+      Groups:
+        - access-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -305,10 +335,14 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: pcofrancesco
+    DependsOn:
+      - AccessGroup
 
   # IAMTariq:
     # Type: AWS::IAM::User
     # Properties:
+      # Groups:
+        # - access-group
       # LoginProfile:
         # Password: !Ref masterPassword
         # PasswordResetRequired: True
@@ -316,10 +350,14 @@ Resources:
         # - arn:aws:iam::aws:policy/AdministratorAccess
       # Path: !Sub "/${applicationName}/"
       # UserName: tislam
+      # DependsOn:
+        # - AccessGroup
 
   # IAMGrant:
     # Type: AWS::IAM::User
     # Properties:
+      # Groups:
+        # - access-group
       # LoginProfile:
         # Password: !Ref masterPassword
         # PasswordResetRequired: True
@@ -327,10 +365,14 @@ Resources:
         # - arn:aws:iam::aws:policy/AdministratorAccess
       # Path: !Sub "/${applicationName}/"
       # UserName: gmoore
+      # DependsOn:
+        # - AccessGroup
 
   IAMThomas:
     Type: AWS::IAM::User
     Properties:
+      Groups:
+        - access-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -347,10 +389,14 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: tklock
+    DependsOn:
+      - AccessGroup
   
   IAMMatt:
     Type: AWS::IAM::User
     Properties:
+      Groups:
+        - access-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -367,10 +413,14 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: mpinardi
+    DependsOn:
+      - AccessGroup
   
   IAMPhung:
     Type: AWS::IAM::User
     Properties:
+      Groups:
+        - access-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -387,10 +437,14 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: pngo
+    DependsOn:
+      - AccessGroup
 
   IAMIan:
     Type: AWS::IAM::User
     Properties:
+      Groups:
+        - access-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -403,6 +457,8 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: imcnutt
+    DependsOn:
+      - AccessGroup
 
 Outputs:
   BitbucketPipelineUserArn:

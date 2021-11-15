@@ -32,6 +32,9 @@ Parameters:
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
+  cognitoStack:
+    Type: String
+    Default: Innolab-CognitoStack
 
 Conditions:
   CreateOneComponent: !Equals
@@ -221,7 +224,7 @@ Resources:
       Environment:
         Variables:
           CLIENT_ID: 
-            Fn::ImportValue: !Sub ${iamStack}-APIClientID
+            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
       Timeout: 180
       Tags:
         - Key: Name 
