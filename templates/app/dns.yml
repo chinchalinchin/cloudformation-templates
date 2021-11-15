@@ -120,7 +120,7 @@ Resources:
     DependsOn:
       - RestAPIDomainName
 
-  CloudFrontDistribution:
+  FrontendDistribution:
     Type: "AWS::CloudFront::Distribution"
     Properties:
       DistributionConfig: 
@@ -209,7 +209,7 @@ Resources:
             # alias record that routes traffic to a CloudFront distribution.
             HostedZoneId: Z2FDTNDATAQYW2
     DependsOn:
-      - CloudFrontDistribution
+      - FrontendDistribution
 
 Outputs: 
   RestAPIDomain:
@@ -227,12 +227,12 @@ Outputs:
     Value: !If [NotDNSExists, !Ref HostedZone, !Ref hostedZoneId]
     Export:
       Name: !Sub ${AWS::StackName}-HostedZoneID
-  CloudfrontDistributionID:
-    Value: !Ref CloudFrontDistribution
+  FrontendDistributionID:
+    Value: !Ref FrontendDistribution
     Description: Resource ID for CloudFront Distribution
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFrontID
-  CloudfrontDomain:
+      Name: !Sub ${AWS::StackName}-FrontendDistributionID
+  FrontendDomain:
     Value: !GetAtt CloudFrontDistribution.DomainName
     Description: Domain name of CloudFront Distribution
     Export:

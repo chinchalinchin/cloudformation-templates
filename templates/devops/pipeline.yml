@@ -410,7 +410,7 @@ Resources:
                 - Name: !Sub "${applicationName}-backend-staging-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
     DependsOn:
       - CodeBuild
 
@@ -454,6 +454,6 @@ Resources:
                 - Name: !Sub "${applicationName}-backend-prod-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
     DependsOn:
       - CodeBuild
