@@ -35,7 +35,7 @@ There are three separate stack sets, the **Account** stack set **DevOps** stack 
 
 # Steps
 
-A more detailed version of what follows can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/358580264/Sandbox+Environment+Setup)
+A more detailed version of what follows (with pictures!) can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/358580264/Sandbox+Environment+Setup)
 
 ## Configuration
 
@@ -102,7 +102,7 @@ At this point, the **RDS** host secret needs passed into AWS **SecretManager**. 
 ./scripts/secrets/secret-api-key --environment <Dev | Prod | Test | Staging>
 ```
 
-Then the final stacks can up,
+Note: The username and password secrets for the RDS are created during the `rds-stack` script, but the host URL secret creation cannot be automated since it doesn't exist until the RDS stack is provisioned. After this is done, then the final sequence of stacks can be stood up,
 
 ```
 ./scripts/stacks/app/lambda-stack --components <one | two | three | four | five> \
@@ -125,21 +125,8 @@ aws cloudformation create-stack
     --capabilities CAPABILITY_NAMED_IAM
 ```
 
-2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
+2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfully deploy.
 
-3. After the **RDS** stack goes up, the host URL for the RDS instance will need inserted into the AWS **SecretsManager**. Use the script,
-
-```
-./scripts/secret-host-rds --environment < Dev | Staging | Test | Prod >
-```
-
-Note: The username and password secrets for the RDS are created during the `rds-stack` script, but the host URL secret creation cannot be automated since it doesn't exist until the RDS stack is provisioned.
-
-4. If an API key needs delivered to the **Lambda** function environment, before the **Lambda** stack goes up, update the **API_KEY** environment variable in *.env* environment file and use the script,
-
-```
-./scripts/secret-api-key --environment < Dev | Staging | Test | Prod >
-```
 
 # Documentation
 ## CloudFormation
