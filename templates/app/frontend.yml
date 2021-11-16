@@ -87,6 +87,23 @@ Resources:
             Resource: !Sub '${FrontendDeployBucket.Arn}/*'
     DependsOn:
       - FrontendDeployBucket
+  
+  CoverageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CoverageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:DeleteObject"
+            Principal: '*'
+            Resource: !Sub '${CoverageBucket.Arn}/*'
+    DependsOn:
+      - FrontendDeployBucket
 
 Outputs:
   DeployBucketID:

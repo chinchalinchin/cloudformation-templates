@@ -2,21 +2,12 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: SonarQube
 
 Parameters:
-  rVPC:
+  vpcStack:
     Type: String
-    Default: vpc-0d07c1468233fbb20
-  rSubnet:
-    Type: String
-    Default: subnet-02ea69cf78eae2ac4
-  rAMI:
-    Type: String
-    Default: ami-0922553b7b0369273
-  rInstanceSize:
-    Type: String
-    Default: t3.medium
+    Default: Innolab-VPCStack-Dev
 
 Resources:
-  rIncomingSonarSecurityGroup:
+  SonarSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow access to Sonar by everyone."
@@ -25,25 +16,24 @@ Resources:
           FromPort: 9000
           ToPort: 9000
           CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: !Join [ ":", [ !Ref "AWS::StackName", sg-incoming-sonar ] ]
-      VpcId: !Ref rVPC
+      VpcId: 
+        Fn::ImportValue: !Sub ${vpcStack}-VPC
 
-  rEC2:
+  Sonar:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !Ref rAMI
-      InstanceType: !Ref rInstanceSize
       Tags:
       - Key: Name
-        Value: sonar
+        Value: !Sub ${application}-sonarqube
+      ImageId: ami-0922553b7b0369273
+      InstanceType: t3.medium
       NetworkInterfaces:
       - AssociatePublicIpAddress: true
         DeviceIndex: "0"
         GroupSet:
-          - !Ref rIncomingSonarSecurityGroup
-        SubnetId: !Ref rSubnet
+          - !Ref SonarSecurityGroup
+        SubnetId: 
+          Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash -ex
@@ -53,14 +43,20 @@ Resources:
           service sonar start
           chkconfig sonar on
           touch /userdata.complete
+
 Outputs:
   InstanceId:
     Description: InstanceId of the newly created EC2 instance
-    Value: !Ref rEC2
+    Value: !Ref Sonar
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", InstanceId ] ]
+      Name: !Join [ ":", [ !Ref "AWS::StackName", InstanceID ] ]
   PublicIP:
     Description: Public IP address of the newly created EC2 instance
-    Value: !GetAtt rEC2.PublicIp
+    Value: !GetAtt Sonar.PublicIp
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicIp ] ]
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicIP ] ]
+  PublicDNS:
+    Description: Public IP address of the newly created EC2 instance
+    Value: !GetAtt Sonar.PublicDnsName
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicDNS ] ]

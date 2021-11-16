@@ -50,6 +50,22 @@ Resources:
           - LOCAL_DOCKER_LAYER_CACHE
           - LOCAL_SOURCE_CACHE
 
+  CodeBuildCoverageReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-coverage-report-group
+      Type: CODE_COVERAGE
+
+  CodeBuildTestReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-test-report-group
+      Type: TEST
+
   FrontendDevEventRule:
     Type: AWS::Events::Rule
     Properties:
@@ -162,7 +178,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-dev-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" },{"name": "SONAR_TOKEN","value":"${applicationName}-sonarToken","type":"SECRETS_MANAGER"}]'
     DependsOn:
       - CodeBuild
 
@@ -206,7 +222,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-staging-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${applicationName}-sonarToken","type":"SECRETS_MANAGER"}]'
     DependsOn:
       - CodeBuild
 
@@ -250,7 +266,7 @@ Resources:
                 - Name: !Sub "${applicationName}-frontend-prod-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${applicationName}-sonarURL","type":"SECRETS_MANAGER"},{"name":"SONAR_TOKEN","value":"${applicationName}-sonarToken","type": "SECRETS_MANAGER"}]'
     DependsOn:
       - CodeBuild
 
@@ -352,6 +368,15 @@ Resources:
                   Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
                 BranchName: Dev
                 PollForSourceChanges: false
+            - Name: Scan
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Invoke
+                Owner: ThirdParty
+                Version: 1
+                Provider: Snyk
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-synk-scan"    
         - Name: Build   
           Actions:
             - Name: CodeBuild
@@ -366,7 +391,7 @@ Resources:
                 - Name: !Sub "${applicationName}-backend-dev-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${applicationName}-sonarToken", "type": "SECRETS_MANAGER" }]'
     DependsOn:
       - CodeBuild
 
@@ -396,6 +421,7 @@ Resources:
                   Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
                 BranchName: Staging
                 PollForSourceChanges: false
+        
         - Name: Build   
           Actions:
             - Name: CodeBuild
@@ -410,7 +436,7 @@ Resources:
                 - Name: !Sub "${applicationName}-backend-staging-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${applicationName}-sonarToken", "type": "SECRETS_MANAGER" }]'
     DependsOn:
       - CodeBuild
 
@@ -454,6 +480,6 @@ Resources:
                 - Name: !Sub "${applicationName}-backend-prod-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${applicationName}-sonarToken", "type": "SECRETS_MANAGER" }]'
     DependsOn:
       - CodeBuild

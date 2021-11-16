@@ -70,7 +70,8 @@ then
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
+                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION
 
 elif [ "$ACTION" == "update" ]
 then
@@ -78,7 +79,8 @@ then
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
+                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION
 
 elif [ "$ACTION" == "delete" ]
 then
