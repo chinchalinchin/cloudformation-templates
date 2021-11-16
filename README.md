@@ -25,9 +25,9 @@ There are two separate stacksets, the **DevOps** stackset and the **Application*
 | ECRStack | None | 
 | VPCStack-$ENV | None | 
 | FrontendStack-$ENV | None |
-| RDSStack-$ENV | VPCStack-$ENV | 
-| LambdaStack-$ENV | VPCStack-$ENV, ECRStack |
-| GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
+| RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
+| LambdaStack-$ENV | VPCStack-$ENV, ECRStack, CognitoStack, IAMStack |
+| GatewayStack-$ENV | UserStack, LambdaStack-$ENV, CognitoStack, IAMStack |
 | DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
 
 

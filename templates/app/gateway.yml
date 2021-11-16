@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the ${applicationName}-LambdaStack-${environmentName} into endpoints. In addition, it attaches a Lambda authorizer using the User Pool from the ${applicationName}-UserStack. The alphaEndpoint and betaEndpoint are set up by default with path parameters and exposed as GETs. The deltaEndpoint and gammaEndpoint are exposed as POSTs. The epsilonEndpoint is reserved for token generation. A mock endpoint on /verify provides a method for validating the status of a given token."
+Description: "This stack will stand up an API Gateway, deploy it, build resources on top of it and then hook Lambda functions from the ${applicationName}-LambdaStack-${environmentName} into endpoints. In addition, it attaches a Lambda authorizer using the User Pool from the ${applicationName}-CognitoStack. The alphaEndpoint and betaEndpoint are set up by default with path parameters and exposed as GETs. The deltaEndpoint and gammaEndpoint are exposed as POSTs. The epsilonEndpoint is reserved for token generation. A mock endpoint on /verify provides a method for validating the status of a given token."
 
 Parameters:
   # OPTIONAL, DEFAULTS TO DEV ENVIRONMENT
@@ -8,15 +8,20 @@ Parameters:
     Type: String
     Description: "Defaults to Dev"
     Default: Dev
-  userStack:
+  # CROSS STACK REFERENCES
+  iamStack:
     Type: String
-    Description: "Defaults to InnoLab-UserStack"
-    Default: InnoLab-UserStack
+    Description: "Defaults to InnoLab-IAMStack"
+    Default: InnoLab-IAMStack
+  cognitoStack:
+    Type: String
+    Description: "Defaults to InnoLab-CognitoStack"
+    Default: InnoLab-CognitoStack
   lambdaStack:
     Type: String
     Description: "Defaults to InnoLab-LambdaStack-Dev"
     Default: InnoLab-LambdaStack-Dev
-  # ENDPOINT PATHS, DEFAULTS
+  # ENDPOINT PATHS
   alphaEndpoint:
     Type: String
     Description: Root endpoint name for Lambda Alpha hook
@@ -56,7 +61,7 @@ Resources:
     Type: AWS::ApiGateway::Account
     Properties:
       CloudWatchRoleArn: 
-        Fn::ImportValue: !Sub ${userStack}-LoggerArn
+        Fn::ImportValue: !Sub ${iamStack}-LoggerArn
   
   CloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
@@ -99,7 +104,7 @@ Resources:
       Type: "COGNITO_USER_POOLS"
       IdentitySource: method.request.header.authorization
       ProviderARNs:
-        - Fn::ImportValue: !Sub "${userStack}-UserPoolArn"
+        - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
 
   AlphaRootResource: 
     Type: 'AWS::ApiGateway::Resource'

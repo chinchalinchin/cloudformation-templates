@@ -53,6 +53,24 @@ Resources:
       WebsiteConfiguration:
         IndexDocument: 'index.html'
 
+  TestCoverageBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Sub 
+        - "${applicationName}-test-coverage${environment}"
+        - environment:
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
+      LoggingConfiguration:
+        DestinationBucketName: !Ref FrontendBucketLogs
+        LogFilePrefix: 'cov/'
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+
   DeployBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -81,6 +99,16 @@ Outputs:
     Description: Domain name of the frontend deployment bucket
     Export:
       Name: !Sub ${AWS::StackName}-FrontendDeployBucketDomain
+  CoverageBucketID:
+    Value: !Ref TestCoverageBucket
+    Description: Resource ID of the frontend deployment bucket
+    Export:
+      Name: !Sub ${AWS::StackName}-CoverageBucketID
+  CoverageBucketDomain:
+    Value: !GetAtt TestCoverageBucket.DomainName
+    Description: Domain name of the frontend deployment bucket
+    Export:
+      Name: !Sub ${AWS::StackName}-CoverageBucketDomain
   LogBucketID:
     Value: !Ref FrontendBucketLogs
     Description: Resource ID of the frontend deployment bucket

@@ -186,6 +186,73 @@ Resources:
             Fn::ImportValue: !Sub ${frontendStack}-FrontendLogBucketDomain
           IncludeCookies: false
           Prefix: 'cdn/'
+  
+  CoverageDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig: 
+        Aliases: 
+          - !Sub
+            - "${subdomainName}-coverage${subdomainEnv}.${domainName}"
+            - subdomainName: !Ref subdomain
+              domainName: !Ref domain
+              subdomainEnv: 
+                Fn::FindInMap:
+                  - SubEnvDomainMap
+                  - !Ref environmentName
+                  - subdomainEnv
+        Origins: 
+        - ConnectionAttempts: 3
+          ConnectionTimeout: 10
+          DomainName: 
+            Fn::ImportValue: !Sub ${frontendStack}-CoverageBucketDomain
+          Id: 
+            Fn::ImportValue: !Sub ${frontendStack}-CoverageBucketID
+          CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginKeepaliveTimeout: 5
+              OriginProtocolPolicy: 'https-only'
+              OriginReadTimeout: 30
+              OriginSSLProtocols:
+                - TLSv1
+                - TLSv1.1
+                - TLSv1.2
+        DefaultCacheBehavior: 
+          AllowedMethods: 
+          - "HEAD"
+          - "DELETE"
+          - "POST"
+          - "GET"
+          - "OPTIONS"
+          - "PUT"
+          - "PATCH"
+          CachedMethods: 
+          - "HEAD"
+          - "GET"
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: true
+          Compress: false
+          SmoothStreaming: false
+          TargetOriginId: 
+            Fn::ImportValue: !Sub ${frontendStack}-CoverageBucketID
+          ViewerProtocolPolicy: "redirect-to-https"
+        PriceClass: "PriceClass_All"
+        Enabled: true
+        ViewerCertificate: 
+          AcmCertificateArn: !If [DNSExists, !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${certificateId}", !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${Certificate}"]
+          MinimumProtocolVersion: "TLSv1.2_2019"
+          SslSupportMethod: "sni-only"
+        HttpVersion: "http2"
+        DefaultRootObject: 'index.html'
+        IPV6Enabled: true
+        Logging:
+          Bucket: 
+            Fn::ImportValue: !Sub ${frontendStack}-FrontendLogBucketDomain
+          IncludeCookies: false
+          Prefix: 'cov/'
 
   FrontendRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
@@ -203,13 +270,37 @@ Resources:
                   - subdomainEnv
           Type: A
           AliasTarget:
-            DNSName: !GetAtt CloudFrontDistribution.DomainName
+            DNSName: !GetAtt FrontendDistribution.DomainName
             EvaluateTargetHealth: false
             # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
             # alias record that routes traffic to a CloudFront distribution.
             HostedZoneId: Z2FDTNDATAQYW2
     DependsOn:
       - FrontendDistribution
+
+  CoverageRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
+      RecordSets:
+        - Name: !Sub
+            - "${subdomainName}-coverage${subdomainEnv}.${domainName}"
+            - subdomainName: !Ref subdomain
+              domainName: !Ref domain
+              subdomainEnv: 
+                Fn::FindInMap:
+                  - SubEnvDomainMap
+                  - !Ref environmentName
+                  - subdomainEnv
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt CoverageDistribution.DomainName
+            EvaluateTargetHealth: false
+            # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
+            # alias record that routes traffic to a CloudFront distribution.
+            HostedZoneId: Z2FDTNDATAQYW2
+    DependsOn:
+      - CoverageDistribution
 
 Outputs: 
   RestAPIDomain:

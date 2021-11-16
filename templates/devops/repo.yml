@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "A stack for provisioning the CodeCommit repositories where the application components will be housed."
+Description: "A stack for provisioning the CodeCommit repositories where the application source code will be housed and S3 buckets that will hold application artifacts."
 
 Parameters:
   applicationName:
@@ -14,7 +14,7 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Sub "${applicationName}-credentials"
-      
+  
   DockerRepo:
     Type: AWS::CodeCommit::Repository
     Properties:

@@ -144,7 +144,8 @@ Resources:
                     - codebuild:StartBuildBatch
                   Resource: "*"
                   Effect: Allow
-
+        RoleName: !Sub ${applicationName}-codepipeline-exector
+        
   # CODEBUILD SERVICE ROLE
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -218,6 +219,9 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+      RoleName: !Sub ${applicationName}-codebuild-exector
+
+
   # LAMBDA FUNCTION ROLE
   LambdaExecutor:
     Type: AWS::IAM::Role
@@ -246,7 +250,8 @@ Resources:
                   - "cognito-idp:AdminInitiateAuth"
                 Resource: 
                   - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
- 
+      RoleName: !Sub ${applicationName}-lambda-executor
+      
   # GATEWAY LOG ROLE
   APILogger:
     Type: AWS::IAM::Role
@@ -263,6 +268,7 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+      RoleName: !Sub ${applicationName}-apigateway-logger
 
   CloudWatchEventRole:
     Type: AWS::IAM::Role
@@ -353,14 +359,14 @@ Resources:
         - arn:aws:iam::aws:policy/AdministratorAccess
       Path: !Sub "/${applicationName}/"
       UserName: tislam
-      DependsOn:
-        - BasicAccessGroup
+    DependsOn:
+      - BasicAccessGroup
 
   IAMGrant:
     Type: AWS::IAM::User
     Properties:
       Groups:
-        - access-group
+        - basic-access-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -368,8 +374,8 @@ Resources:
         - arn:aws:iam::aws:policy/AdministratorAccess
       Path: !Sub "/${applicationName}/"
       UserName: gmoore
-      DependsOn:
-        - BasicAccessGroup
+    DependsOn:
+      - BasicAccessGroup
 
   IAMPeter:
     Type: AWS::IAM::User
