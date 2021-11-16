@@ -33,3 +33,14 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+for ENVIRONMENT in ${ENVIRONMENTS[@]}
+do
+    if [ $ENVIRONMENT == "Prod" ]
+    then
+        BUCKET_SUFFIX=""
+    else
+        BUCKET_SUFFIX="-${ENVIRONMENT}"
+    fi
+    aws s3 cp $SCRIPT_DIR/assets/ s3://${APPLICATION}-coverage${BUCKET_SUFFIX,,}/ --recursive
+done

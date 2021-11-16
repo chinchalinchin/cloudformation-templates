@@ -53,13 +53,13 @@ Resources:
       WebsiteConfiguration:
         IndexDocument: 'index.html'
 
-  TestCoverageBucket:
+  CoverageBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       AccessControl: PublicRead
       BucketName: !Sub 
-        - "${applicationName}-test-coverage${environment}"
+        - "${applicationName}-coverage${environment}"
         - environment:
             Fn::FindInMap:
               - SubEnvDomainMap
@@ -100,12 +100,12 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-FrontendDeployBucketDomain
   CoverageBucketID:
-    Value: !Ref TestCoverageBucket
+    Value: !Ref CoverageBucket
     Description: Resource ID of the frontend deployment bucket
     Export:
       Name: !Sub ${AWS::StackName}-CoverageBucketID
   CoverageBucketDomain:
-    Value: !GetAtt TestCoverageBucket.DomainName
+    Value: !GetAtt CoverageBucket.DomainName
     Description: Domain name of the frontend deployment bucket
     Export:
       Name: !Sub ${AWS::StackName}-CoverageBucketDomain

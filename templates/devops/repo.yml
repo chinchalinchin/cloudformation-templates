@@ -15,6 +15,25 @@ Resources:
       AccessControl: Private
       BucketName: !Sub "${applicationName}-credentials"
   
+  PostgresECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Postgres image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-postgres"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+
   DockerRepo:
     Type: AWS::CodeCommit::Repository
     Properties:
@@ -125,3 +144,8 @@ Outputs:
     Description: Repository name for automated testing repository
     Export:
       Name: !Sub ${AWS::StackName}-TestingCloneSSH
+
+  PostgresECRRepository:
+    Value: !GetAtt PostgresECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-PostgresECR

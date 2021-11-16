@@ -59,7 +59,7 @@ elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-$COGNITO_STACK" \
-        --template-body file://user.yml \
+        --template-body file://cognito.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
                      ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \

@@ -324,7 +324,17 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-FrontendDistributionID
   FrontendDomain:
-    Value: !GetAtt CloudFrontDistribution.DomainName
+    Value: !GetAtt FrontendDistribution.DomainName
     Description: Domain name of CloudFront Distribution
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFrontDomain
+      Name: !Sub ${AWS::StackName}-FrontendDistributionDomain
+  CoverageDistributionID:
+    Value: !Ref CoverageDistribution
+    Description: Resource ID for CloudFront Distribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CoverageDistributionID
+  CoverageDomain:
+    Value: !GetAtt CoverageDistribution.DomainName
+    Description: Domain name of CloudFront Distribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CoverageDistributionDomain
