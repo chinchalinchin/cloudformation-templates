@@ -9,12 +9,14 @@ aws cloudformation create-stack
 
 # Cross Stack Dependencies
 
-There are two separate stacksets, the **DevOps** stackset and the **Application** stackset. The **DevOps** stacks needs stood up before the **Aplication** stacks go up.
+There are three separate stack sets, the **Account** stack set **DevOps** stack set and the **Application** stack set. 
+
+## Account Stack
+| IAMStack | None |
 
 ## DevOps Stacks
 | Stack | Dependency | 
 | ----- | ---------- |
-| IAMStack | None |
 | RepoStack | None |
 | Pipeline Stack | RepoStack, IAMStack |
 
@@ -37,19 +39,40 @@ A more detailed version of what follows can be found on the [Confluence page](ht
 
 ## Configuration
 
-Before either stackset can be stood up, the *.env* environment file needs setup and configured. Copy the sample into a new file and adjust the variables. See *.sample.env* comments for more information on each variable.
+Before any of the stack sets can be stood up, the *.env* environment file needs setup and configured. Copy the sample into a new file and adjust the variables. See *.sample.env* comments for more information on each variable.
 
 ```
 cp .sample.env .env
 ```
 
-## DevOps Stack
+## Account Stack
+
+Along with the service roles and permissions, this stack creates the developer accounts with the information in the *.env* file. Password resets will be required.
 
 ```
 ./scripts/stacks/devops/iam-stack
+```
+
+## DevOps Stack
+
+If the DevOps stack needs stood up (i.e., if the pipeline is provisioned on AWS Codepipeline as opposed to Bitbucket), these stacks should be stood up last, after the Application stack set has been stood up. See [next section](/#application-stack).
+
+```
 ./scripts/stacks/devops/repo-stack
+```
+
+After creating the repositories, the Bitbucket repositories will need cloned into the CodeCommit repositores,
+
+```
+./scripts/aws/clone-bb-repos --environments Dev,Staging,Prod
+```
+
+Once the repositories are cloned, the final stack, the PipelineStack, can be stood up,
+
+```
 ./scripts/stacks/devops/pipeline-stack
 ```
+
 ## Application Stack
 
 The first two stacks are independent of the application's environment,
