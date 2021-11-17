@@ -1,0 +1,1 @@
+aws codecommit batch-associate-approval-rule-template-with-repositories --repository-names "innolab-frontend" "innolab-backend" --approval-rule-template-name 1-approver-rule-for-main
