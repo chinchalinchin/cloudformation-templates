@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SonarQube
+
+Parameters:
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack-Dev
+
+Resources:
+  SonarSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow access to Sonar by everyone."
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 9000
+          ToPort: 9000
+          CidrIp: 0.0.0.0/0
+      VpcId: 
+        Fn::ImportValue: !Sub ${vpcStack}-VPC
+
+  Sonar:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Sub ${application}-sonarqube
+      ImageId: ami-0922553b7b0369273
+      InstanceType: t3.medium
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: true
+        DeviceIndex: "0"
+        GroupSet:
+          - !Ref SonarSecurityGroup
+        SubnetId: 
+          Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -ex
+          yum update -y
+          wget -O /etc/yum.repos.d/sonar.repo http://downloads.sourceforge.net/project/sonar-pkg/rpm/sonar.repo
+          yum install -y java-1.8.0-openjdk-devel sonar
+          service sonar start
+          chkconfig sonar on
+          touch /userdata.complete
+
+Outputs:
+  InstanceId:
+    Description: InstanceId of the newly created EC2 instance
+    Value: !Ref Sonar
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", InstanceID ] ]
+  PublicIP:
+    Description: Public IP address of the newly created EC2 instance
+    Value: !GetAtt Sonar.PublicIp
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicIP ] ]
+  PublicDNS:
+    Description: Public IP address of the newly created EC2 instance
+    Value: !GetAtt Sonar.PublicDnsName
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicDNS ] ]

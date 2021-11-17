@@ -7,45 +7,112 @@ aws cloudformation create-stack
     --parameters ParameterKey=<key>,ParameterValue=<value> ParameterKey=<key>,ParameterValue=<value>
 ```
 
-# Dependencies
+# Cross Stack Dependencies
 
+There are three separate stack sets, the **Account** stack set **DevOps** stack set and the **Application** stack set. 
 
+## Account Stack
+| IAMStack | None |
+
+## DevOps Stacks
+| Stack | Dependency | 
+| ----- | ---------- |
+| RepoStack | None |
+| Pipeline Stack | RepoStack, IAMStack |
+
+## Application Stacks
 | Stack  |  Dependency |
 | ------ | ----------- |
-| UserStack | None |
+| CognitoStack | None |
 | ECRStack | None | 
 | VPCStack-$ENV | None | 
 | FrontendStack-$ENV | None |
-| PolicyStack | UserStack |
-| RDSStack-$ENV | VPCStack-$ENV | 
-| LambdaStack-$ENV | VPCStack-$ENV, ECRStack |
-| GatewayStack-$ENV | UserStack, LambdaStack-$ENV |
+| RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
+| LambdaStack-$ENV | VPCStack-$ENV, ECRStack, CognitoStack, IAMStack |
+| GatewayStack-$ENV | UserStack, LambdaStack-$ENV, CognitoStack, IAMStack |
 | DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
 
 
 # Steps
 
-A more detailed version of what follows can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/356483073/AWS+Resource+and+CI+CD+Setup+Walk-Thru)
+A more detailed version of what follows (with pictures!) can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/358580264/Sandbox+Environment+Setup)
+
+## Configuration
+
+Before any of the stack sets can be stood up, the *.env* environment file needs setup and configured. Copy the sample into a new file and adjust the variables. See *.sample.env* comments for more information on each variable.
 
 ```
 cp .sample.env .env
-# *: configure application environment in .env file 
-./scripts/stacks/user-stack
-./scripts/stacks/policy-stack 
-./scripts/stacks/frontend-stack --environment <Dev | Prod | Test | Staging> 
-./scripts/stacks/vpc-stack --environment <Dev | Prod | Test | Staging>
-./scripts/stacks/rds-stack --environment <Dev | Prod | Test | Staging>
-# *: Pass RDS Host Url to SecretManager
-./scripts/secrets/rds-host-secret --environment <Dev | Prod | Test | Staging>
-./scripts/scripts/ecr-stack --components <one | two | three | four | five>
-# *: Build images and push to ECR; use ./scripts/docker/build-images from lambda-pipeline repo
-# *: If API key needs provisioned, add it to .env and use ./scripts/secrets/secret-api-key. 
-./scripts/lambda-stack --components <one | two | three | four | five> --environment <Dev | Prod | Test | Staging>
-./scripts/gateway-stack --environment <Dev | Prod | Test | Staging>
-./scripts/stacks/dns-stack [--dns-exists] --environment <Dev | Prod | Test | Staging> 
 ```
 
-NOTE: all scripts have an optional argument ``--action`` with allowable values of `create` or `update`. If `update` is passed through the ``--action`` flag, the script will update the current stack instead of creating a new one.
+## Account Stack
+
+Along with the service roles and permissions, this stack creates the developer accounts with the information in the *.env* file. Password resets will be required.
+
+```
+./scripts/stacks/devops/iam-stack
+```
+
+## DevOps Stack
+
+If the DevOps stack needs stood up (i.e., if the pipeline is provisioned on AWS Codepipeline as opposed to Bitbucket), these stacks should be stood up last, after the Application stack set has been stood up. See [next section](/#application-stack).
+
+```
+./scripts/stacks/devops/repo-stack
+```
+
+After creating the repositories, the Bitbucket repositories will need cloned into the CodeCommit repositores,
+
+```
+./scripts/aws/clone-bb-repos --environments Dev,Staging,Prod
+```
+
+Once the repositories are cloned, the final stack, the PipelineStack, can be stood up,
+
+```
+./scripts/stacks/devops/pipeline-stack
+```
+
+## Application Stack
+
+The first two stacks are independent of the application's environment,
+
+```
+./scripts/stacks/app/cognito-stack
+./scripts/stacks/app/ecr-stack --components <one | two | three | four | five>
+```
+
+After these stacks go up, all subsequent stacks are a function of the environment they are being stood up in,
+
+```
+./scripts/stacks/app/vpc-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/frontend-stack --environment <Dev | Prod | Test | Staging> 
+```
+
+At this point, the images for the **Lambda** functions need built for the first time and pushed to ECR.
+
+```
+./scripts/stacks/app/rds-stack --environment <Dev | Prod | Test | Staging>
+```
+
+At this point, the **RDS** host secret needs passed into AWS **SecretManager**. If an API key is required, add it to the *.env* file and use the following scripts,
+
+```
+./scripts/secrets/secret-rds-host --environment <Dev | Prod | Test | Staging>
+./scripts/secrets/secret-api-key --environment <Dev | Prod | Test | Staging>
+```
+
+Note: The username and password secrets for the RDS are created during the `rds-stack` script, but the host URL secret creation cannot be automated since it doesn't exist until the RDS stack is provisioned. After this is done, then the final sequence of stacks can be stood up,
+
+```
+./scripts/stacks/app/lambda-stack --components <one | two | three | four | five> \
+                                  --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/gateway-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/dns-stack [--dns-exists] \
+                                --environment <Dev | Prod | Test | Staging> 
+```
+
+All scripts have an optional argument ``--action`` with allowable values of `create` or `update`. The `action` defaults to `create` if not provided. If `update` is passed through the ``--action`` flag, the script will update. NOTE: Some **CloudFormation** configurations *cannot* be updated while the stack is up.
 
 # Notes
 
@@ -58,21 +125,8 @@ aws cloudformation create-stack
     --capabilities CAPABILITY_NAMED_IAM
 ```
 
-2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfull deploy.
+2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfully deploy.
 
-3. After the **RDS** stack goes up, the host URL for the RDS instance will need inserted into the AWS **SecretsManager**. Use the script,
-
-```
-./scripts/secret-host-rds --environment < Dev | Staging | Test | Prod >
-```
-
-Note: The username and password secrets for the RDS are created during the `rds-stack` script, but the host URL secret creation cannot be automated since it doesn't exist until the RDS stack is provisioned.
-
-4. If an API key needs delivered to the **Lambda** function environment, before the **Lambda** stack goes up, update the **API_KEY** environment variable in *.env* environment file and use the script,
-
-```
-./scripts/secret-api-key --environment < Dev | Staging | Test | Prod >
-```
 
 # Documentation
 ## CloudFormation
