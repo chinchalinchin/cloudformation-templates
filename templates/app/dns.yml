@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "A stack containing the resources to serve associate routes in the AWS DNS record set. This stack should be stood up last, after everything else has been successfully provisioned. The template can conditionally provision the hosted zone and certificate for a domain that has been registered. If template is not told to configure this values, it will need the hosted zone ID and the certificate ID passed in through parameters"
+Description: "A stack containing the resources to route traffic to the appropriate destination, via AWS DNS record sets. This stack should be stood up after the rest of the application stack, once everything else has been successfully provisioned. The template can conditionally provision the hosted zone and certificate for a domain that has been registered. If template is not told to configure this values, it will need the hosted zone ID and the certificate ID passed in through parameters"
 
 Parameters:
   DNS:
