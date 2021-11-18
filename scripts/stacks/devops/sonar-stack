@@ -51,14 +51,16 @@ then
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${SONAR_STACK}" \
         --template-body file://sonar.yml \
-        --parameters ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-Dev"
+        --parameters ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-Dev" \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${SONAR_STACK}" \
         --template-body file://sonar.yml \
-        --parameters ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-Dev"
+        --parameters ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-Dev" \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION
          
 elif [ "$ACTION" == "delete" ]
 then

@@ -2,6 +2,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: SonarQube
 
 Parameters:
+  applicationName:
+    Type: String
+    Default: innolab
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
@@ -24,7 +27,7 @@ Resources:
     Properties:
       Tags:
       - Key: Name
-        Value: !Sub ${application}-sonarqube
+        Value: !Sub ${applicationName}-sonarqube
       ImageId: ami-0922553b7b0369273
       InstanceType: t3.medium
       NetworkInterfaces:

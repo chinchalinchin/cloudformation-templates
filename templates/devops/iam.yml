@@ -165,14 +165,14 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: !Sub ${applicationName}-codebuild-log-policy
+              - Sid: !Sub ${applicationName}CodeBuildLogOps
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Effect: Allow
                 Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${applicationName}-*
-              - Sid: !Sub ${applicationName}-codebuild-s3-policy
+              - Sid: !Sub ${applicationName}CodeBuildS3Ops
                 Action:
                   - s3:PutObject
                   - s3:GetObject
@@ -183,7 +183,7 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:s3:::${applicationName}-*"
-              - Sid: !Sub ${applicationName}-codebuild-test-report-policy
+              - Sid: !Sub ${applicationName}CodeBuildTestReportOps
                 Action:
                   - codebuild:CreateReportGroup
                   - codebuild:CreateReport
@@ -193,19 +193,19 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${applicationName}*"
-              - Sid: !Sub ${applicationName}-codecommit-policy
+              - Sid: !Sub ${applicationName}CodeBuildCodeCommitOps
                 Action:
                   - codecommit:GitPull
                 Effect: Allow
                 Resource:
                   - Sub! "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"  
-              - Sid: !Sub ${applicationName}-codebuild-secrets-policy
+              - Sid: !Sub ${applicationName}CodeBuildSecretsOps
                 Action:
                   - secretsmanager:GetSecretValue
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-              - Sid: !Sub ${applicationName}-codebuild-ecr-policy
+              - Sid: !Sub ${applicationName}CodebuildECROps
                 Action:
                   - "ecr:GetAuthorizationToken"
                   - "ecr:BatchCheckLayerAvailability"
@@ -222,14 +222,13 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-              - Sid: !Sub ${applicationName}-lambda-policy
+              - Sid: !Sub ${applicationName}CodebuildLambdaUpdateOps
                 Action:
                   - lambda:UpdateFunctionCode
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
       RoleName: !Sub ${applicationName}-codebuild-exector
-
 
   # LAMBDA FUNCTION ROLE
   LambdaExecutor:
@@ -372,8 +371,6 @@ Resources:
                       - "refs/heads/Prod"
                       - "refs/heads/Dev"
                       - "refs/heads/Staging"
-                    Null: 
-                      codecommit:References: false
 
   IAMTariq:
     Type: AWS::IAM::User
@@ -416,7 +413,9 @@ Resources:
         PasswordResetRequired: True
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam:aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
       Path: !Sub "/${applicationName}/"
       UserName: pcofrancesco
     DependsOn:
@@ -434,6 +433,8 @@ Resources:
         PasswordResetRequired: True
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
       Path: !Sub "/${applicationName}/"
       UserName: tklock
     DependsOn:

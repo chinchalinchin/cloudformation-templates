@@ -395,6 +395,10 @@ Resources:
                 # Provider: Snyk
               # OutputArtifacts:
                 # - Name: !Sub "${applicationName}-synk-scan"  
+                
+                ## TODO: the configuration fro this Action isn't documented anywhere, but 
+                ##      without these two properties, CloudFormation complains about not 
+                ##      having them.
               # Configuration:
                 # ClientId: <id>
                 # ClientToken: <token>

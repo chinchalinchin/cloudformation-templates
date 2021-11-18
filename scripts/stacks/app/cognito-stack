@@ -52,7 +52,7 @@ then
         --template-body file://cognito.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                     ParameterKey=subdomain,ParameterValue=$APPLICATION \
                      ParameterKey=applicationName,ParameterValue=$APPLICATION 
         
 elif [ "$ACTION" == "update" ]
@@ -62,7 +62,7 @@ then
         --template-body file://cognito.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$SUBDOMAIN \
+                     ParameterKey=subdomain,ParameterValue=$APPLICATION \
                      ParameterKey=applicationName,ParameterValue=$APPLICATION 
 
 elif [ "$ACTION" == "delete" ]
