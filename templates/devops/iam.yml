@@ -172,6 +172,11 @@ Resources:
                   - logs:PutLogEvents
                 Effect: Allow
                 Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${applicationName}-*
+              - Sid: !Sub ${applicationName}CloudFrontOps
+                Action:
+                  - cloudfront:CreateInvalidation
+                Effect: Allow
+                Resource: '*'
               - Sid: !Sub ${applicationName}CodeBuildS3Ops
                 Action:
                   - s3:PutObject
