@@ -19,6 +19,10 @@ Resources:
           FromPort: 9000
           ToPort: 9000
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
       VpcId: 
         Fn::ImportValue: !Sub ${vpcStack}-VPC
 
