@@ -165,13 +165,15 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Action:
+              - Sid: !Sub ${applicationName}-codebuild-log-policy
+                Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Effect: Allow
                 Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${applicationName}-*
-              - Action:
+              - Sid: !Sub ${applicationName}-codebuild-s3-policy
+                Action:
                   - s3:PutObject
                   - s3:GetObject
                   - s3:DeleteObject
@@ -181,7 +183,8 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:s3:::${applicationName}-*"
-              - Action:
+              - Sid: !Sub ${applicationName}-codebuild-test-report-policy
+                Action:
                   - codebuild:CreateReportGroup
                   - codebuild:CreateReport
                   - codebuild:UpdateReport
@@ -190,12 +193,21 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${applicationName}*"
-              - Action:
+              - Sid: !Sub ${applicationName}-codecommit-policy
+                Action:
+                  - codecommit:GitPull
+                Effect: Allow
+                Resource:
+                  - Sub! "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"  
+              - Sid: !Sub ${applicationName}-codebuild-secrets-policy
+                Action:
                   - secretsmanager:GetSecretValue
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-              - Action:
+              - Sid: !Sub ${applicationName}-codebuild-ecr-policy
+                Action:
+                  - "ecr:GetAuthorizationToken"
                   - "ecr:BatchCheckLayerAvailability"
                   - "ecr:GetDownloadUrlForLayer"
                   - "ecr:GetRepositoryPolicy"
@@ -210,12 +222,8 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-              - Sid: RepositoryToken
-                Effect: Allow
+              - Sid: !Sub ${applicationName}-lambda-policy
                 Action:
-                  - "ecr:GetAuthorizationToken"
-                Resource: "*"
-              - Action:
                   - lambda:UpdateFunctionCode
                 Effect: Allow
                 Resource: 
@@ -347,6 +355,25 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+      Policies:
+        - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action: 
+                  - "codecommit:GitPush"
+                  - "codecommit:DeleteBranch"
+                  - "codecommit:PutFile"
+                Effect: Deny
+                Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
+                Condition:
+                  StringEqualsIfExists:
+                    codecommit:References:
+                      - "refs/heads/Prod"
+                      - "refs/heads/Dev"
+                      - "refs/heads/Staging"
+                    Null: 
+                      codecommit:References: false
 
   IAMTariq:
     Type: AWS::IAM::User

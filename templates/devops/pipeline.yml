@@ -383,21 +383,21 @@ Resources:
                   Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
                 BranchName: Dev
                 PollForSourceChanges: false
-        - Name: Scan
-          Actions:
-            - Name: Scan
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-backend-dev-source"
-              ActionTypeId:
-                Category: Invoke
-                Owner: ThirdParty
-                Version: 1
-                Provider: Snyk
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-synk-scan"  
-              Configuration:
-                ClientId: 9e54efdb-d62e-4dc7-955a-b0d910bb5b7c
-                ClientToken: 33dc5614-b737-472e-9a02-3bfb18c7bb6d
+        # - Name: Scan
+          # Actions:
+            # - Name: Scan
+              # InputArtifacts:
+                # - Name: !Sub "${applicationName}-backend-dev-source"
+              # ActionTypeId:
+                # Category: Invoke
+                # Owner: ThirdParty
+                # Version: 1
+                # Provider: Snyk
+              # OutputArtifacts:
+                # - Name: !Sub "${applicationName}-synk-scan"  
+              # Configuration:
+                # ClientId: <id>
+                # ClientToken: <token>
         - Name: Build   
           Actions:
             - Name: CodeBuild
