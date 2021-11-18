@@ -1,6 +1,0 @@
-- script for branch rules
-- bdd tests in frontend and backend
-    - see how execution reports are generated
-- stand up stacks again.
-- remember to tag and push postgres
-- add cache invalidation to frontend pipeline

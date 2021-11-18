@@ -29,10 +29,13 @@ Parameters:
     Default: ${AWS::NoValue}    
   frontendStack:
     Type: String
-    Default: InnoLab-FrontendStack-Dev
+    Default: Innolab-FrontendStack-Dev
   gatewayStack:
     Type: String
-    Default: InnoLab-GatewayStack-Dev
+    Default: Innolab-GatewayStack-Dev
+  sonarStack:
+    Type: String
+    Default: Innolab-SonarStack
 
 Conditions:
   DNSExists: !Equals 
@@ -41,6 +44,10 @@ Conditions:
   
   NotDNSExists: !Not
     - Condition: DNSExists
+
+  SonarQube: !Equals
+    - !Ref environmentName
+    - Dev
 
 Mappings:
   SubEnvDomainMap:
@@ -99,7 +106,6 @@ Resources:
 
   RestAPIRoute53RecordSetGroup:
     # NOTE: Condition & The HostedZoneId
-    Condition: DNSExists
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
@@ -119,6 +125,19 @@ Resources:
             DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
     DependsOn:
       - RestAPIDomainName
+  
+  SonarRoute53RecordSetGroup:
+    # NOTE: Condition & The HostedZoneId
+    Condition: SonarQube
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
+      RecordSets:
+        - Name: !Sub "${subdomain}-sonar.${domain}"
+          Type: A
+          ResourceRecords:
+            - Fn::ImportValue: !Sub ${sonarStack}-SonarPublicIP
+          TTL: 900
 
   FrontendDistribution:
     Type: "AWS::CloudFront::Distribution"

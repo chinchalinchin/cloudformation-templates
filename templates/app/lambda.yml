@@ -19,9 +19,6 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
-  dbName:
-    Type: String
-    Default: innolab
   # Stack Dependencies
   iamStack:
     Type: String

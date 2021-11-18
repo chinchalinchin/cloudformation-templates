@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: SonarQube
+Description: "A stack for a standalone SonarQube instance deployed into a public subnet of the ${application}-VPCStack-Dev VPC."
 
 Parameters:
   applicationName:
@@ -43,23 +43,27 @@ Resources:
           yum update -y
           wget -O /etc/yum.repos.d/sonar.repo http://downloads.sourceforge.net/project/sonar-pkg/rpm/sonar.repo
           yum install -y java-1.8.0-openjdk-devel sonar
+          /sbin/iptables -A INPUT -i eth0 -p tcp --dport 80 -j ACCEPT
+          /sbin/iptables -A INPUT -i eth0 -p tcp --dport 9000 -j ACCEPT
+          /sbin/iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 9000
+          /sbin/iptables-save > /etc/sysconfig/iptables
           service sonar start
           chkconfig sonar on
           touch /userdata.complete
 
 Outputs:
-  InstanceId:
+  SonarInstanceId:
     Description: InstanceId of the newly created EC2 instance
     Value: !Ref Sonar
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", InstanceID ] ]
-  PublicIP:
+      Name: !Sub "${AWS::StackName}-SonarID"
+  SonarPublicIP:
     Description: Public IP address of the newly created EC2 instance
     Value: !GetAtt Sonar.PublicIp
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicIP ] ]
-  PublicDNS:
+      Name: !Sub "${AWS::StackName}-SonarPublicIP"
+  SonarPublicDNS:
     Description: Public IP address of the newly created EC2 instance
     Value: !GetAtt Sonar.PublicDnsName
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicDNS ] ]
+      Name: !Sub "${AWS::StackName}-SonarPublicDNS"

@@ -252,7 +252,7 @@ Resources:
       KeyName: !Ref dbKeyName
       Tags:
       - Key: Name
-        Value: !Sub ${applicationName}
+        Value: !Sub ${applicationName}-bastion-host
       UserData:      #  This code is NAT code.  Look at how the last line signals the wait condition:
         Fn::Base64: !Sub |
           #!/bin/bash

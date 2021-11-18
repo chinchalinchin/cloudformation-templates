@@ -182,108 +182,108 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "value": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "value": "PLAINTEXT"}]'
                   - app: !Ref applicationName
                     distro: 
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-FrontendDistributionID
     DependsOn:
       - CodeBuild
 
-  FrontendStagingPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-frontend-staging-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-staging-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
-                BranchName: Staging
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-staging-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-staging-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "value": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-                    distro: 
-                      Fn::ImportValue: !Sub ${dnsStack}-Staging-FrontendDistributionID
-    DependsOn:
-      - CodeBuild
+  # FrontendStagingPipeline:
+  #   Type: AWS::CodePipeline::Pipeline
+  #   Properties:
+  #     Name: !Sub "${applicationName}-frontend-staging-pipeline"
+  #     RoleArn:
+  #       Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+  #     ArtifactStore: 
+  #       Type: S3 
+  #       Location: !Ref PipelineArtifacts
+  #     Stages:
+  #       - Name: Source
+  #         Actions:
+  #           - Name: Source
+  #             InputArtifacts: []
+  #             ActionTypeId:
+  #               Category: Source
+  #               Owner: AWS
+  #               Version: 1
+  #               Provider: CodeCommit
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-frontend-staging-source"    
+  #             Configuration:
+  #               RepositoryName: 
+  #                 Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
+  #               BranchName: Staging
+  #               PollForSourceChanges: false
+  #       - Name: Build   
+  #         Actions:
+  #           - Name: CodeBuild
+  #             ActionTypeId:
+  #               Category: Build
+  #               Owner: AWS
+  #               Provider: CodeBuild
+  #               Version: '1'
+  #             InputArtifacts:
+  #               - Name: !Sub "${applicationName}-frontend-staging-source"
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-frontend-staging-build"
+  #             Configuration: 
+  #               ProjectName: !Ref CodeBuild
+  #               EnvironmentVariables: !Sub 
+  #                 - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "value": "PLAINTEXT"}]'
+  #                 - app: !Ref applicationName
+  #                   distro: 
+  #                     Fn::ImportValue: !Sub ${dnsStack}-Staging-FrontendDistributionID
+  #   DependsOn:
+  #     - CodeBuild
 
-  FrontendProdPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-frontend-prod-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-prod-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
-                BranchName: Prod
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-prod-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-prod-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "value": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-                    distro: 
-                      Fn::ImportValue: !Sub ${dnsStack}-Prod-FrontendDistributionID
-    DependsOn:
-      - CodeBuild
+  # FrontendProdPipeline:
+  #   Type: AWS::CodePipeline::Pipeline
+  #   Properties:
+  #     Name: !Sub "${applicationName}-frontend-prod-pipeline"
+  #     RoleArn:
+  #       Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+  #     ArtifactStore: 
+  #       Type: S3 
+  #       Location: !Ref PipelineArtifacts
+  #     Stages:
+  #       - Name: Source
+  #         Actions:
+  #           - Name: Source
+  #             InputArtifacts: []
+  #             ActionTypeId:
+  #               Category: Source
+  #               Owner: AWS
+  #               Version: 1
+  #               Provider: CodeCommit
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-frontend-prod-source"    
+  #             Configuration:
+  #               RepositoryName: 
+  #                 Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
+  #               BranchName: Prod
+  #               PollForSourceChanges: false
+  #       - Name: Build   
+  #         Actions:
+  #           - Name: CodeBuild
+  #             ActionTypeId:
+  #               Category: Build
+  #               Owner: AWS
+  #               Provider: CodeBuild
+  #               Version: '1'
+  #             InputArtifacts:
+  #               - Name: !Sub "${applicationName}-frontend-prod-source"
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-frontend-prod-build"
+  #             Configuration: 
+  #               ProjectName: !Ref CodeBuild
+  #               EnvironmentVariables: !Sub 
+  #                 - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "value": "PLAINTEXT"}]'
+  #                 - app: !Ref applicationName
+  #                   distro: 
+  #                     Fn::ImportValue: !Sub ${dnsStack}-Prod-FrontendDistributionID
+  #   DependsOn:
+  #     - CodeBuild
 
   BackendDevEventRule:
     Type: AWS::Events::Rule
@@ -420,91 +420,91 @@ Resources:
     DependsOn:
       - CodeBuild
 
-  BackendStagingPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-backend-staging-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-staging-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
-                BranchName: Staging
-                PollForSourceChanges: false
+  # BackendStagingPipeline:
+  #   Type: AWS::CodePipeline::Pipeline
+  #   Properties:
+  #     Name: !Sub "${applicationName}-backend-staging-pipeline"
+  #     RoleArn:
+  #       Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+  #     ArtifactStore: 
+  #       Type: S3 
+  #       Location: !Ref PipelineArtifacts
+  #     Stages:
+  #       - Name: Source
+  #         Actions:
+  #           - Name: Source
+  #             InputArtifacts: []
+  #             ActionTypeId:
+  #               Category: Source
+  #               Owner: AWS
+  #               Version: 1
+  #               Provider: CodeCommit
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-backend-staging-source"    
+  #             Configuration:
+  #               RepositoryName: 
+  #                 Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
+  #               BranchName: Staging
+  #               PollForSourceChanges: false
         
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-backend-staging-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-staging-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${applicationName}-sonarToken", "type": "SECRETS_MANAGER" }]'
-    DependsOn:
-      - CodeBuild
+  #       - Name: Build   
+  #         Actions:
+  #           - Name: CodeBuild
+  #             ActionTypeId:
+  #               Category: Build
+  #               Owner: AWS
+  #               Provider: CodeBuild
+  #               Version: '1'
+  #             InputArtifacts:
+  #               - Name: !Sub "${applicationName}-backend-staging-source"
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-backend-staging-build"
+  #             Configuration: 
+  #               ProjectName: !Ref CodeBuild
+  #               EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${applicationName}-sonarToken", "type": "SECRETS_MANAGER" }]'
+  #   DependsOn:
+  #     - CodeBuild
 
-  BackendProdPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-backend-prod-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-prod-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
-                BranchName: Prod
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-backend-prod-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-prod-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${applicationName}-sonarToken", "type": "SECRETS_MANAGER" }]'
-    DependsOn:
-      - CodeBuild
+  # BackendProdPipeline:
+  #   Type: AWS::CodePipeline::Pipeline
+  #   Properties:
+  #     Name: !Sub "${applicationName}-backend-prod-pipeline"
+  #     RoleArn:
+  #       Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+  #     ArtifactStore: 
+  #       Type: S3 
+  #       Location: !Ref PipelineArtifacts
+  #     Stages:
+  #       - Name: Source
+  #         Actions:
+  #           - Name: Source
+  #             InputArtifacts: []
+  #             ActionTypeId:
+  #               Category: Source
+  #               Owner: AWS
+  #               Version: 1
+  #               Provider: CodeCommit
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-backend-prod-source"    
+  #             Configuration:
+  #               RepositoryName: 
+  #                 Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
+  #               BranchName: Prod
+  #               PollForSourceChanges: false
+  #       - Name: Build   
+  #         Actions:
+  #           - Name: CodeBuild
+  #             ActionTypeId:
+  #               Category: Build
+  #               Owner: AWS
+  #               Provider: CodeBuild
+  #               Version: '1'
+  #             InputArtifacts:
+  #               - Name: !Sub "${applicationName}-backend-prod-source"
+  #             OutputArtifacts:
+  #               - Name: !Sub "${applicationName}-backend-prod-build"
+  #             Configuration: 
+  #               ProjectName: !Ref CodeBuild
+  #               EnvironmentVariables: !Sub '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${applicationName}","type":"PLAINTEXT"},{"name": "AWS_DEFAULT_REGION", "value": "${AWS::Region}","type": "PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${applicationName}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${applicationName}-sonarToken", "type": "SECRETS_MANAGER" }]'
+  #   DependsOn:
+  #     - CodeBuild

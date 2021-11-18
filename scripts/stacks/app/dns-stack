@@ -73,6 +73,7 @@ then
                          ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                          ParameterKey=DNS,ParameterValue=true \
+                         ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
                          ParameterKey=frontendStack,ParameterValue="${APPLICATION^}-$FRONTEND_STACK-$ENVIRONMENT" \
                          ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$GATEWAY_STACK-$ENVIRONMENT"
     else
@@ -82,6 +83,7 @@ then
             --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                          ParameterKey=domain,ParameterValue=$DOMAIN \
                          ParameterKey=subdomain,ParameterValue=$APPLICATION \
+                         ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
                          ParameterKey=frontendStack,ParameterValue="${APPLICATION^}-$FRONTEND_STACK-$ENVIRONMENT" \
                          ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$GATEWAY_STACK-$ENVIRONMENT"
     fi
@@ -99,6 +101,7 @@ then
                          ParameterKey=certificateId,ParameterValue=$CERTIFICATE_ID \
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                          ParameterKey=DNS,ParameterValue=true \
+                         ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
                          ParameterKey=frontendStack,ParameterValue="${APPLICATION^}-$FRONTEND_STACK-$ENVIRONMENT" \
                          ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$GATEWAY_STACK-$ENVIRONMENT"
     else
@@ -108,6 +111,7 @@ then
             --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                          ParameterKey=domain,ParameterValue=$DOMAIN \
                          ParameterKey=subdomain,ParameterValue=$APPLICATION \
+                         ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
                          ParameterKey=frontendStack,ParameterValue="${APPLICATION^}-$FRONTEND_STACK-$ENVIRONMENT" \
                          ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$GATEWAY_STACK-$ENVIRONMENT"
     fi
