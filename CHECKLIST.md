@@ -28,6 +28,7 @@
 - [] script for Sonar token secret
 - [] add Null condition to Developer group (see below)
 - [] get Cognito auth domain, change password and add to secrets
+- [] tag local *postgres* image with ECR and push for pipeline to use
 
 ### Conditionally Required
 - [] script to add API key secret
@@ -39,7 +40,6 @@
 "Null": {
     "codecommit:References": "false"
 }
-
 
 ## TODOS
 
