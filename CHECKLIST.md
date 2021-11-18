@@ -15,6 +15,7 @@
 
 # Non-Stack Operations
 
+- [] generate credentials && configure AWS cli
 - [] build ECR images
 - [] upload ssh key to profile
 - [] upload database ssh keys to bucket
