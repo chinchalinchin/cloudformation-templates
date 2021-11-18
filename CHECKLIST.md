@@ -27,6 +27,7 @@
 - [] script for Sonar host secret
 - [] script for Sonar token secret
 - [] add Null condition to Developer group (see below)
+- [] get Cognito auth domain, change password and add to secrets
 
 ### Conditionally Required
 - [] script to add API key secret

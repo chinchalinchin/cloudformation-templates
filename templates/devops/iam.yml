@@ -198,7 +198,7 @@ Resources:
                   - codecommit:GitPull
                 Effect: Allow
                 Resource:
-                  - Sub! "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"  
+                  - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"  
               - Sid: !Sub ${applicationName}CodeBuildSecretsOps
                 Action:
                   - secretsmanager:GetSecretValue

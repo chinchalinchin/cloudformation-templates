@@ -29,13 +29,13 @@ done
 
 RULE_NAME="environment-branch-restricted-access"
 RULE_DESCRIPTION="Requires one developer from the team to approve the pull request if the destination branch is one of the environment branches: Prod, Staging or Dev"
-RULE_TEMPLATE="{\"Version\": \"2018-11-08\",\"DestinationReferences\": [\"refs/heads/Dev\",\"refs/heads/Staging\", \"refs/heads/Prod\"],\"Statements\": [{\"Type\": \"Approvers\",\"NumberOfApprovalsNeeded\": 1,\"ApprovalPoolMembers\": [\"arn:aws:iam::$AWS_ACCOUNT_ID:user/innolab/tklock\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/innolab/pconfrancesco\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/innolab/gmoore\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/innolab/pngo\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/innolab/mpinardi\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/innolab/imcnutt\"]}]}"
+RULE_TEMPLATE="{\"Version\": \"2018-11-08\",\"DestinationReferences\": [\"refs/heads/Dev\",\"refs/heads/Staging\", \"refs/heads/Prod\"],\"Statements\": [{\"Type\": \"Approvers\",\"NumberOfApprovalsNeeded\": 1,\"ApprovalPoolMembers\": [\"arn:aws:iam::$AWS_ACCOUNT_ID:user/$APPLICATION/tklock\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/$APPLICATION/pconfrancesco\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/$APPLICATION/gmoore\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/$APPLICATION/pngo\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/$APPLICATION/mpinardi\", \"arn:aws:iam::$AWS_ACCOUNT_ID:user/$APPLICATION/imcnutt\"]}]}"
 
 aws codecommit create-approval-rule-template \
-                --approval-rule-template-name $RULE_NAME \
-                --approval-rule-template-description $RULE_DESCRIPTION \
-                --approval-rule-template-content $RULE_TEMPLATE
+                --approval-rule-template-name "$RULE_NAME" \
+                --approval-rule-template-description "$RULE_DESCRIPTION" \
+                --approval-rule-template-content "$RULE_TEMPLATE"
 
 aws codecommit batch-associate-approval-rule-template-with-repositories \
-                --repository-names "innolab-frontend" "innolab-backend" \
-                --approval-rule-template-name $RULE_NAME
+                --repository-names "comet-frontend" "comet-backend" \
+                --approval-rule-template-name "$RULE_NAME"
