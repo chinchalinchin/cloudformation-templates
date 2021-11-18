@@ -41,7 +41,3 @@
 "Null": {
     "codecommit:References": "false"
 }
-
-## TODOS
-
-1. add bdd scripts to buildspecs. install selenium, requests, behave in frontend buildspec.
