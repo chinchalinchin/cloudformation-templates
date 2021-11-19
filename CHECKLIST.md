@@ -1,3 +1,9 @@
+# Configuration
+- [] Get Hosted Zone ID
+- [] Get Certificate Arn
+- [] Configure Gateway Endpoints
+- [] Configure image name in backend repo
+
 # Stacks
 
 - [] IAMStack
@@ -25,6 +31,7 @@
 - [] script for branch rules
 - [] script for RDS host secret 
 - [] login into Sonar and change admin password
+- [] generate Sonar token
 - [] script for Sonar host secret
 - [] script for Sonar token secret
 - [] add Null condition to Developer group (see below)
@@ -33,6 +40,13 @@
 
 ### Conditionally Required
 - [] script to add API key secret
+
+# Presentation
+
+- [] Screenshot Sonar project tab
+- [] Screenshot Sonar analysis tab
+- [] Screenshot API Gateway Integration tab
+- [] Screenshot Pipeline
 
 ## Resources
 

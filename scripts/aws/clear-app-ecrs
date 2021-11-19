@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-COMPONENTS=("alpha" "beta" "gamma" "delta" "epsilon")
+# COMPONENTS=("alpha" "beta" "gamma" "delta" "epsilon")
 
 for COMPONENT in ${COMPONENTS[@]}
 do 
@@ -37,3 +37,7 @@ do
         --repository-name "${APPLICATION}-lambda-${COMPONENT}" \
         --force
 done
+
+aws ecr delete-repository \
+    --repository-name "${APPLICATION}-postgres" \
+    --force

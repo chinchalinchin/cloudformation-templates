@@ -270,7 +270,7 @@ Resources:
       RoleName: !Sub ${applicationName}-lambda-executor
       
   # GATEWAY LOG ROLE
-  APILogger:
+  APILoggerRole:
     Type: AWS::IAM::Role
     Description: Role to allow API Gateway to push logs to CloudWatch
     Properties:
@@ -522,7 +522,7 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-CodeBuildRoleArn
   LoggerRoleArn:
-    Value: !GetAtt APILogger.Arn
+    Value: !GetAtt APILoggerRole.Arn
     Description: ARN for API Logger Role
     Export:
       Name: !Sub ${AWS::StackName}-LoggerArn
