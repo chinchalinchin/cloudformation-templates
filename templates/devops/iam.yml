@@ -1,0 +1,574 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "The first stack of the DevOps stackset; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM permissions on which the application will build. It contains a dummy account for a Bitbucket pipeline, an execution role for Lambda, services roles for CodeBuild and CodePipeline and other various roles necessary for the application to function. NOTE: This stack contains resources for both a Bitbucket and a CodePipeline CI/CD pipeline. If using the CodePipeline, the ${applicationName}-RepoStack and ${applicationName}-PipelineStack stacks will need stood up in addition to the other stacks."
+
+Parameters:
+  pipelineUser:
+    Type: String
+    Default: innolab-bb-pipeline
+    Description: Username for the Bitbucket pipeline account
+  applicationName:
+    Type: String
+    Default: innolab
+    Description: Namespace for the application resources
+  masterPassword:
+    Type: String
+    Description: Initial password for IAM users before required password reset.
+
+Resources:
+
+  ## BITBUCKET PIPELINE USER & POLICY
+  BitbucketPipelineUser:
+    Type: AWS::IAM::User
+    Description: User account for Innolab pipeline to perform all the necessary deployment operations
+    Properties:
+      UserName: !Ref pipelineUser
+
+  BitbucketPipelinePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub pipeline-${applicationName}-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: UpdateLambdaFunction
+            Effect: Allow
+            Action: 
+              - "lambda:UpdateFunctionCode"
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+          - Sid: RepositoryPermissions
+            Effect: Allow
+            Action:
+              - "ecr:GetAuthorizationToken"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:GetRepositoryPolicy"
+              - "ecr:DescribeRepositories"
+              - "ecr:ListImages"
+              - "ecr:DescribeImages"
+              - "ecr:BatchGetImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
+              - "ecr:PutImage"
+            Resource: 
+              - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+          - Sid: piplineCrudOps
+            Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+            Resource: 
+                - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment/*"
+          - Sid: pipelineReadOp
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+            Resource: 
+              - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment"
+          - Sid: cloudfrontInvalidateOp
+            Effect: Allow
+            Action:
+              - "cloudfront:CreateInvalidation"
+            Resource:
+              - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
+      Users: 
+        - !Ref BitbucketPipelineUser
+
+  ## SERVICE ROLES
+  RDSMonitoringRole:
+    Type: AWS::IAM::Role
+    Description: Role to allow monitoring of RDS
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "monitoring.rds.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+      RoleName: !Sub ${applicationName}-rds-monitor
+
+  # CODEPIPELINE SERVICE ROLE
+  CodePipelineRole:
+      Type: AWS::IAM::Role
+      Description: Role to allow Innolab Pipeline to access other AWS Services
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - "codepipeline.amazonaws.com"
+              Action: 
+                - "sts:AssumeRole"
+        Policies:
+          - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Action:
+                    - codecommit:CancelUploadArchive
+                    - codecommit:GetBranch
+                    - codecommit:GetCommit
+                    - codecommit:GetRepository
+                    - codecommit:GetUploadArchiveStatus
+                    - codecommit:UploadArchive
+                  Effect: Allow
+                  Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+                - Action:
+                    - cloudwatch:*
+                  Resource: "*"
+                  Effect: Allow
+                - Action:
+                    - s3:*
+                  Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:s3:::${applicationName}-*"
+                - Action:
+                    - lambda:UpdateFunctionCode
+                  Effect: Allow
+                  Resource: 
+                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+                - Action:
+                    - codebuild:BatchGetBuilds
+                    - codebuild:StartBuild
+                    - codebuild:BatchGetBuildBatches
+                    - codebuild:StartBuildBatch
+                  Resource: "*"
+                  Effect: Allow
+        RoleName: !Sub ${applicationName}-codepipeline-exector
+        
+  # CODEBUILD SERVICE ROLE
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Description: Role to allow Innolab Pipeline's CodeBuild stage to access other AWS Services
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-codebuild-role-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: !Sub ${applicationName}CodeBuildLogOps
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${applicationName}-*
+              - Sid: !Sub ${applicationName}CloudFrontOps
+                Action:
+                  - cloudfront:CreateInvalidation
+                Effect: Allow
+                Resource: '*'
+              - Sid: !Sub ${applicationName}CodeBuildS3Ops
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:s3:::${applicationName}-*"
+              - Sid: !Sub ${applicationName}CodeBuildTestReportOps
+                Action:
+                  - codebuild:CreateReportGroup
+                  - codebuild:CreateReport
+                  - codebuild:UpdateReport
+                  - codebuild:BatchPutTestCases
+                  - codebuild:BatchPutCodeCoverages
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${applicationName}*"
+              - Sid: !Sub ${applicationName}CodeBuildCodeCommitOps
+                Action:
+                  - codecommit:GitPull
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"  
+              - Sid: !Sub ${applicationName}CodeBuildSecretsOps
+                Action:
+                  - secretsmanager:GetSecretValue
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+              - Sid: !Sub ${applicationName}CodebuildECROps
+                Action:
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:GetRepositoryPolicy"
+                  - "ecr:DescribeRepositories"
+                  - "ecr:ListImages"
+                  - "ecr:DescribeImages"
+                  - "ecr:BatchGetImage"
+                  - "ecr:InitiateLayerUpload"
+                  - "ecr:UploadLayerPart"
+                  - "ecr:CompleteLayerUpload"
+                  - "ecr:PutImage"
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+              - Sid: !Sub ${applicationName}CodebuildECRTokenOps
+                Action:
+                  - "ecr:GetAuthorizationToken"
+                Effect: Allow
+                Resource: '*'
+              - Sid: !Sub ${applicationName}CodebuildLambdaUpdateOps
+                Action:
+                  - lambda:UpdateFunctionCode
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+      RoleName: !Sub ${applicationName}-codebuild-exector
+
+  # LAMBDA FUNCTION ROLE
+  LambdaExecutor:
+    Type: AWS::IAM::Role
+    Description: Role to allow Innolab Lambdas to access other AWS Services
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: !Sub "${applicationName}-cognito-token-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: TokenPermissions
+                Effect: Allow
+                Action:
+                  - "cognito-idp:AdminInitiateAuth"
+                Resource: 
+                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+      RoleName: !Sub ${applicationName}-lambda-executor
+      
+  # GATEWAY LOG ROLE
+  APILogger:
+    Type: AWS::IAM::Role
+    Description: Role to allow API Gateway to push logs to CloudWatch
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+      RoleName: !Sub ${applicationName}-apigateway-logger
+
+  CloudWatchEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: 
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com            
+      Policies:
+        - PolicyName: !Sub "${applicationName}-cloudwatch-event-pipeline-execution"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: codepipeline:StartPipelineExecution
+                Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
+      RoleName: !Sub ${applicationName}-cloudwatch-role
+
+  BasicAccessGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: basic-access-group
+      Policies:
+        - PolicyName: !Sub "${applicationName}-iam-access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action: 
+                  - iam:GetAccountPasswordPolicy
+                  - iam:GetAccountSummary
+                Effect: Allow
+                Resource: '*'
+              - Action: 
+                  - iam:ChangePassword
+                  - iam:CreateAccessKey
+                  - iam:DeleteAccessKey
+                  - iam:ListAccessKeys
+                  - iam:UpdateAccessKey
+                  - iam:DeleteSSHPublicKey
+                  - iam:ListSSHPublicKeys
+                  - iam:GetSSHPublicKey
+                  - iam:UpdateSSHPublicKey
+                  - iam:UploadSSHPublicKey
+                Effect: Allow
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
+
+  DatabaseAdminGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: database-admin-group
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+  
+  DeveloperGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: developer-group
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
+        - arn:aws:iam::aws:policy/CloudFrontFullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+      Policies:
+        - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action: 
+                  - "codecommit:GitPush"
+                  - "codecommit:DeleteBranch"
+                  - "codecommit:PutFile"
+                Effect: Deny
+                Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
+                Condition:
+                  StringEqualsIfExists:
+                    codecommit:References:
+                      - "refs/heads/Prod"
+                      - "refs/heads/Dev"
+                      - "refs/heads/Staging"
+
+  IAMTariq:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: tislam
+    DependsOn:
+      - BasicAccessGroup
+
+  IAMGrant:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: gmoore
+    DependsOn:
+      - BasicAccessGroup
+
+  IAMPeter:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: pcofrancesco
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+
+  IAMThomas:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: tklock
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+  
+  IAMMatt:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: mpinardi
+    DependsOn:
+      - BasicAccessGroup
+  
+  IAMPhung:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: pngo
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+
+  IAMIan:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - database-admin-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: imcnutt
+    DependsOn:
+      - BasicAccessGroup
+      - DatabaseAdminGroup
+
+Outputs:
+  BitbucketPipelineUserArn:
+    Value: !GetAtt BitbucketPipelineUser.Arn
+    Description: ARN for BitBucket Pipeline User
+    Export:
+      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserArn
+  BitbucketPipelineUserName:
+    Value: !Ref pipelineUser
+    Description: Username for BitBucket Pipeline User
+    Export:
+      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserName
+  LambdaExecutorArn:
+    Value: !GetAtt LambdaExecutor.Arn
+    Description: ARN for Lambda Execution Role
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaExecutorArn
+  CodePipelineRoleArn:
+    Value: !GetAtt CodePipelineRole.Arn
+    Description: ARN for CodePipeline role
+    Export:
+      Name: !Sub ${AWS::StackName}-CodePipelineRoleArn
+  CodeBuildRoleArn:
+    Value: !GetAtt CodeBuildRole.Arn
+    Description: ARN for CodeBuild role
+    Export:
+      Name: !Sub ${AWS::StackName}-CodeBuildRoleArn
+  LoggerRoleArn:
+    Value: !GetAtt APILogger.Arn
+    Description: ARN for API Logger Role
+    Export:
+      Name: !Sub ${AWS::StackName}-LoggerArn
+  RDSMonitorRoleARN:
+    Value: !GetAtt RDSMonitoringRole.Arn
+    Description: ARN for RDS Monitoring role
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSMonitorRoleARN
+  CloudWatchEventRoleArn:
+    Value: !GetAtt CloudWatchEventRole.Arn
+    Description: ARN for CloudWatch Event roles
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudWatchEventRoleArn
+
+  # Grant:
+    # Value: !Ref IAMGrant
+    # Description: DevOps Engineer
+    # Export: 
+      # Name: !Sub ${AWS::StackName}-Grant
+  # Tariq:
+    # Value: !Ref IAMTariq
+    # Description: Solutions Architect
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Tariq
+  # Peter:
+    # Value: !Ref IAMPeter
+    # Description: Full Stack Developer
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Peter
+  # Thomas:
+    # Value: !Ref IAMThomas
+    # Description: Full Stack Developer
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Thomas
+  # Phung:
+    # Value: !Ref IAMPhung
+    # Description: UX/UI Developer
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Phung
+  # Matt:
+    # Value: !Ref IAMMatt
+    # Description: Automation Tester
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Matt
+  # Ian:
+    # Value: !Ref IAMIan
+    # Description: Database Administrator
+    # Export:
+      # Name: !Sub ${AWS::StackName}-Ian
