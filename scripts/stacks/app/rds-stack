@@ -7,7 +7,9 @@ PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     rds-stack --environment <Dev | Prod | Test> --action <action | update>
+# >$     rds-stack --environment <Dev | Prod | Test> \
+#                   --action <action | update>
+#                   --type <postgres | mysql>
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -29,6 +31,11 @@ while [[ $# -gt 0 ]]; do
                     help
                     exit 0
                     ;;
+                --type)
+                    TYPE="$2"
+                    shift
+                    shift
+                    ;;
                 --environment)
                     ENVIRONMENT="$2"
                     shift
@@ -46,7 +53,15 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/app/rds.yml ./rds.yml
+if [ "$TYPE" == 'postgres ']
+then
+    cp $PROJECT_DIR/templates/app/postgres.yml ./rds.yml
+elif [ "$TYPE" == "mysql" ]
+    echo "TODO"
+else
+    # default to postgres
+    cp $PROJECT_DIR/templates/app/postgres.yml ./rds.yml
+fi
 
 if [ "$ACTION" == "create" ]
 then

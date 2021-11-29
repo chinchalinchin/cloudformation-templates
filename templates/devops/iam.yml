@@ -480,6 +480,21 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
+  IAMAhsan:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: akhan
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+
   IAMIan:
     Type: AWS::IAM::User
     Properties:
