@@ -9,8 +9,6 @@ source $PROJECT_DIR/.env
 # Example Usage:
 # >$     retrieve-cloudfront-id --environment <Dev | Prod | Staging> --page <frontend | coverage>
 
-# NOTE: ``--environments`` is a comma separated list with no spaces.
-
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
 }
@@ -22,11 +20,6 @@ function help(){
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        --action)
-            ACTION="$2"
-            shift
-            shift 
-            ;;
         --help)
             help
             exit 0

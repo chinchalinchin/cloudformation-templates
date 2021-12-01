@@ -287,7 +287,7 @@ Resources:
       RoleName: !Sub ${applicationName}-lambda-executor
       
   # GATEWAY LOG ROLE
-  APILogger:
+  APILoggerRole:
     Type: AWS::IAM::Role
     Description: Role to allow API Gateway to push logs to CloudWatch
     Properties:
@@ -497,6 +497,21 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
+  IAMAhsan:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: akhan
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+
   IAMIan:
     Type: AWS::IAM::User
     Properties:
@@ -539,7 +554,7 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-CodeBuildRoleArn
   LoggerRoleArn:
-    Value: !GetAtt APILogger.Arn
+    Value: !GetAtt APILoggerRole.Arn
     Description: ARN for API Logger Role
     Export:
       Name: !Sub ${AWS::StackName}-LoggerArn

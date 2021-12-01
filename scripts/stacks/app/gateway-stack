@@ -80,9 +80,9 @@ then
                      ParameterKey=betaEndpoint,ParameterValue=$BETA_PARAM \
                      ParameterKey=gammaEndpoint,ParameterValue=$GAMMA_ENDPOINT \
                      ParameterKey=deltaEndpoint,ParameterValue=$DELTA_ENDPOINT \
-                     ParameterKey=epsilonEndpoint,ParameterValue=$EPSILON_ENDPOINT 
+                     ParameterKey=epsilonEndpoint,ParameterValue=$EPSILON_ENDPOINT \
                      ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=cogntioStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}" \
+                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 
 
