@@ -7,8 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     lambda-stack --components <one | two | three | four | five> \
-#                     --environment <Dev | Prod | Test | Staging> \
+# >$     lambda-stack --environment <Dev | Prod | Test | Staging> \
 #                     --action <create | update | delete>
 
 #      NOTE: ``--action`` defaults to `create` if not supplied.
@@ -28,11 +27,6 @@ while [[ $# -gt 0 ]]; do
                      ACTION="$2"
                      shift
                      shift 
-                     ;;
-              --components)
-                     COMPONENTS="$2"
-                     shift
-                     shift
                      ;;
               --environment)
                      ENVIRONMENT="$2"
@@ -62,8 +56,7 @@ then
        aws cloudformation create-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
               --template-body file://lambda.yml \
-              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                            ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+              --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
@@ -76,8 +69,7 @@ then
        aws cloudformation update-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
               --template-body file://lambda.yml \
-              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                            ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+              --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
