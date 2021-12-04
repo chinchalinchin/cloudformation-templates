@@ -22,31 +22,27 @@ Parameters:
     Description: "Defaults to InnoLab-LambdaStack-Dev"
     Default: InnoLab-LambdaStack-Dev
   # ENDPOINT PATHS
-  alphaEndpoint:
+  newsEndpoint:
     Type: String
     Description: Root endpoint name for Lambda Alpha hook
     Default: alpha
-  alphaParam:
+  newsParam:
     Type: String
     Description: Path parameter name for Lambda Alpha hook
     Default: alpha_param
-  betaEndpoint:
+  commentEndpoint:
     Type: String
     Description: Root endpoint name for Lambda Beta hook
     Default: beta
-  betaParam:
-    Type: String
-    Description: Path parameter name for Lambda Beta hook
-    Default: beta_param
-  gammaEndpoint:
+  registerEndpoint:
     Type: String
     Description: Endpoint name for Lambda Gamma Hook
     Default: gamma
-  deltaEndpoint:
+  tokenEndpoint:
     Type: String
     Description: Endpoint name for Lambda Delta hook
     Default: delta
-  epsilonEndpoint:
+  verifyEndpoint:
     Type: String
     Description: Endpoint name for Lambda Epsilon hook
     Default: token
@@ -106,7 +102,7 @@ Resources:
       ProviderARNs:
         - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
 
-  AlphaRootResource: 
+  NewsResource: 
     Type: 'AWS::ApiGateway::Resource'
     Properties: 
       RestApiId: !Ref RestAPI
@@ -116,7 +112,7 @@ Resources:
       - RestAPI
 
   # Nested Endpoint
-  AlphaParamResource:
+  NewsQueryResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
