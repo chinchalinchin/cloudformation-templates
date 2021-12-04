@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Conditionally provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline user from the ${applicationName}-IAMStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-ECRStack.'
+Description: 'Provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline user from the ${applicationName}-IAMStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-ECRStack.'
 
 Parameters:
   environmentName:

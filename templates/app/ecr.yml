@@ -1,16 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "Conditionally provisions ECRs to hold images for Lambda functions and attaches policies to pull and push to these ECRs to the PipelineUser from the InnoLab-UserStack."
+Description: "Provisions ECRs to hold images for Lambda functions and attaches policies to pull and push to these ECRs to the PipelineUser from the InnoLab-UserStack."
 Parameters:
-  components:
-    Type: String
-    AllowedValues:
-      - one
-      - two
-      - three
-      - four
-      - five
-    Default: five
   applicationName:
     Type: String
     Default: innolab
@@ -18,48 +9,6 @@ Parameters:
     Type: String
     Default: InnoLab-UserStack
   
-
-Conditions:
-  CreateOneComponent: !Equals
-      - !Ref components
-      - one
-  CreateTwoComponents: !Equals
-      - !Ref components
-      - two
-  CreateThreeComponents: !Equals
-      - !Ref components
-      - three
-  CreateFourComponents: !Equals
-      - !Ref components
-      - four
-  CreateFiveComponents: !Equals
-      - !Ref components
-      - five
-  
-  CreateAlphaComponent: !Or
-    - !Condition CreateOneComponent
-    - !Condition CreateTwoComponents
-    - !Condition CreateThreeComponents
-    - !Condition CreateFourComponents
-    - !Condition CreateFiveComponents
-
-  CreateBetaComponent: !Or
-    - !Condition CreateTwoComponents
-    - !Condition CreateThreeComponents
-    - !Condition CreateFourComponents
-    - !Condition CreateFiveComponents
-
-  CreateGammaComponent: !Or
-    - !Condition CreateThreeComponents
-    - !Condition CreateFourComponents
-    - !Condition CreateFiveComponents
-
-  CreateDeltaComponent: !Or
-    - !Condition CreateFourComponents
-    - !Condition CreateFiveComponents
-
-  CreateEpsilonComponent: !Condition CreateFiveComponents
-
 Resources:
   LambdaAlphaECR:
     Type: AWS::ECR::Repository
@@ -81,8 +30,8 @@ Resources:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
       Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-LambdaAlphaECR
+        - Key: Application
+          Value: !Ref applicationName
 
   LambdaBetaECR:
     Type: AWS::ECR::Repository
@@ -104,8 +53,8 @@ Resources:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
       Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-LambdaBetaECR
+        - Key: Application
+          Value: !Ref applicationName
   
   LambdaGammaECR:
     Type: AWS::ECR::Repository
@@ -127,8 +76,8 @@ Resources:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
       Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-LambdaGammaECR
+        - Key: Application
+          Value: !Ref applicationName
 
   LambdaDeltaECR:
     Type: AWS::ECR::Repository
@@ -150,8 +99,8 @@ Resources:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
       Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-LambdaDeltaECR
+        - Key: Application
+          Value: !Ref applicationName
 
   LambdaEpsilonECR:
     Type: AWS::ECR::Repository
@@ -173,8 +122,52 @@ Resources:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
       Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-LambdaEpsilonECR
+        - Key: Application
+          Value: !Ref applicationName
+  
+  LambdaEtaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda Eta function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-eta"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaEtaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+  
+  LambdaZetaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda Zeta function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-zeta"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaZetaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
 
 Outputs:
   LambdaAlphaImageRepository:
@@ -197,3 +190,11 @@ Outputs:
     Value: !GetAtt LambdaEpsilonECR.RepositoryUri
     Export:
       Name: !Sub ${AWS::StackName}-LambdaEpsilonImageRepository
+  LambdaEtaImageRepository:
+    Value: !GetAtt LambdaEtaECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaEtaImageRepository
+  LambdaZetaImageRepository:
+    Value: !GetAtt LambdaZetaECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaZetaImageRepository
