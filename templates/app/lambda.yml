@@ -20,7 +20,7 @@ Parameters:
     Default: Innolab-VPCStack-Dev
   cognitoStack:
     Type: String
-    Default: Innolab-CognitoStack
+    Default: Innolab-CognitoStack-Dev
 
 Resources:
   LambdaAlpha: 
@@ -44,11 +44,12 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
+          CLIENT_ID: 
+            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
 
   LambdaBeta: 
@@ -72,11 +73,12 @@ Resources:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
+          CLIENT_ID: 
+            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
 
   LambdaGamma:
@@ -101,11 +103,12 @@ Resources:
       MemorySize: 4000 
       Environment:
         Variables:
+          CLIENT_ID: 
+            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
 
   LambdaDelta:
@@ -129,11 +132,12 @@ Resources:
             - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
+          CLIENT_ID: 
+            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
-          API_KEY: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-APIKey:SecretString}}'
       Timeout: 90
 
   LambdaEpsilon:
@@ -153,6 +157,10 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POSTGRES_DB: !Ref applicationName
+          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
 
   LambdaEta:
@@ -191,6 +199,10 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POSTGRES_DB: !Ref applicationName
+          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
 
 Outputs:
@@ -214,3 +226,11 @@ Outputs:
     Value: !GetAtt LambdaEpsilon.Arn
     Export: 
       Name: !Sub ${AWS::StackName}-LambdaEpsilonArn
+  LambdaEtArn:
+    Value: !GetAtt LambdaEta.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaEtaArn
+  LambdaZetaArn:
+    Value: !GetAtt LambdaZeta.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaZetaArn
