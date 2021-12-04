@@ -8,6 +8,8 @@ source $PROJECT_DIR/.env
 
 # Example Usage:
 # >$     dynamo-stack --environment <Dev | Prod | Test | Staging> \
+#                       --partition-key <required: key name> \
+#                       --sort-key <optional: key name> \
 #                       --action <create | update | delete>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
@@ -28,13 +30,18 @@ while [[ $# -gt 0 ]]; do
             shift
             shift 
             ;;
-         --tableName)
+         --table-name)
             TABLE="$2"
             shift
             shift 
             ;;
-         --partitionKey)
+         --partition-key)
             PARTITION="$2"
+            shift
+            shift 
+            ;;
+        --sort-key)
+            SORT="$2"
             shift
             shift 
             ;;
@@ -63,27 +70,46 @@ cp $PROJECT_DIR/templates/app/dynamo.yml ./dynamo.yml
 
 if [ "$ACTION" == "create" ]
 then
-    echo "$PARTITION"
-    aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}" \
-        --template-body file://dynamo.yml \
-        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                     ParameterKey=tableName,ParameterValue=$TABLE \
-                     ParameterKey=partitionKey,ParameterValue=$PARTITION \
-                     ParameterKey=sortKey,ParameterValue="sort_key"
-
+    if [ ! -z $SORT ]
+    then
+        aws cloudformation create-stack \
+            --stack-name "${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}" \
+            --template-body file://dynamo.yml \
+            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                        ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=tableName,ParameterValue=$TABLE \
+                        ParameterKey=partitionKey,ParameterValue=$PARTITION \
+                        ParameterKey=sortKey,ParameterValue=$SORT
+    else
+        aws cloudformation create-stack \
+            --stack-name "${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}" \
+            --template-body file://dynamo.yml \
+            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                        ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=tableName,ParameterValue=$TABLE \
+                        ParameterKey=partitionKey,ParameterValue=$PARTITION
+    fi
 elif [ "$ACTION" == "update" ]
 then
-    aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}" \
-        --template-body file://dynamo.yml \
-        --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                     ParameterKey=tableName,ParameterValue=$TABLE \
-                     ParameterKey=partitionKey,ParameterValue=$PARTITION \
-                     ParameterKey=sortKey,ParameterValue="sort_key"
-
+    if [ ! -z $SORT ]
+    then
+        aws cloudformation update-stack \
+            --stack-name "${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}" \
+            --template-body file://dynamo.yml \
+            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                        ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=tableName,ParameterValue=$TABLE \
+                        ParameterKey=partitionKey,ParameterValue=$PARTITION \
+                        ParameterKey=sortKey,ParameterValue=$SORT
+    else
+        aws cloudformation update-stack \
+            --stack-name "${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}" \
+            --template-body file://dynamo.yml \
+            --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                        ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=tableName,ParameterValue=$TABLE \
+                        ParameterKey=partitionKey,ParameterValue=$PARTITION
+    fi
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \

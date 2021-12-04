@@ -77,8 +77,6 @@ Resources:
       ValidationMethod: DNS
 
   RestAPIDomainName:
-    # NOTE: Condition & The Certificate ARN
-    Condition: DNSExists
     Type: 'AWS::ApiGateway::DomainName'
     Properties:
       CertificateArn: 
