@@ -126,25 +126,6 @@ Resources:
       - RestAPI
       - AlphaRootResource
   
-  BetaRootResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: !Ref betaEndpoint
-    DependsOn:
-      - RestAPI
-  
-  # Nested Endpoint
-  BetaParamResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !Ref BetaRootResource
-      PathPart: !Sub "{${betaParam}}"
-    DependsOn:
-      - RestAPI
-
   # Mock Data Endpoint
   DeltaResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -184,58 +165,58 @@ Resources:
       - RestAPI
 
   # Mock Response for root method to return 400 status code
-  AlphaRootResourceMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref AlphaRootResource
-      HttpMethod: GET
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 400
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 400
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - AlphaRootResource
+  # AlphaRootResourceMethod:
+  #   Type: AWS::ApiGateway::Method
+  #   Properties:
+  #     AuthorizationType: NONE
+  #     RestApiId: !Ref RestAPI
+  #     ResourceId: !Ref AlphaRootResource
+  #     HttpMethod: GET
+  #     Integration:
+  #       IntegrationResponses:
+  #       - StatusCode: 400
+  #         ResponseParameters:
+  #           method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  #           method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+  #           method.response.header.Access-Control-Allow-Origin: "'*'"
+  #         ResponseTemplates:
+  #           application/json: ''
+  #       PassthroughBehavior: WHEN_NO_MATCH
+  #       RequestTemplates:
+  #         application/json: '{"statusCode": 200}'
+  #       Type: MOCK
+  #     MethodResponses:
+  #     - StatusCode: 400
+  #       ResponseModels:
+  #         application/json: 'Empty'
+  #       ResponseParameters:
+  #           method.response.header.Access-Control-Allow-Headers: false
+  #           method.response.header.Access-Control-Allow-Methods: false
+  #           method.response.header.Access-Control-Allow-Origin: false
+  #   DependsOn:
+  #     - AlphaRootResource
 
   # Lambda Integration for root method 
-  # AlphaRootResourceMethod:
-    # Type: 'AWS::ApiGateway::Method'
-    # Properties:
-      # RestApiId: !Ref RestAPI
-      # ResourceId: !Ref AlphaResource
-      # HttpMethod: GET
-      # AuthorizationType: COGNITO_USER_POOLS
-      # AuthorizerId: !Ref ApiGatewayAuthorizer
-      # Integration:
-        # Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateway transforms all incoming requests into POSTS
-        # IntegrationHttpMethod: POST
-        # Uri: !Join
-          # - ''
-          # - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            # - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
-            # - /invocations
-    # DependsOn:
-      # - AlphaResource
+  AlphaRootResourceMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref AlphaResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        INTEGRATION HTTP METHOD MUST BE POST
+          NOTE: API Gateway transforms all incoming requests into POSTS
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
+            - /invocations
+    DependsOn:
+      - AlphaResource
   
   AlphaRootCORS:
     Type: AWS::ApiGateway::Method
