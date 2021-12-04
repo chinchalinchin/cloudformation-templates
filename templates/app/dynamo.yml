@@ -26,40 +26,51 @@ Conditions:
     SortKeyExists: !Not
       - Condition: SortKeyNotExists
 
-
 Resources:
     ApplicationAutoScalingScalableTarget:
-        Type: "AWS::ApplicationAutoScaling::ScalableTarget"
-        Properties:
-            MaxCapacity: 40000
-            MinCapacity: 5
-            ResourceId: !Sub "table/${DynamoDBTable}"
-            RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
-            ScalableDimension: "dynamodb:table:WriteCapacityUnits"
-            ServiceNamespace: "dynamodb"
-            SuspendedState: 
-                DynamicScalingInSuspended: false
-                DynamicScalingOutSuspended: false
-                ScheduledScalingSuspended: false
+      Type: "AWS::ApplicationAutoScaling::ScalableTarget"
+      Properties:
+          MaxCapacity: 40000
+          MinCapacity: 5
+          ResourceId: !Sub "table/${DynamoDBTable}"
+          RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
+          ScalableDimension: "dynamodb:table:WriteCapacityUnits"
+          ServiceNamespace: "dynamodb"
+          SuspendedState: 
+              DynamicScalingInSuspended: false
+              DynamicScalingOutSuspended: false
+              ScheduledScalingSuspended: false
 
     DynamoDBTable:
+      Type: "AWS::DynamoDB::Table"
+      Condition: SortKeyExists
+      Properties:
+          AttributeDefinitions: 
+            - AttributeName: !Sub "${partitionKey}"
+              AttributeType: "S"
+            - AttributeName: !Sub "${sortKey}"
+              AttributeType: "S"
+          TableName: !Sub "${applicationName}-${tableName}-${environmentName}"
+          KeySchema: 
+            - AttributeName: !Sub "${partitionKey}"
+              KeyType: "HASH"
+            - AttributeName: !Sub "${sortKey}"
+              KeyType: "RANGE"
+          ProvisionedThroughput: 
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+  
+    DynamoDBTable:
         Type: "AWS::DynamoDB::Table"
+        Condition: SortKeyNotExists
         Properties:
             AttributeDefinitions: 
-              - 
-                AttributeName: !Sub "${partitionKey}"
-                AttributeType: "S"
-              - 
-                AttributeName: !Sub "${sortKey}"
+              - AttributeName: !Sub "${partitionKey}"
                 AttributeType: "S"
             TableName: !Sub "${applicationName}-${tableName}-${environmentName}"
             KeySchema: 
-              - 
-                AttributeName: !Sub "${partitionKey}"
+              - AttributeName: !Sub "${partitionKey}"
                 KeyType: "HASH"
-              - 
-                AttributeName: !Sub "${sortKey}"
-                KeyType: "RANGE"
             ProvisionedThroughput: 
                 ReadCapacityUnits: 5
                 WriteCapacityUnits: 5
