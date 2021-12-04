@@ -23,18 +23,23 @@ while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
             --action)
-                    ACTION="$2"
-                    shift
-                    shift 
-                    ;;
+                ACTION="$2"
+                shift
+                shift 
+                ;;
             --help)
-                    help
-                    exit 0
-                    ;;
+                help
+                exit 0
+                ;;
+            --environment)
+                ENVIRONMENT="$2"
+                shift
+                shift
+                ;;
             *)
-                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                    exit 1
-                    ;;
+                log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+                exit 1
+                ;;
        esac
 done
 
@@ -48,27 +53,29 @@ cp $PROJECT_DIR/templates/app/cognito.yml ./cognito.yml
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-$COGNITO_STACK" \
+        --stack-name "${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}" \
         --template-body file://cognito.yml \
         --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$APPLICATION \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION 
+        --parameters ParameterKey=domainName,ParameterValue=$DOMAIN \
+                     ParameterKey=subdomainName,ParameterValue=$APPLICATION \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                     ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
         
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-$COGNITO_STACK" \
+        --stack-name "${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}" \
         --template-body file://cognito.yml \
         --capabilities CAPABILITY_NAMED_IAM \
-        --parameters ParameterKey=domain,ParameterValue=$DOMAIN \
-                     ParameterKey=subdomain,ParameterValue=$APPLICATION \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION 
+        --parameters ParameterKey=domainName,ParameterValue=$DOMAIN \
+                     ParameterKey=subdomainName,ParameterValue=$APPLICATION \
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                     ParameterKey=environmentName,ParameterValue=$ENVIRONMENT
 
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${APPLICATION^}-$COGNITO_STACK"
+        --stack-name "${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}"
 else
     log "Action not understood."
     exit 1
