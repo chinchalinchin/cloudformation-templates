@@ -53,7 +53,7 @@ Resources:
           RequireLowercase: true
           RequireSymbols: true
           RequireUppercase: true
-          TemporaryPasswordValidityDays: 1
+          TemporaryPasswordValidityDays: 3
       Schema:
         - AttributeDataType: String
           DeveloperOnlyAttribute: false
@@ -125,12 +125,10 @@ Resources:
       Username: "pcofrancesco@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "pcofrancesco@makpar.com"
         - Name: "name"
-          Value: "Peter Confrancesco"
+          Value: "Peter Cofrancesco"
     DependsOn:
       - CognitoUserPool
 
@@ -140,8 +138,6 @@ Resources:
       Username: "tislam@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "tislam@makpar.com"
         - Name: "name"
@@ -153,8 +149,6 @@ Resources:
       Username: "gmoore@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "gmoore@makpar.com"
         - Name: "name"
@@ -168,8 +162,6 @@ Resources:
       Username: "tklock@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "tklock@makpar.com"
         - Name: "name"
@@ -183,8 +175,6 @@ Resources:
       Username: "aukhan@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "aukhan@makpar.com"
         - Name: "name"
@@ -198,8 +188,6 @@ Resources:
       Username: "pngo@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "pngo@makpar.com"
         - Name: "name"
