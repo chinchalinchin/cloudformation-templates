@@ -1,16 +1,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Metadata:
-    Generator: "former2"
-Description: ""
+Description: "Stack for a serverless NoSQL DynamoDB table. Table name and partition key are passed in as parameters. Optionally, a sort key can be passed in."
+
 Parameters:
     tableName:
       Type: String
     partitionKey:
       Type: String
-      Default: "test"
+      Default: partitionKey
     sortKey:
       Type: String
-      Default: "work"
+      Default: ${AWS::NoValue}
     applicationName:
       Type: String
       Default: innolab

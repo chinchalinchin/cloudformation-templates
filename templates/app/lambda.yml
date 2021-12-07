@@ -46,6 +46,8 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POOL_ID:
+            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
@@ -75,6 +77,8 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POOL_ID:
+            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
@@ -105,6 +109,8 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POOL_ID:
+            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
@@ -134,6 +140,8 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POOL_ID:
+            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
@@ -157,6 +165,8 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POOL_ID:
+            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
@@ -180,6 +190,12 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POOL_ID:
+            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
+          POSTGRES_DB: !Ref applicationName
+          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
   
   LambdaZeta:
@@ -199,6 +215,8 @@ Resources:
         Variables:
           CLIENT_ID: 
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+          POOL_ID:
+            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
           POSTGRES_DB: !Ref applicationName
           POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
           POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'

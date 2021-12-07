@@ -103,7 +103,6 @@ Resources:
       Stage: !Ref environmentName
 
   RestAPIRoute53RecordSetGroup:
-    # NOTE: Condition & The HostedZoneId
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
