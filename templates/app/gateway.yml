@@ -147,7 +147,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ParentId: !Ref NewsResource
-      PathPart: !Sub "{news_id}"
+      PathPart: "{news_id}"
     DependsOn:
       - RestAPI
       - NewsResource
@@ -275,8 +275,8 @@ Resources:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
-      ParentId: !Ref NewsResource
-      PathPart: !Sub "{comment_id}"
+      ParentId: !Ref CommentResource
+      PathPart: "{comment_id}"
     DependsOn:
       - RestAPI
       - NewsResource
