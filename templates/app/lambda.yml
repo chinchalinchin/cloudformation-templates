@@ -161,6 +161,12 @@ Resources:
       PackageType: Image
       Role:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+      VpcConfig:
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
           CLIENT_ID: 
@@ -186,6 +192,12 @@ Resources:
       PackageType: Image
       Role:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+      VpcConfig:
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
           CLIENT_ID: 
@@ -211,6 +223,12 @@ Resources:
       PackageType: Image
       Role:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+      VpcConfig:
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
           CLIENT_ID: 
