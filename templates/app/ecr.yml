@@ -12,7 +12,6 @@ Parameters:
 Resources:
   LambdaAlphaECR:
     Type: AWS::ECR::Repository
-    Condition: CreateAlphaComponent
     Description: ECR to hold image of Lambda function
     Properties:
       ImageScanningConfiguration: 
@@ -35,7 +34,6 @@ Resources:
 
   LambdaBetaECR:
     Type: AWS::ECR::Repository
-    Condition: CreateBetaComponent
     Description: ECR to hold image of Lambda beta function
     Properties:
       ImageScanningConfiguration: 
@@ -58,7 +56,6 @@ Resources:
   
   LambdaGammaECR:
     Type: AWS::ECR::Repository
-    Condition: CreateAlphaComponent
     Description: ECR to hold image of Lambda gamma function
     Properties:
       ImageScanningConfiguration: 
@@ -81,7 +78,6 @@ Resources:
 
   LambdaDeltaECR:
     Type: AWS::ECR::Repository
-    Condition: CreateDeltaComponent
     Description: ECR to hold image of Lambda Delta function
     Properties:
       ImageScanningConfiguration: 
@@ -104,7 +100,6 @@ Resources:
 
   LambdaEpsilonECR:
     Type: AWS::ECR::Repository
-    Condition: CreateEpsilonComponent
     Description: ECR to hold image of Lambda Epsilon function
     Properties:
       ImageScanningConfiguration:

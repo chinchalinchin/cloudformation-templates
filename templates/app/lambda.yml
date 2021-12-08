@@ -20,7 +20,7 @@ Parameters:
     Default: Innolab-VPCStack-Dev
   cognitoStack:
     Type: String
-    Default: Innolab-CognitoStack-Dev
+    Default: Innolab-CognitoStack
 
 Resources:
   LambdaAlpha: 

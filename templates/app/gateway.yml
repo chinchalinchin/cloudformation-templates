@@ -62,12 +62,12 @@ Resources:
     DependsOn:
       - CloudWatch
       - CloudWatchLogGroup
-      - AlphaRootResourceMethod
-      - AlphaParamResourceMethod
-      - BetaRootResourceMethod
-      - BetaParamResourceMethod
-      - DeltaResourceMethod
-      - EpsilonResourceMethod
+      - NewsResourceMethod
+      - NewsQueryResourceMethod
+      - CommentResourceMethod
+      - CommentQueryResourceMethod
+      - TokenResourceMethod
+      - RegisterResourceMethod
       - VerifyResourceMethod
 
   ApiGatewayAuthorizer:
@@ -95,7 +95,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref NewsResource
-      HttpMethod: GET
+      HttpMethod: ANY
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -158,7 +158,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref NewsQueryResource
-      HttpMethod: GET
+      HttpMethod: ANY
       RequestParameters:
         "method.request.path.news_id": true
       AuthorizationType: COGNITO_USER_POOLS
@@ -224,7 +224,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref CommentResource
-      HttpMethod: GET
+      HttpMethod: POST
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -286,7 +286,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestAPI
       ResourceId: !Ref CommentQueryResource
-      HttpMethod: GET
+      HttpMethod: ANY
       RequestParameters:
         "method.request.path.comment_id": true
       AuthorizationType: COGNITO_USER_POOLS
@@ -542,8 +542,8 @@ Resources:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref GammaResource
-      HttpMethod: POST
+      ResourceId: !Ref ModelResource
+      HttpMethod: ANY
       AuthorizationType: NONE
       # AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -564,7 +564,7 @@ Resources:
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref GammaResource
+      ResourceId: !Ref ModelResource
       HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
@@ -588,7 +588,7 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: false
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn:
-      - ZetaResource
+      - ModelResource
 
   LambdaAlphaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -598,7 +598,7 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${alphaEndpoint}/*
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/news
     DependsOn:
       - RestAPIDeployment
 
@@ -610,7 +610,7 @@ Resources:
         Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${betaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/news/*
     DependsOn:
       - RestAPIDeployment
 
@@ -622,7 +622,7 @@ Resources:
           Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${deltaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/comment/*
     DependsOn:
       - RestAPIDeployment
   
@@ -634,7 +634,7 @@ Resources:
         Fn::ImportValue: !Sub ${lambdaStack}-LambdaGammaArn
       Principal: apigateway.amazonaws.com
       SourceArn:
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${gammaEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/comment
     DependsOn:
       - RestAPIDeployment
 
@@ -646,7 +646,31 @@ Resources:
         Fn::ImportValue: !Sub ${lambdaStack}-LambdaEpsilonArn
       Principal: apigateway.amazonaws.com
       SourceArn:
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/${epsilonEndpoint}
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/token
+    DependsOn:
+      - RestAPIDeployment
+
+  LamdbaEtaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::ImportValue: !Sub ${lambdaStack}-LambdaEtaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/register
+    DependsOn:
+      - RestAPIDeployment
+
+  LamdbaZetaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::ImportValue: !Sub ${lambdaStack}-LambdaZetaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/models
     DependsOn:
       - RestAPIDeployment
       
