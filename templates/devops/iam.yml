@@ -268,7 +268,7 @@ Resources:
                   - "cognito-idp:AdminInitiateAuth"
                   - "cognito-idp:AdminCreateUser"
                 Resource: 
-                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${applicationName}-userpool"
+                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
         - PolicyName: !Sub "${applicationName}-dynamodb-policy"
           PolicyDocument:
             Version: "2012-10-17"
@@ -450,6 +450,26 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
+  IAMJustin:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: jstauffer
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+      
   IAMThomas:
     Type: AWS::IAM::User
     Properties:

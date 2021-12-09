@@ -6,6 +6,14 @@ SCRIPT_DES=$'Invalidate the CloudFront cache. Use after deploying to S3 bucket f
 PROJECT_DIR=$SCRIPT_DIR/../..
 source $PROJECT_DIR/.env
 
+function log(){
+    echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
+}
+
+function help(){
+    echo -e "\n\e[4m$SCRIPT_NAME\e[0m\n\n\t$SCRIPT_DES" 
+}
+
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
