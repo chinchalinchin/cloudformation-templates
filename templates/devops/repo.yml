@@ -89,7 +89,7 @@ Outputs:
     Value: !GetAtt CloudFormationRepo.Arn
     Description: Repository ARN for CloudFormation template repository
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFormationARN
+      Name: !Sub ${AWS::StackName}-CloudFormationRepositoryARN
 
   FrontendRepository:
     Value: !GetAtt FrontendRepo.Name
