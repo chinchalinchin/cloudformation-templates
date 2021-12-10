@@ -1,0 +1,1 @@
+1. can probably condense ECRSTack and RepoStack into a single stack since they do not depend on the number of environments or any of the other stacks. they are basically static. 

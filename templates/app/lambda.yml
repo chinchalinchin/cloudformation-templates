@@ -245,28 +245,28 @@ Outputs:
   LambdaAlphaArn:
     Value: !GetAtt LambdaAlpha.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-LambdaAlphaArn
+      Name: !Sub ${AWS::StackName}-LambdaAlphaARN
   LambdaBetaArn:
     Value: !GetAtt LambdaBeta.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-LambdaBetaArn
+      Name: !Sub ${AWS::StackName}-LambdaBetaARN
   LambdaGammaArn:
     Value: !GetAtt LambdaGamma.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-LambdaGammaArn
+      Name: !Sub ${AWS::StackName}-LambdaGammaARN
   LambdaDeltaArn:
     Value: !GetAtt LambdaDelta.Arn
     Export: 
-      Name: !Sub ${AWS::StackName}-LambdaDeltaArn
+      Name: !Sub ${AWS::StackName}-LambdaDeltaARN
   LambdaEpsilonArn:
     Value: !GetAtt LambdaEpsilon.Arn
     Export: 
-      Name: !Sub ${AWS::StackName}-LambdaEpsilonArn
+      Name: !Sub ${AWS::StackName}-LambdaEpsilonARN
   LambdaEtArn:
     Value: !GetAtt LambdaEta.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-LambdaEtaArn
+      Name: !Sub ${AWS::StackName}-LambdaEtaARN
   LambdaZetaArn:
     Value: !GetAtt LambdaZeta.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-LambdaZetaArn
+      Name: !Sub ${AWS::StackName}-LambdaZetaARN

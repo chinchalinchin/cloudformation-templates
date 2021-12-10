@@ -139,7 +139,18 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-TestingCloneSSH
 
-  PostgresECRRepository:
-    Value: !GetAtt PostgresECR.RepositoryUri
+  JiraRepository:
+    Value: !GetAtt JiraRepo.Name
+    Description: Repository name for Jira repository
     Export:
-      Name: !Sub ${AWS::StackName}-PostgresECR
+      Name: !Sub ${AWS::StackName}-JiraRepository
+  JiraRepositoryArn:
+    Value: !GetAtt JiraRepo.Arn
+    Description: Repository name for Jira repository
+    Export:
+      Name: !Sub ${AWS::StackName}-JiraRepositoryARN
+  JiraCloneSSH:
+    Value: !GetAtt JiraRepo.CloneUrlSsh
+    Description: Repository name for Jira repository
+    Export:
+      Name: !Sub ${AWS::StackName}-JiraCloneSSH

@@ -11,12 +11,13 @@ Parameters:
     Default: makpar-innovation.com
   iamStack:
     Type: String
-    Default: InnoLab-IAMStack
+    Default: Innolab-IAMStack
   repoStack:
     Type: String
-    Default: InnoLab-RepoStack
+    Default: Innolab-RepoStack
   dnsStack:
     Type: String
+    Default: Innolab-DNSStack-Dev
   
 
 Resources:
@@ -71,6 +72,76 @@ Resources:
         ExportConfigType: NO_EXPORT
       Name: !Sub ${applicationName}-test-report-group
       Type: TEST
+
+  JiraMasterEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-JiraRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - master
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-jira-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+          Id: !Sub ${applicationName}-codepipeline-jira-master
+
+  JiraPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-jira-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-jira-source"    
+              Configuration:
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-JiraRepository"
+                BranchName: master
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-jira-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-jira-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+                EnvironmentVariables: !Sub 
+                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                  - app: !Ref applicationName
+    DependsOn:
+      - CodeBuild
 
   FrontendDevEventRule:
     Type: AWS::Events::Rule

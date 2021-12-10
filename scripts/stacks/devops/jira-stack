@@ -53,7 +53,8 @@ then
         --template-body file://jira.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION"  \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
-                     ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK"
+                     ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
+                     ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-$ECR_STACK"
 
 elif [ "$ACTION" == "update" ]
 then
@@ -62,7 +63,8 @@ then
         --template-body file://jira.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
-                     ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK"
+                     ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
+                     ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-$ECR_STACK"
 
          
 elif [ "$ACTION" == "delete" ]

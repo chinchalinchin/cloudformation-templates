@@ -185,7 +185,7 @@ Resources:
       Tags:
         - Key: Application
           Value: !Ref applicationName
-          
+
   PostgresECR:
     Type: AWS::ECR::Repository
     Description: ECR to hold image of Postgres image
@@ -237,3 +237,11 @@ Outputs:
     Value: !GetAtt LambdaZetaECR.RepositoryUri
     Export:
       Name: !Sub ${AWS::StackName}-LambdaZetaImageRepository
+  PostgresImageRepository:
+    Value: !GetAtt PostgresECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-PostgresImageRepository
+  JiraIntegrationImageRepository:
+    Value: !GetAtt JiraECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-JiraImageRepository

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: ""
+Description: "A stack containing the resources necessary to integrate Jira with the CodeCommit repositories provisioned in the ${applicationName}-RepoStack. This stack creates a Lambda function and hooks it into a CloudWatch event rule that watches the repositories for commits made onto environment branches."
 
 Parameters:
   applicationName: 
@@ -12,37 +12,12 @@ Parameters:
   repoStack:
     Type: String
     Default: Innolab-RepoStack
+  ecrStack:
+    Type: String
+    Default: Innolab-ECRStack
 
 Resources:
-  JiraRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-jira"
-      RepositoryDescription: "The repository for Jira Lambda"
-  
-  JiraECR:
-    Type: AWS::ECR::Repository
-    Description: ECR to hold image of Jira Lambda function
-    Properties:
-      ImageScanningConfiguration:
-        ScanOnPush: true
-      RepositoryName: !Sub "${applicationName}-lambda-jira"
-      RepositoryPolicyText:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: ECRLambdaJiraPolicy
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - "ecr:BatchGetImage"
-              - "ecr:GetDownloadUrlForLayer"
-      Tags:
-        - Key: Application
-          Value: !Ref applicationName
-  
-  LambdaJira:
+  LambdaJira: 
     Type: AWS::Lambda::Function
     Properties: 
       FunctionName: !Sub ${applicationName}-lambda-jira
@@ -50,7 +25,7 @@ Resources:
         ImageUri: !Sub
           - "${ecrUri}:${tag}"
           - ecrUri:
-              Fn::GetAtt: JiraECR.RepositoryUri
+              Fn::ImportValue: !Sub ${ecrStack}-JiraImageRepository
             tag: latest
       PackageType: Image
       Role:
@@ -67,6 +42,8 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt BackendDevJiraEventRule.Arn
+    DependsOn:
+      - BackendDevJiraEventRule
 
   BackendDevJiraEventRule:
     Type: AWS::Events::Rule
@@ -89,3 +66,35 @@ Resources:
       Targets:
         - Arn: !GetAtt LambdaJira.Arn
           Id: !Sub "${applicationName}-jira-backend-dev"
+
+  FrontendDevInvokeJiraLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Sub ${applicationName}-lambda-jira
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt FrontendDevJiraEventRule.Arn
+    DependsOn:
+      - FrontendDevJiraEventRule
+
+  FrontendDevJiraEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Dev
+      Targets:
+        - Arn: !GetAtt LambdaJira.Arn
+          Id: !Sub "${applicationName}-jira-frontend-dev"

@@ -285,6 +285,21 @@ Resources:
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Dev"
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Staging"
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Prod"
+        - PolicyName: !Sub "${applicationName}-codecommit-policy"
+          PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Sid: CodeCommitPermissions
+                  Effect: Allow
+                  Action: 
+                    - codecommit:GetCommit
+                    - codecommit:BatchGetCommit
+                    - codecommit:GetDifferences
+                    - codecommit:GetTree
+                    - codecommit:ListRepositories
+                  Resource:
+                    - !Sub "arn:aws:codecommit:$AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+
       RoleName: !Sub ${applicationName}-lambda-executor
       
   # GATEWAY LOG ROLE
