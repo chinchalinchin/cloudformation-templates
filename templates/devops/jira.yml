@@ -14,6 +14,34 @@ Parameters:
     Default: Innolab-RepoStack
 
 Resources:
+  JiraRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-jira"
+      RepositoryDescription: "The repository for Jira Lambda"
+  
+  JiraECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Jira Lambda function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-jira"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaJiraPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+  
   LambdaJira:
     Type: AWS::Lambda::Function
     Properties: 
