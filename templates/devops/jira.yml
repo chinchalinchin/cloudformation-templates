@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: ""
+
+Parameters:
+  applicationName: 
+    Type: String
+    Default: innolab
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+  repoStack:
+    Type: String
+    Default: Innolab-RepoStack
+
+Resources:
+  LambdaJira:
+    Type: AWS::Lambda::Function
+    Properties: 
+      FunctionName: !Sub ${applicationName}-lambda-jira
+      Code:
+        ImageUri: !Sub
+          - "${ecrUri}:${tag}"
+          - ecrUri:
+              Fn::GetAtt: JiraECR.RepositoryUri
+            tag: latest
+      PackageType: Image
+      Role:
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+      Environment:
+        Variables:
+          ATLASSIAN_TOKEN: !Sub '{{resolve:secretsmanager:${applicationName}-atlassianToken:SecretString}}'
+      Timeout: 180
+
+  BackendDevInvokeJiraLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Sub ${applicationName}-lambda-jira
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt BackendDevJiraEventRule.Arn
+
+  BackendDevJiraEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Dev
+      Targets:
+        - Arn: !GetAtt LambdaJira.Arn
+          Id: !Sub "${applicationName}-jira-backend-dev"

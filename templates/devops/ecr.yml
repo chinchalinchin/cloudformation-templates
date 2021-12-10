@@ -163,6 +163,50 @@ Resources:
       Tags:
         - Key: Application
           Value: !Ref applicationName
+  
+  JiraECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Jira Lambda function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-jira"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaJiraPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+          
+  PostgresECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Postgres image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-postgres"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
 
 Outputs:
   LambdaAlphaImageRepository:
