@@ -57,20 +57,36 @@ Resources:
           - LOCAL_DOCKER_LAYER_CACHE
           - LOCAL_SOURCE_CACHE
 
-  CodeBuildCoverageReportGroup:
+  BackendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
-      Name: !Sub ${applicationName}-coverage-report-group
+      Name: !Sub ${applicationName}-backend-coverage-report-group
       Type: CODE_COVERAGE
 
-  CodeBuildTestReportGroup:
+  BackendTestReportGroup:
     Type: AWS::CodeBuild::ReportGroup
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
       Name: !Sub ${applicationName}-test-report-group
+      Type: TEST
+
+  FrontendCoverageReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-frontend-coverage-report-group
+      Type: CODE_COVERAGE
+
+  FrontendTestReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-frontend-test-report-group
       Type: TEST
 
   JiraMasterEventRule:
