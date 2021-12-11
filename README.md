@@ -12,6 +12,8 @@ aws cloudformation create-stack
 There are three separate stack sets, the **Account** stack set **DevOps** stack set and the **Application** stack set. 
 
 ## Account Stack
+| Stack | Dependency |
+| ----- | --------- |
 | IAMStack | None |
 
 ## DevOps Stacks

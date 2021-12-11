@@ -56,20 +56,52 @@ Resources:
           - LOCAL_DOCKER_LAYER_CACHE
           - LOCAL_SOURCE_CACHE
 
-  CodeBuildCoverageReportGroup:
+  CodeBuildBackendDevCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
-      Name: !Sub ${applicationName}-coverage-report-group
+      Name: !Sub ${applicationName}-backend-dev-coverage-group
       Type: CODE_COVERAGE
 
-  CodeBuildTestReportGroup:
+  CodeBuildBackendStagingCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
-      Name: !Sub ${applicationName}-test-report-group
+      Name: !Sub ${applicationName}-backend-staging-coverage-group
+      Type: CODE_COVERAGE
+  
+  CodeBuildBackendDevCoverageReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-backend-prod-coverage-group
+      Type: CODE_COVERAGE
+
+  CodeBuildBackendDevTestReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-backend-dev-test-group
+      Type: TEST
+  
+  CodeBuildBackendStagingTestReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-backend-staging-test-group
+      Type: TEST
+  
+  CodeBuildBackendProdTestReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-backend-prod-test-group
       Type: TEST
 
   FrontendDevEventRule:
