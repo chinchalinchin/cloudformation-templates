@@ -15,10 +15,12 @@ Parameters:
   repoStack:
     Type: String
     Default: Innolab-RepoStack
+  cognitoStack:
+    Type: String
+    Default: Innolab-CognitoStack
   dnsStack:
     Type: String
-    Default: Innolab-DNSStack-Dev
-  
+    Default: Innolab-DNSStack
 
 Resources:
   PipelineArtifacts:
@@ -70,7 +72,7 @@ Resources:
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
-      Name: !Sub ${applicationName}-test-report-group
+      Name: !Sub ${applicationName}-backend-test-report-group
       Type: TEST
 
   FrontendCoverageReportGroup:
@@ -513,10 +515,14 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                    cognitoClient:
+                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+                    userPool:
+                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
                     
     DependsOn:
       - CodeBuild
@@ -563,10 +569,14 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                    cognitoClient:
+                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+                    userPool:
+                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
     DependsOn:
       - CodeBuild
 
@@ -611,9 +621,13 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                    cognitoClient:
+                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+                    userPool:
+                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
     DependsOn:
       - CodeBuild

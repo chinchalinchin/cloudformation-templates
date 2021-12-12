@@ -60,7 +60,9 @@ then
                      ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}"
+                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
+                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}"
+
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
@@ -70,7 +72,8 @@ then
                      ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}"
+                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
+                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}"
 
          
 elif [ "$ACTION" == "delete" ]
