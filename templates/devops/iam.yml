@@ -510,20 +510,6 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
   
-  IAMMatt:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: mpinardi
-    DependsOn:
-      - BasicAccessGroup
-  
   IAMPhung:
     Type: AWS::IAM::User
     Properties:
@@ -539,7 +525,7 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
-  IAMAhsan:
+  IAMAurora:
     Type: AWS::IAM::User
     Properties:
       Groups:
@@ -549,7 +535,7 @@ Resources:
         Password: !Ref masterPassword
         PasswordResetRequired: True
       Path: !Sub "/${applicationName}/"
-      UserName: akhan
+      UserName: apariseau
     DependsOn:
       - BasicAccessGroup
       - DeveloperGroup
@@ -595,39 +581,3 @@ Outputs:
     Description: ARN for CloudWatch Event roles
     Export:
       Name: !Sub ${AWS::StackName}-CloudWatchEventRoleArn
-
-  # Grant:
-    # Value: !Ref IAMGrant
-    # Description: DevOps Engineer
-    # Export: 
-      # Name: !Sub ${AWS::StackName}-Grant
-  # Tariq:
-    # Value: !Ref IAMTariq
-    # Description: Solutions Architect
-    # Export:
-      # Name: !Sub ${AWS::StackName}-Tariq
-  # Peter:
-    # Value: !Ref IAMPeter
-    # Description: Full Stack Developer
-    # Export:
-      # Name: !Sub ${AWS::StackName}-Peter
-  # Thomas:
-    # Value: !Ref IAMThomas
-    # Description: Full Stack Developer
-    # Export:
-      # Name: !Sub ${AWS::StackName}-Thomas
-  # Phung:
-    # Value: !Ref IAMPhung
-    # Description: UX/UI Developer
-    # Export:
-      # Name: !Sub ${AWS::StackName}-Phung
-  # Matt:
-    # Value: !Ref IAMMatt
-    # Description: Automation Tester
-    # Export:
-      # Name: !Sub ${AWS::StackName}-Matt
-  # Ian:
-    # Value: !Ref IAMIan
-    # Description: Database Administrator
-    # Export:
-      # Name: !Sub ${AWS::StackName}-Ian

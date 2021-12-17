@@ -22,6 +22,65 @@ Resources:
       AccessControl: Private
       BucketName: !Sub "${applicationName}-credentials"
 
+  DockerRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-docker-images"
+      RepositoryDescription: "A repository for Dockerfiles"
+
+  CloudFormationRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-cloudformation"
+      RepositoryDescription: "A repository for CloudFormation templates"
+
+  FrontendRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-frontend"
+      RepositoryDescription: "A repository for the frontend application"
+
+  LambdaRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-lambdas"
+      RepositoryDescription: "A repository for Lambda functions"
+      
+  BackendRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-backend"
+      RepositoryDescription: "A repository for the backend application"
+      
+  TestingRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-test-harness"
+      RepositoryDescription: "A repository for the BDD testing harness"
+      RepositoryDescription: "A repository for testing harness"
+
+  PostgresECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Postgres image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-postgres"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+
   LambdaAlphaECR:
     Type: AWS::ECR::Repository
     Condition: CreateAlphaComponent
@@ -137,60 +196,18 @@ Resources:
         - Key: Application
           Value: !Ref applicationName
 
-  DockerRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-docker-images"
-      RepositoryDescription: "A repository for Dockerfiles"
-
-  CloudFormationRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-cloudformation"
-      RepositoryDescription: "A repository for CloudFormation templates"
-
-  FrontendRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-frontend"
-      RepositoryDescription: "A repository for the frontend application"
-
-  LambdaRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-lambdas"
-      RepositoryDescription: "A repository for Lambda functions"
-      
-  BackendRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-backend"
-      RepositoryDescription: "A repository for the backend application"
-      
-  TestingRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-test-harness"
-      RepositoryDescription: "A repository for the BDD testing harness"
-      RepositoryDescription: "A repository for testing harness"
-  
-  JiraRepo:
-    Type: AWS::CodeCommit::Repository
-    Properties:
-      RepositoryName: !Sub "${applicationName}-jira"
-      RepositoryDescription: "The repository for Jira Lambda"
-
-  JiraECR:
+  LambdaEtaECR:
     Type: AWS::ECR::Repository
-    Description: ECR to hold image of Jira Lambda function
+    Condition: CreateEpsilonComponent
+    Description: ECR to hold image of Lambda Epsilon function
     Properties:
       ImageScanningConfiguration:
         ScanOnPush: true
-      RepositoryName: !Sub "${applicationName}-lambda-jira"
+      RepositoryName: !Sub "${applicationName}-lambda-eta"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
-          - Sid: ECRLambdaJiraPolicy
+          - Sid: ECRLambdaEpsilonPolicy
             Effect: Allow
             Principal:
               Service:
@@ -201,22 +218,23 @@ Resources:
       Tags:
         - Key: Application
           Value: !Ref applicationName
-
-  PostgresECR:
+  
+  LambdaZetaECR:
     Type: AWS::ECR::Repository
-    Description: ECR to hold image of Postgres image
+    Condition: CreateEpsilonComponent
+    Description: ECR to hold image of Lambda Epsilon function
     Properties:
-      ImageScanningConfiguration: 
+      ImageScanningConfiguration:
         ScanOnPush: true
-      RepositoryName: !Sub "${applicationName}-postgres"
+      RepositoryName: !Sub "${applicationName}-lambda-zeta"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
-          - Sid: ecr-code-build-policy
+          - Sid: ECRLambdaEpsilonPolicy
             Effect: Allow
             Principal:
               Service:
-                - codebuild.amazonaws.com
+                - lambda.amazonaws.com
             Action:
               - "ecr:BatchGetImage"
               - "ecr:GetDownloadUrlForLayer"
@@ -264,30 +282,46 @@ Outputs:
       Name: !Sub ${AWS::StackName}-FrontendRepository
   FrontendRepositoryARN:
     Value: !GetAtt FrontendRepo.Arn
-    Description: Repository ARN for the Frontend React app repository
+    Description: Repository ARN for the frontend application repository
     Export:
       Name: !Sub ${AWS::StackName}-FrontendRepositoryARN
   FrontendRepositorySSHClone:
     Value: !GetAtt FrontendRepo.CloneUrlSsh
-    Description: Repository name for the Frontend React app repository
+    Description: Repository name for the frontend application repository
     Export:
       Name: !Sub ${AWS::StackName}-FrontendCloneSSH
 
   BackendRepository:
     Value: !GetAtt BackendRepo.Name
-    Description: Repository name for Backend Lambda function repository
+    Description: Repository name for backend application repository
     Export:
       Name: !Sub ${AWS::StackName}-BackendRepository
   BackendRepositoryARN:
     Value: !GetAtt BackendRepo.Arn
-    Description: Repository name for Backend Lambda function repository
+    Description: Repository name for backend application repository
     Export:
       Name: !Sub ${AWS::StackName}-BackendRepositoryARN
   BackendCloneSSH:
     Value: !GetAtt BackendRepo.CloneUrlSsh
-    Description: SSH clone URL for Backend Lambda function repository
+    Description: SSH clone URL for backend application repository
     Export:
       Name: !Sub ${AWS::StackName}-BackendCloneSSH
+
+  LambdaRepository:
+    Value: !GetAtt LambdaRepo.Name
+    Description: Repository name for Lambda functions repository
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaRepository
+  LambdaRepositoryARN:
+    Value: !GetAtt LambdaRepo.Arn
+    Description: Repository name for Lambda functions repository
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaRepositoryARN
+  LambdaCloneSSH:
+    Value: !GetAtt LambdaRepo.CloneUrlSsh
+    Description: SSH clone URL for Lambda functions repository
+    Export:
+      Name: !Sub ${AWS::StackName} LambdaCloneSSH
 
   TestingRepository:
     Value: !GetAtt TestingRepo.Name

@@ -20,21 +20,19 @@ There are three separate stack sets, the **Account** stack set **DevOps** stack 
 | Stack | Dependency | 
 | ----- | ---------- |
 | RepoStack | None |
-| Pipeline Stack | RepoStack, IAMStack |
+| PipelineStack | RepoStack, IAMStack, CognitoStack, DNSStack |
+| SonarStack | VPCStack-Dev |
 
 ## Application Stacks
 | Stack  |  Dependency |
 | ------ | ----------- |
-| ECRStack | None | 
-| CognitoStack-$ENV | None |
+| CognitoStack | None |
 | VPCStack-$ENV | None | 
 | FrontendStack-$ENV | None |
 | RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
-| LambdaStack-$ENV | VPCStack-$ENV, ECRStack, CognitoStack, IAMStack |
+| LambdaStack-$ENV | VPCStack-$ENV, RepoStack, CognitoStack, IAMStack |
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV, CognitoStack, IAMStack |
 | DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
-
-**Note**: The environments in the **ECRStack** are managed through image tags, rather than stack names. 
 
 # Steps
 
@@ -70,10 +68,10 @@ After creating the repositories, the Bitbucket repositories will need cloned int
 ./scripts/aws/clone-bb-repos --environments Dev,Staging,Prod
 ```
 
-Once the repositories are cloned, the final stack, the PipelineStack, can be stood up,
+The SonarQube resources can be stood up after the **VPCStack** has been setup,
 
 ```
-./scripts/stacks/devops/pipeline-stack
+./scripts/aws/devops/sonar-stack
 ```
 
 ## Application Stack
@@ -82,7 +80,6 @@ The first two stacks are independent of the application's environment,
 
 ```
 ./scripts/stacks/app/cognito-stack
-./scripts/stacks/app/ecr-stack --components <one | two | three | four | five>
 ```
 
 After these stacks go up, all subsequent stacks are a function of the environment they are being stood up in,
@@ -117,6 +114,14 @@ Note: The username and password secrets for the RDS are created during the `rds-
 
 All scripts have an optional argument ``--action`` with allowable values of `create` or `update`. The `action` defaults to `create` if not provided. If `update` is passed through the ``--action`` flag, the script will update. NOTE: Some **CloudFormation** configurations *cannot* be updated while the stack is up.
 
+## Pipeline
+
+After all the preceding stacks have been set up and initialized, the final stack, the PipelineStack, can be stood up to kick off the CI/CD process,
+
+```
+./scripts/stacks/devops/pipeline-stack
+```
+
 # Notes
 
 1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
@@ -144,3 +149,8 @@ aws cloudformation create-stack
 - [ECR](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ECR.html)
 - [IAM](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_IAM.html)
 - [Lambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_Lambda.html)
+
+# TODOS
+
+1. distribute jira integration across stacks. 
+2. simplify lambda and gateway stack into lambda and lambda-integration stack. extend the possible use cases of lambda in a single stack.

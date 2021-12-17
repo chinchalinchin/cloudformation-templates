@@ -28,12 +28,6 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       BucketName: !Sub "${applicationName}-pipeline-artifacts"
-  
-  # PipelineCache:
-    # Type: AWS::S3::Bucket
-    # DeletionPolicy: Delete
-    # Properties:
-      # BucketName: !Sub "${applicationName}-pipeline-cache"
       
   CodeBuild:
     Type: AWS::CodeBuild::Project
@@ -41,8 +35,6 @@ Resources:
       Name: !Sub "${applicationName}-codebuild"
       Artifacts:
         Type: CODEPIPELINE
-        # Type: S3
-        # Location: !Ref PipelineArtifacts
       ServiceRole:
         Fn::ImportValue: !Sub "${iamStack}-CodeBuildRoleArn"
       Environment:
@@ -90,76 +82,6 @@ Resources:
         ExportConfigType: NO_EXPORT
       Name: !Sub ${applicationName}-frontend-test-report-group
       Type: TEST
-
-  JiraMasterEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-JiraRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - master
-      Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-jira-pipeline"
-          RoleArn: 
-            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-jira-master
-
-  JiraPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-jira-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-jira-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-JiraRepository"
-                BranchName: master
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-jira-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-jira-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-    DependsOn:
-      - CodeBuild
 
   FrontendDevEventRule:
     Type: AWS::Events::Rule
@@ -629,5 +551,83 @@ Resources:
                       Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
                     userPool:
                       Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
+    DependsOn:
+      - CodeBuild
+
+  
+  LambdaEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-LambdaRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - Dev
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-dev-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+          Id: !Sub ${applicationName}-codepipeline-frontend-dev
+
+  LambdaPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-lambda-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-dev-source"    
+              Configuration:
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
+                BranchName: master
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-backend-dev-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-backend-dev-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+                EnvironmentVariables: !Sub 
+                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                  - app: !Ref applicationName
+                    covDistro:
+                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                    cognitoClient:
+                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+                    userPool:
+                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
+                    
     DependsOn:
       - CodeBuild
