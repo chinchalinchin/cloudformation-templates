@@ -20,10 +20,10 @@ Parameters:
     Type: String
     Description: "Cross stack reference to Application's CognitoStack. Defaults to Innolab-CognitoStack"
     Default: Innolab-CognitoStack
-  lambdaStack:
+  functionStack:
     Type: String
     Description: "Cross stack reference to Applciation's Lambda stack. Defaults to Innolab-LambdaStack-Dev"
-    Default: Innolab-LambdaStack-Dev
+    Default: Innolab-LambdaFunctionStack-Dev
 
 Resources:
   RestAPI:
@@ -62,13 +62,10 @@ Resources:
     DependsOn:
       - CloudWatch
       - CloudWatchLogGroup
-      - NewsResourceMethod
-      - NewsQueryResourceMethod
-      - CommentResourceMethod
-      - CommentQueryResourceMethod
-      - TokenResourceMethod
-      - RegisterResourceMethod
-      - VerifyResourceMethod
+      - AlphaResourceMethod
+      - AlphaQueryResourceMethod
+      - BetaResourceMethod
+      - BetaQueryResourceMethod
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
@@ -80,21 +77,20 @@ Resources:
       ProviderARNs:
         - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
 
-  NewsResource: 
+  PathResource: 
     Type: 'AWS::ApiGateway::Resource'
     Properties: 
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: news
+      PathPart: path
     DependsOn:
       - RestAPI
 
-  NewsResourceMethod:
-    # maps NewsResource to LambdaAlpha
+  PathResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref NewsResource
+      ResourceId: !Ref PathResource
       HttpMethod: ANY
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
@@ -109,14 +105,14 @@ Resources:
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaAlphaArn
             - /invocations
     DependsOn:
-      - NewsResource
+      - PathResource
   
-  NewsResourceCORS:
+  PathResourceCORS:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref NewsResource
+      ResourceId: !Ref PathResource
       HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
@@ -140,27 +136,26 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: false
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn: 
-      - NewsResource
+      - PathResource
 
-  NewsQueryResource:
+  PathParamResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
-      ParentId: !Ref NewsResource
-      PathPart: "{news_id}"
+      ParentId: !Ref PathResource
+      PathPart: "{param}"
     DependsOn:
       - RestAPI
-      - NewsResource
+      - PathResource
   
-  NewsQueryResourceMethod:
-    # Maps NewsQueryResource to LambdaBeta
+  PathParamResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref NewsQueryResource
+      ResourceId: !Ref PathParamResource
       HttpMethod: ANY
       RequestParameters:
-        "method.request.path.news_id": true
+        "method.request.path.param": true
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayAuthorizer
       Integration:
@@ -174,15 +169,15 @@ Resources:
             - Fn::ImportValue: !Sub ${lambdaStack}-LambdaBetaArn
             - /invocations
     DependsOn:
-      - NewsResource
-      - NewsQueryResource
+      - PathResource
+      - PathParamResource
 
-  NewsQueryResourceCORS:
+  PathParamResourceCORS:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref NewsQueryResource
+      ResourceId: !Ref PathParamResource
       HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
@@ -207,135 +202,8 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: false
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn:
-      - NewsQueryResource
-
-  CommentResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: comment
-    DependsOn:
-      - RestAPI
-
-  CommentResourceMethod:
-    # maps NewsResource to LambdaAlpha
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref CommentResource
-      HttpMethod: POST
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayAuthorizer
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-         # NOTE: API Gateway transforms all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Join
-          - ''
-          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaGammaArn
-            - /invocations
-    DependsOn:
-      - CommentResource
+      - PathParamResource
   
-  CommentResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref CommentResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn: 
-      - CommentResource
-
-  CommentQueryResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !Ref CommentResource
-      PathPart: "{comment_id}"
-    DependsOn:
-      - RestAPI
-      - NewsResource
-  
-  CommentQueryResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref CommentQueryResource
-      HttpMethod: ANY
-      RequestParameters:
-        "method.request.path.comment_id": true
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayAuthorizer
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateway transforms all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Join
-          - ''
-          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
-            - /invocations
-    DependsOn:
-      - CommentResource
-      - CommentQueryResource
-
-  CommentQueryResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref CommentQueryResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - CommentQueryResource
-
   TokenResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:   
@@ -455,140 +323,6 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn:
       - RegisterResource
-  
-  VerifyResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: verify
-    DependsOn: 
-      - RestAPI
-
-  VerifyResourceMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayAuthorizer
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref VerifyResource
-      HttpMethod: GET
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - VerifyResource
-  
-  VerifyCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref VerifyResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            # method.response.header.Access-Control-Allow-Methods: "'*'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn: 
-      - VerifyResource
-
-  ModelResource: 
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: model
-    DependsOn: 
-      - RestAPI
-      
-  ModelResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref ModelResource
-      HttpMethod: ANY
-      AuthorizationType: NONE
-      # AuthorizerId: !Ref ApiGatewayAuthorizer
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateway transforms all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Join
-          - ''
-          - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            - Fn::ImportValue: !Sub ${lambdaStack}-LambdaZetaArn
-            - /invocations
-    DependsOn:
-      - ModelResource
-
-  ModelResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref ModelResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - ModelResource
 
   LambdaAlphaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -614,30 +348,6 @@ Resources:
     DependsOn:
       - RestAPIDeployment
 
-  LambdaDeltaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: 
-          Fn::ImportValue: !Sub ${lambdaStack}-LambdaDeltaArn
-      Principal: apigateway.amazonaws.com
-      SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/comment/*
-    DependsOn:
-      - RestAPIDeployment
-  
-  LamdbaGammaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::ImportValue: !Sub ${lambdaStack}-LambdaGammaArn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/comment
-    DependsOn:
-      - RestAPIDeployment
-
   LamdbaEpsilonApiGatewayInvoke:
     Type: AWS::Lambda::Permission
     Properties:
@@ -659,18 +369,6 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn:
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/register
-    DependsOn:
-      - RestAPIDeployment
-
-  LamdbaZetaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::ImportValue: !Sub ${lambdaStack}-LambdaZetaArn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/models
     DependsOn:
       - RestAPIDeployment
       

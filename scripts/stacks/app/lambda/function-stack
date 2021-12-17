@@ -1,13 +1,13 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="lambda-stack"
+SCRIPT_NAME="function-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../../..
+PROJECT_DIR=$SCRIPT_DIR/../../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     lambda-stack --environment <Dev | Prod | Test | Staging> \
+# >$     function-stack --environment <Dev | Prod | Test | Staging> \
 #                     --action <create | update | delete>
 
 #      NOTE: ``--action`` defaults to `create` if not supplied.
@@ -49,13 +49,13 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/app/lambda.yml ./lambda.yml
+cp $PROJECT_DIR/templates/app/lambda/function.yml ./function.yml
 
 if [ "$ACTION" == "create" ]
 then
        aws cloudformation create-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
-              --template-body file://lambda.yml \
+              --template-body file://function.yml \
               --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
@@ -68,7 +68,7 @@ elif [ "$ACTION" == "update" ]
 then
        aws cloudformation update-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
-              --template-body file://lambda.yml \
+              --template-body file://function.yml \
               --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
@@ -83,4 +83,4 @@ then
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}"
 fi
 
-rm ./lambda.yml
+rm ./function.yml

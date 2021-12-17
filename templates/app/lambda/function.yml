@@ -23,6 +23,7 @@ Parameters:
     Default: Innolab-CognitoStack
 
 Resources:
+  # API Gateway Path Lambda
   LambdaAlpha: 
     Type: AWS::Lambda::Function
     Properties:
@@ -54,6 +55,7 @@ Resources:
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
+  # API Gateway Path Param Lambda
   LambdaBeta: 
     Type: AWS::Lambda::Function
     Properties:
@@ -148,6 +150,7 @@ Resources:
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
+  # API Gateway Token Lambda
   LambdaEpsilon:
     Type: AWS::Lambda::Function
     Properties: 
@@ -179,6 +182,7 @@ Resources:
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
 
+  # API Gateway Register Lamdba
   LambdaEta:
     Type: AWS::Lambda::Function
     Properties: 
@@ -210,35 +214,23 @@ Resources:
           POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
   
-  LambdaZeta:
+  # JIRA Integration Lambda
+  LambdaZeta: 
     Type: AWS::Lambda::Function
     Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-jira
       Code:
         ImageUri: !Sub
-          - "${ecrRepo}:${environment}"
-          - ecrRepo:
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaZetaImageRepository
-            environment: !Ref environmentName
+          - "${ecrUri}:${tag}"
+          - ecrUri:
+              Fn::ImportValue: !Sub ${ecrStack}-JiraImageRepository
+            tag: latest
       PackageType: Image
       Role:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
-      VpcConfig:
-        SecurityGroupIds: 
-          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
-          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Environment:
         Variables:
-          CLIENT_ID: 
-            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-          POOL_ID:
-            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          POSTGRES_DB: !Ref applicationName
-          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
+          ATLASSIAN_TOKEN: !Sub '{{resolve:secretsmanager:${applicationName}-atlassianToken:SecretString}}'
       Timeout: 180
 
 Outputs:
