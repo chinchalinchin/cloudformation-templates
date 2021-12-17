@@ -95,6 +95,20 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
       RoleName: !Sub ${applicationName}-rds-monitor
 
+  # ECS ROLE
+  ECSExecutorRole:
+    Type: AWS::IAM::Role
+    Description: Role for ECS execution
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: Allow
+            Principal:  
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+    
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
       Type: AWS::IAM::Role
