@@ -22,6 +22,12 @@ Resources:
       AccessControl: Private
       BucketName: !Sub "${applicationName}-credentials"
 
+  DocumentationRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-documentation"
+      RepositoryDescription: "A repository for documentation"
+
   DockerRepo:
     Type: AWS::CodeCommit::Repository
     Properties:
@@ -61,11 +67,55 @@ Resources:
 
   PostgresECR:
     Type: AWS::ECR::Repository
-    Description: ECR to hold image of Postgres image
+    Description: ECR to hold Postgres image
     Properties:
       ImageScanningConfiguration: 
         ScanOnPush: true
       RepositoryName: !Sub "${applicationName}-postgres"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+
+  FrontendECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold frontend application image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-frontend"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+
+  BackendECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold backend application image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-backend"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:

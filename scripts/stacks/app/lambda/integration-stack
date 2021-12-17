@@ -1,13 +1,13 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="rds-stack"
+SCRIPT_NAME="integration-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     gateway-stack --environment <Dev | Prod | Test | Staging> \
+# >$     integration-stack --environment <Dev | Prod | Test | Staging> \
 #                      --action <create | update | delete>
 #
 # NOTE: if no `--action` is provided, it will default to `create`
