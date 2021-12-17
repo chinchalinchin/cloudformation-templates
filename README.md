@@ -28,7 +28,6 @@ There are three separate stack sets, the **Account** stack set **DevOps** stack 
 | ------ | ----------- |
 | CognitoStack | None |
 | VPCStack-$ENV | None | 
-| FrontendStack-$ENV | None |
 | RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
 | LambdaStack-$ENV | VPCStack-$ENV, RepoStack, CognitoStack, IAMStack |
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV, CognitoStack, IAMStack |

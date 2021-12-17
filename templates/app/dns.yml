@@ -45,9 +45,9 @@ Conditions:
   NotDNSExists: !Not
     - Condition: DNSExists
 
-  SonarQube: !Equals
-    - !Ref environmentName
-    - Dev
+  DevInstances: !Equals
+  - !Ref environmentName
+  - Dev
 
 Mappings:
   SubEnvDomainMap:
@@ -125,7 +125,7 @@ Resources:
   
   SonarRoute53RecordSetGroup:
     # NOTE: Condition & The HostedZoneId
-    Condition: SonarQube
+    Condition: DevInstances
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
@@ -135,6 +135,55 @@ Resources:
           ResourceRecords:
             - Fn::ImportValue: !Sub ${sonarStack}-SonarPublicIP
           TTL: 900
+
+  FrontendBucketLogs:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketName: !Sub 
+        - "${applicationName}-frontend${environment}-logs"
+        - environment: 
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
+
+  FrontendDeployBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Sub 
+        - "${applicationName}-frontend${environment}-deployment"
+        - environment:
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
+      LoggingConfiguration:
+        DestinationBucketName: !Ref FrontendBucketLogs
+        LogFilePrefix: 'cdn/'
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+        ErrorDocument: 'index.html'
+
+  DeployBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendDeployBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:DeleteObject"
+            Principal: '*'
+            Resource: !Sub '${FrontendDeployBucket.Arn}/*'
+    DependsOn:
+      - FrontendDeployBucket
 
   FrontendDistribution:
     Type: "AWS::CloudFront::Distribution"
@@ -153,10 +202,8 @@ Resources:
         Origins: 
         - ConnectionAttempts: 3
           ConnectionTimeout: 10
-          DomainName: 
-            Fn::ImportValue: !Sub ${frontendStack}-FrontendDeployBucketDomain
-          Id: 
-            Fn::ImportValue: !Sub ${frontendStack}-FrontendDeployBucketID
+          DomainName: !GetAtt FrontendDeployBucket.DomainName
+          Id: !Ref FrontendDeployBucket
           CustomOriginConfig:
               HTTPPort: 80
               HTTPSPort: 443
@@ -185,8 +232,7 @@ Resources:
             QueryString: true
           Compress: false
           SmoothStreaming: false
-          TargetOriginId: 
-            Fn::ImportValue: !Sub ${frontendStack}-FrontendDeployBucketID
+          TargetOriginId: !Ref FrontendDeployBucket
           ViewerProtocolPolicy: "redirect-to-https"
         CustomErrorResponses:
           ErrorCode: 404
@@ -202,32 +248,59 @@ Resources:
         DefaultRootObject: 'index.html'
         IPV6Enabled: true
         Logging:
-          Bucket: 
-            Fn::ImportValue: !Sub ${frontendStack}-FrontendLogBucketDomain
+          Bucket: !GetAtt FrontendBucketLogs.DomainName
           IncludeCookies: false
           Prefix: 'cdn/'
   
+  CoverageBucket:
+    Type: AWS::S3::Bucket
+    Condition: DevInstances
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Sub 
+        - "${applicationName}-coverage${environment}"
+        - environment:
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
+      LoggingConfiguration:
+        DestinationBucketName: !Ref FrontendBucketLogs
+        LogFilePrefix: 'cov/'
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+
+  CoverageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DevInstances
+    Properties:
+      Bucket: !Ref CoverageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:DeleteObject"
+            Principal: '*'
+            Resource: !Sub '${CoverageBucket.Arn}/*'
+    DependsOn:
+      - CoverageBucket
+
   CoverageDistribution:
     Type: "AWS::CloudFront::Distribution"
+    Condition: DevInstances
     Properties:
       DistributionConfig: 
         Aliases: 
-          - !Sub
-            - "${subdomainName}-coverage${subdomainEnv}.${domainName}"
-            - subdomainName: !Ref subdomain
-              domainName: !Ref domain
-              subdomainEnv: 
-                Fn::FindInMap:
-                  - SubEnvDomainMap
-                  - !Ref environmentName
-                  - subdomainEnv
+          - !Sub "${subdomain}-coverage.${domain}"
         Origins: 
         - ConnectionAttempts: 3
           ConnectionTimeout: 10
-          DomainName: 
-            Fn::ImportValue: !Sub ${frontendStack}-CoverageBucketDomain
-          Id: 
-            Fn::ImportValue: !Sub ${frontendStack}-CoverageBucketID
+          DomainName: !GetAtt CoverageBucket.DomainName
+          Id: !Ref CoverageBucket
           CustomOriginConfig:
               HTTPPort: 80
               HTTPSPort: 443
@@ -256,8 +329,7 @@ Resources:
             QueryString: true
           Compress: false
           SmoothStreaming: false
-          TargetOriginId: 
-            Fn::ImportValue: !Sub ${frontendStack}-CoverageBucketID
+          TargetOriginId: !Ref CoverageBucket
           ViewerProtocolPolicy: "redirect-to-https"
         PriceClass: "PriceClass_All"
         Enabled: true
@@ -269,8 +341,7 @@ Resources:
         DefaultRootObject: 'index.html'
         IPV6Enabled: true
         Logging:
-          Bucket: 
-            Fn::ImportValue: !Sub ${frontendStack}-FrontendLogBucketDomain
+          Bucket: !GetAtt FrontendBucketLogs.DomainName
           IncludeCookies: false
           Prefix: 'cov/'
 
@@ -300,6 +371,7 @@ Resources:
 
   CoverageRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
+    Condition: DevInstances
     Properties:
       HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
       RecordSets:

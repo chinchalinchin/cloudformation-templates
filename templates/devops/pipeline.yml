@@ -554,7 +554,6 @@ Resources:
     DependsOn:
       - CodeBuild
 
-  
   LambdaEventRule:
     Type: AWS::Events::Rule
     Properties:
@@ -574,10 +573,10 @@ Resources:
           referenceName:
             - Dev
       Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-dev-pipeline"
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-lambda-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-frontend-dev
+          Id: !Sub ${applicationName}-codepipeline-lambda-master
 
   LambdaPipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -599,10 +598,10 @@ Resources:
                 Version: 1
                 Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-dev-source"    
+                - Name: !Sub "${applicationName}-lambda-source"    
               Configuration:
                 RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
+                  Fn::ImportValue: !Sub "${repoStack}-LambdaRepository"
                 BranchName: master
                 PollForSourceChanges: false
         - Name: Build   
@@ -614,9 +613,87 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-backend-dev-source"
+                - Name: !Sub "${applicationName}-lambda-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-dev-build"
+                - Name: !Sub "${applicationName}-lambda-build"
+              Configuration: 
+                ProjectName: !Ref CodeBuild
+                EnvironmentVariables: !Sub 
+                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                  - app: !Ref applicationName
+                    covDistro:
+                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                    cognitoClient:
+                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+                    userPool:
+                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
+                    
+    DependsOn:
+      - CodeBuild
+
+
+  MasterEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - master
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-master-pipeline"
+          RoleArn: 
+            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+          Id: !Sub ${applicationName}-codepipeline-master
+
+  MasterPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${applicationName}-master-pipeline"
+      RoleArn:
+        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+      ArtifactStore: 
+        Type: S3 
+        Location: !Ref PipelineArtifacts
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-master-source"    
+              Configuration:
+                RepositoryName: 
+                  Fn::ImportValue: !Sub "${repoStack}-MasterRepository"
+                BranchName: master
+                PollForSourceChanges: false
+        - Name: Build   
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-master-source"
+              OutputArtifacts:
+                - Name: !Sub "${applicationName}-master-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 

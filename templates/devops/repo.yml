@@ -8,25 +8,11 @@ Parameters:
     Default: innolab
 
 Resources:
-  DocumentationBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub "${applicationName}-documentation"
-      
-  CredentialsBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub "${applicationName}-credentials"
-
-  DocumentationRepo:
+  MasterRepo:
     Type: AWS::CodeCommit::Repository
     Properties:
-      RepositoryName: !Sub "${applicationName}-documentation"
-      RepositoryDescription: "A repository for documentation"
+      RepositoryName: !Sub "${applicationName}-master"
+      RepositoryDescription: "A repository for documentation and master files"
 
   DockerRepo:
     Type: AWS::CodeCommit::Repository
@@ -404,6 +390,22 @@ Outputs:
     Description: Repository name for Jira repository
     Export:
       Name: !Sub ${AWS::StackName}-JiraCloneSSH
+  
+  MasterRepository:
+    Value: !GetAtt MasterRepo.Name
+    Description: Repository name for master repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MasterRepository
+  MasterRepositoryArn:
+    Value: !GetAtt MasterRepo.Arn
+    Description: Repository name for master repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MasterRepositoryARN
+  MasterCloneSSH:
+    Value: !GetAtt MasterRepo.CloneUrlSsh
+    Description: Repository name for master repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MasterCloneSSH
 
   PostgresImageRepository:
     Value: !GetAtt PostgresECR.RepositoryUri
