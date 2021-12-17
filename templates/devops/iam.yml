@@ -237,6 +237,13 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+              - Sid: !Sub ${applicationName}CognitoOps
+                Effect: Allow
+                Action:
+                  - "cognito-idp:AdminInitiateAuth"
+                  - "cognito-idp:AdminCreateUser"
+                Resource: 
+                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
       RoleName: !Sub ${applicationName}-codebuild-exector
 
   # LAMBDA FUNCTION ROLE
@@ -262,12 +269,13 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: TokenPermissions
+              - Sid: CognitoPermissions
                 Effect: Allow
                 Action:
                   - "cognito-idp:AdminInitiateAuth"
+                  - "cognito-idp:AdminCreateUser"
                 Resource: 
-                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
         - PolicyName: !Sub "${applicationName}-dynamodb-policy"
           PolicyDocument:
             Version: "2012-10-17"
@@ -284,6 +292,21 @@ Resources:
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Dev"
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Staging"
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Prod"
+        - PolicyName: !Sub "${applicationName}-codecommit-policy"
+          PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Sid: CodeCommitPermissions
+                  Effect: Allow
+                  Action: 
+                    - codecommit:GetCommit
+                    - codecommit:BatchGetCommit
+                    - codecommit:GetDifferences
+                    - codecommit:GetTree
+                    - codecommit:ListRepositories
+                  Resource:
+                    - !Sub "arn:aws:codecommit:$AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+
       RoleName: !Sub ${applicationName}-lambda-executor
       
   # GATEWAY LOG ROLE
@@ -449,6 +472,26 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
+  IAMJustin:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: jstauffer
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+      
   IAMThomas:
     Type: AWS::IAM::User
     Properties:
@@ -511,21 +554,6 @@ Resources:
     DependsOn:
       - BasicAccessGroup
       - DeveloperGroup
-
-  IAMIan:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - database-admin-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: imcnutt
-    DependsOn:
-      - BasicAccessGroup
-      - DatabaseAdminGroup
 
 Outputs:
   BitbucketPipelineUserArn:

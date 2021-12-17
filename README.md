@@ -25,8 +25,8 @@ There are three separate stack sets, the **Account** stack set **DevOps** stack 
 ## Application Stacks
 | Stack  |  Dependency |
 | ------ | ----------- |
-| CognitoStack | None |
 | ECRStack | None | 
+| CognitoStack-$ENV | None |
 | VPCStack-$ENV | None | 
 | FrontendStack-$ENV | None |
 | RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
@@ -34,6 +34,7 @@ There are three separate stack sets, the **Account** stack set **DevOps** stack 
 | GatewayStack-$ENV | UserStack, LambdaStack-$ENV, CognitoStack, IAMStack |
 | DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
 
+**Note**: The environments in the **ECRStack** are managed through image tags, rather than stack names. 
 
 # Steps
 

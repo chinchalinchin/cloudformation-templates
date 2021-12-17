@@ -57,13 +57,6 @@ then
         --stack-name "${APPLICATION^}-${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=alphaEndpoint,ParameterValue=$ALPHA_ENDPOINT \
-                     ParameterKey=alphaParam,ParameterValue=$ALPHA_PARAM \
-                     ParameterKey=betaEndpoint,ParameterValue=$BETA_ENDPOINT \
-                     ParameterKey=betaEndpoint,ParameterValue=$BETA_PARAM \
-                     ParameterKey=gammaEndpoint,ParameterValue=$GAMMA_ENDPOINT \
-                     ParameterKey=deltaEndpoint,ParameterValue=$DELTA_ENDPOINT \
-                     ParameterKey=epsilonEndpoint,ParameterValue=$EPSILON_ENDPOINT \
                      ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
                      ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
@@ -74,13 +67,6 @@ then
         --stack-name "${APPLICATION^}-${GATEWAY_STACK}-${ENVIRONMENT}" \
         --template-body file://gateway.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=alphaEndpoint,ParameterValue=$ALPHA_ENDPOINT \
-                     ParameterKey=alphaParam,ParameterValue=$ALPHA_PARAM \
-                     ParameterKey=betaEndpoint,ParameterValue=$BETA_ENDPOINT \
-                     ParameterKey=betaEndpoint,ParameterValue=$BETA_PARAM \
-                     ParameterKey=gammaEndpoint,ParameterValue=$GAMMA_ENDPOINT \
-                     ParameterKey=deltaEndpoint,ParameterValue=$DELTA_ENDPOINT \
-                     ParameterKey=epsilonEndpoint,ParameterValue=$EPSILON_ENDPOINT \
                      ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
                      ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"

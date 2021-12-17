@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="pipeline-stack"
+SCRIPT_NAME="jira-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
@@ -32,11 +32,6 @@ while [[ $# -gt 0 ]]; do
                     help
                     exit 0
                     ;;
-                --environment)
-                    ENVIRONMENT="$2"
-                    shift
-                    shift
-                    ;;
                 *)
                     log "Input not understood. See \e[3m--help\e[0m for information on using this command."
                     exit 1
@@ -49,39 +44,35 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/devops/pipeline.yml ./pipeline.yml
+cp $PROJECT_DIR/templates/devops/jira.yml ./jira.yml
 
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
-        --template-body file://pipeline.yml \
+        --stack-name "${APPLICATION^}-${JIRA_STACK}" \
+        --template-body file://jira.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION"  \
-                     ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
-                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}"
+                     ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-$ECR_STACK"
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
-        --template-body file://pipeline.yml \
+        --stack-name "${APPLICATION^}-${JIRA_STACK}" \
+        --template-body file://jira.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                     ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
-                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}"
+                     ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-$ECR_STACK"
 
          
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE_STACK}"
+        --stack-name "${APPLICATION^}-${JIRA_STACK}"
 else
     log "Action not understood"
 fi
 
-rm ./pipeline.yml
+rm ./jira.yml

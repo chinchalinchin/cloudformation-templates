@@ -7,8 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     ecr-stack --components < one | two | three | four | five > \
-#                  --action < create | update | delete>
+# >$     ecr-stack --action < create | update | delete>
 #
 # NOTE: If no `--action` is provided, it will default to `create`
 
@@ -28,11 +27,6 @@ while [[ $# -gt 0 ]]; do
                      shift
                      shift 
                      ;;
-              --components)
-                     COMPONENTS="$2"
-                     shift
-                     shift
-                     ;;
               --help)
                      help
                      exit 0
@@ -49,15 +43,14 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/app/ecr.yml ./ecr.yml
+cp $PROJECT_DIR/templates/devops/ecr.yml ./ecr.yml
 
 if [ "$ACTION" == "create" ]
 then
        aws cloudformation create-stack \
               --stack-name "${APPLICATION^}-${ECR_STACK}" \
               --template-body file://ecr.yml \
-              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                            ParameterKey=applicationName,ParameterValue=$APPLICATION \
+              --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK" \
               --capabilities CAPABILITY_NAMED_IAM
 elif [ "$ACTION" == "update" ]
@@ -65,8 +58,7 @@ then
        aws cloudformation update-stack \
               --stack-name "${APPLICATION^}-${ECR_STACK}" \
               --template-body file://ecr.yml \
-              --parameters ParameterKey=components,ParameterValue=$COMPONENTS \
-                            ParameterKey=applicationName,ParameterValue=$APPLICATION \
+              --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=userStack,ParameterValue="${APPLICATION^}-$USER_STACK" \
               --capabilities CAPABILITY_NAMED_IAM
 elif [ "$ACTION" == "delete" ]

@@ -21,25 +21,6 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Sub "${applicationName}-credentials"
-  
-  PostgresECR:
-    Type: AWS::ECR::Repository
-    Description: ECR to hold image of Postgres image
-    Properties:
-      ImageScanningConfiguration: 
-        ScanOnPush: true
-      RepositoryName: !Sub "${applicationName}-postgres"
-      RepositoryPolicyText:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: ecr-code-build-policy
-            Effect: Allow
-            Principal:
-              Service:
-                - codebuild.amazonaws.com
-            Action:
-              - "ecr:BatchGetImage"
-              - "ecr:GetDownloadUrlForLayer"
 
   DockerRepo:
     Type: AWS::CodeCommit::Repository
@@ -70,6 +51,12 @@ Resources:
     Properties:
       RepositoryName: !Sub "${applicationName}-test-harness"
       RepositoryDescription: "A repository for testing harness"
+  
+  JiraRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub "${applicationName}-jira"
+      RepositoryDescription: "The repository for Jira Lambda"
 
 Outputs:
   DockerRepository:
@@ -102,7 +89,7 @@ Outputs:
     Value: !GetAtt CloudFormationRepo.Arn
     Description: Repository ARN for CloudFormation template repository
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFormationARN
+      Name: !Sub ${AWS::StackName}-CloudFormationRepositoryARN
 
   FrontendRepository:
     Value: !GetAtt FrontendRepo.Name
@@ -152,7 +139,18 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-TestingCloneSSH
 
-  PostgresECRRepository:
-    Value: !GetAtt PostgresECR.RepositoryUri
+  JiraRepository:
+    Value: !GetAtt JiraRepo.Name
+    Description: Repository name for Jira repository
     Export:
-      Name: !Sub ${AWS::StackName}-PostgresECR
+      Name: !Sub ${AWS::StackName}-JiraRepository
+  JiraRepositoryArn:
+    Value: !GetAtt JiraRepo.Arn
+    Description: Repository name for Jira repository
+    Export:
+      Name: !Sub ${AWS::StackName}-JiraRepositoryARN
+  JiraCloneSSH:
+    Value: !GetAtt JiraRepo.CloneUrlSsh
+    Description: Repository name for Jira repository
+    Export:
+      Name: !Sub ${AWS::StackName}-JiraCloneSSH

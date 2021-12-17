@@ -3,18 +3,32 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: "The first stack of the ${applicationName} application. It will provision all the necessary resources for a Cognito OAUTH authentication flow, such as UserPool, UserPoolClients, UserPoolDomain, etc. It will also provision user accounts for the development team and send them emails to reset their Cognito IDP passwords."
 
 Parameters:
-  domain:
+  domainName:
     Type: String
-    Default: makpar-innovation.com
+    Default: makpar-innovation.net
     Description: Domain used in the callback registered with the Cognito Auth clients.
-  subdomain:
+  subdomainName:
     Type: String
-    Default: laboratory
+    Default: innolab
     Description: Subdomain used in the callback registered with the Cognito Auth clients.
   applicationName:
     Type: String
     Default: innolab
     Description: Namespace for the application resources
+  environmentName:
+    Type: String
+    Default: Dev
+
+Mappings:
+  SubEnvDomainMap:
+    Dev: 
+      subdomainEnv:  "-dev"
+    Test: 
+      subdomainEnv: "-test"
+    Staging: 
+      subdomainEnv: "-staging"
+    Prod: 
+      subdomainEnv: ""
 
 Resources:
   AuthDomain:
@@ -39,7 +53,7 @@ Resources:
           RequireLowercase: true
           RequireSymbols: true
           RequireUppercase: true
-          TemporaryPasswordValidityDays: 1
+          TemporaryPasswordValidityDays: 3
       Schema:
         - AttributeDataType: String
           DeveloperOnlyAttribute: false
@@ -63,7 +77,15 @@ Resources:
         - profile
       AllowedOAuthFlowsUserPoolClient: true
       CallbackURLs:
-        - !Sub "https://${subdomain}.${domain}"
+        - !Sub 
+          - "https://${subdomain}${subdomainEnv}.${domain}"
+          - subdomain: !Ref subdomainName
+            subdomainEnv: 
+              Fn::FindInMap:
+                - SubEnvDomainMap
+                - !Ref environmentName
+                - subdomainEnv
+            domain: !Ref domainName
       ExplicitAuthFlows:
         - "ALLOW_CUSTOM_AUTH"
         - "ALLOW_REFRESH_TOKEN_AUTH"
@@ -103,12 +125,10 @@ Resources:
       Username: "pcofrancesco@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "pcofrancesco@makpar.com"
         - Name: "name"
-          Value: "Peter Confrancesco"
+          Value: "Peter Cofrancesco"
     DependsOn:
       - CognitoUserPool
 
@@ -118,8 +138,6 @@ Resources:
       Username: "tislam@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "tislam@makpar.com"
         - Name: "name"
@@ -131,8 +149,6 @@ Resources:
       Username: "gmoore@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "gmoore@makpar.com"
         - Name: "name"
@@ -146,8 +162,6 @@ Resources:
       Username: "tklock@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "tklock@makpar.com"
         - Name: "name"
@@ -158,13 +172,11 @@ Resources:
   CognitoMatt:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
-      Username: "mpinardi@baosystems.com"
+      Username: "aukhan@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
-          Value: "mpinardi@baosystems.com"
+          Value: "aukhan@makpar.com"
         - Name: "name"
           Value: "Matt Pinardi"
     DependsOn:
@@ -176,27 +188,10 @@ Resources:
       Username: "pngo@makpar.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
         - Name: "email"
           Value: "pngo@makpar.com"
         - Name: "name"
           Value: "Phung Ngo"
-    DependsOn:
-      - CognitoUserPool
-
-  CognitoIan:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "ian.mcnutt@tripointsolutions.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email_verified"
-          Value: "true"
-        - Name: "email"
-          Value: "ian.mcnutt@tripointsolutions.com"
-        - Name: "name"
-          Value: "Ian McNutt"
     DependsOn:
       - CognitoUserPool
 

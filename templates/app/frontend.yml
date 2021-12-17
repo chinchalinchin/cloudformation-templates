@@ -52,6 +52,7 @@ Resources:
         LogFilePrefix: 'cdn/'
       WebsiteConfiguration:
         IndexDocument: 'index.html'
+        ErrorDocument: 'index.html'
 
   CoverageBucket:
     Type: AWS::S3::Bucket
