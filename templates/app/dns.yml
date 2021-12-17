@@ -27,9 +27,6 @@ Parameters:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do not need this paramter."
     Default: ${AWS::NoValue}    
-  frontendStack:
-    Type: String
-    Default: Innolab-FrontendStack-Dev
   gatewayStack:
     Type: String
     Default: Innolab-GatewayStack-Dev
