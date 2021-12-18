@@ -55,12 +55,12 @@ fi
 
 if [ "$TYPE" == 'postgres ']
 then
-    cp $PROJECT_DIR/templates/app/postgres.yml ./rds.yml
+    cp $PROJECT_DIR/templates/app/rds/postgres.yml ./rds.yml
 elif [ "$TYPE" == "mysql" ]
     echo "TODO"
 else
     # default to postgres
-    cp $PROJECT_DIR/templates/app/postgres.yml ./rds.yml
+    cp $PROJECT_DIR/templates/app/rds/postgres.yml ./rds.yml
 fi
 
 if [ "$ACTION" == "create" ]

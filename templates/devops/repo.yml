@@ -411,6 +411,14 @@ Outputs:
     Value: !GetAtt PostgresECR.RepositoryUri
     Export:
       Name: !Sub ${AWS::StackName}-PostgresImageRepository
+  BackendImageRepository:
+    Value: !GetAtt BackendECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendImageRepository
+  FrontendImageRepository:
+    Value: !GetAtt FrontendECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendImageRepository
   JiraIntegrationImageRepository:
     Value: !GetAtt JiraECR.RepositoryUri
     Export:

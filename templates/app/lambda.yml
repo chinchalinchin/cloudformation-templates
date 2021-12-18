@@ -39,7 +39,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -71,7 +71,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -102,7 +102,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -134,7 +134,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -166,7 +166,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role:
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -198,7 +198,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role:
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
@@ -221,16 +221,16 @@ Resources:
   LambdaZeta: 
     Type: AWS::Lambda::Function
     Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-jira
+      FunctionName: !Sub ${applicationName}-lambda-zeta
       Code:
         ImageUri: !Sub
           - "${ecrUri}:${tag}"
           - ecrUri:
-              Fn::ImportValue: !Sub ${ecrStack}-JiraImageRepository
+              Fn::ImportValue: !Sub ${ecrStack}-LambdaZetaImageRepository
             tag: latest
       PackageType: Image
       Role:
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       Environment:
         Variables:
           ATLASSIAN_TOKEN: !Sub '{{resolve:secretsmanager:${applicationName}-atlassianToken:SecretString}}'

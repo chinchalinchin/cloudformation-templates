@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'Provisions resources for an ECS Fargate Cluster'
+
+Parameters:
+  applicationName:
+    Type: String
+    Default: innolab
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+  repoStaack:
+    Type: String
+    Default: Innolab-RepoStack
+
+Resources:
+  BackendDevLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/dev/backend/"
+  FrontendDevLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/dev/frontend/"
+  BackendStagingLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/staging/backend/"
+  FrontendStagingLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/staging/frontend/"
+  BackendProdLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/prod/backend/"
+  FrontendProdLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/prod/frontend/"
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${applicationName}-cluster"
+
+  DevTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: LogGroup
+    Properties:
+      Family: !Sub "${applicationName}--dev-task-definition"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 512
+      Memory: 1GB
+      ExecutionRoleArn: Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleARN"
+      TaskRoleArn: Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleARN"
+      ContainerDefinitions:
+        - Name: !Sub ${applicationName}-backend
+          Image: !Ref Image
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          # Send logs to CloudWatch Logs
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: ecs

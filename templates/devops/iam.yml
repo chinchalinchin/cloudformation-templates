@@ -111,7 +111,19 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       RoleName: !Sub ${applicationName}-ecs-executor
-    
+  
+  # ECS TASK TOLE
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${applicationName}-ecs-task-role"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
       Type: AWS::IAM::Role
@@ -264,7 +276,7 @@ Resources:
       RoleName: !Sub ${applicationName}-codebuild-exector
 
   # LAMBDA FUNCTION ROLE
-  LambdaExecutor:
+  LambdaExecutorRole:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Lambdas to access other AWS Services
     Properties:
@@ -568,11 +580,21 @@ Outputs:
     Description: Username for BitBucket Pipeline User
     Export:
       Name: !Sub ${AWS::StackName}-BitbucketPipelineUserName
-  LambdaExecutorArn:
-    Value: !GetAtt LambdaExecutor.Arn
+  LambdaExecutorRoleArn:
+    Value: !GetAtt LambdaExecutorRole.Arn
     Description: ARN for Lambda Execution Role
     Export:
-      Name: !Sub ${AWS::StackName}-LambdaExecutorArn
+      Name: !Sub ${AWS::StackName}-LambdaExecutorRoleArn
+  ECSExecutorRoleArn:
+    Value: !GetAtt ECSExecutorRole.Arn
+    Description: ARN for ECS Execution Role
+    Export:
+      Name: !Sub ${AWS::StackName}-ECSExecutorRoleArn
+  ECSTaskRoleArn:
+    Value: !GetAtt ECSTaskRole.Arn
+    Description: ARN for ECS Execution Role
+    Export:
+      Name: !Sub ${AWS::StackName}-ECSTaskRoleArn
   CodePipelineRoleArn:
     Value: !GetAtt CodePipelineRole.Arn
     Description: ARN for CodePipeline role
