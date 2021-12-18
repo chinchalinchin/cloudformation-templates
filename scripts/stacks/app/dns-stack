@@ -100,7 +100,7 @@ then
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                          ParameterKey=DNS,ParameterValue=true \
                          ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
-                         ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$GATEWAY_STACK-$ENVIRONMENT"
+                         ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$LAMBDA_STACK-$ENVIRONMENT"
     else
         aws cloudformation update-stack \
             --stack-name "${APPLICATION^}-${DNS_STACK}-${ENVIRONMENT}" \
@@ -109,7 +109,7 @@ then
                          ParameterKey=domain,ParameterValue=$DOMAIN \
                          ParameterKey=subdomain,ParameterValue=$APPLICATION \
                          ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
-                         ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$GATEWAY_STACK-$ENVIRONMENT"
+                         ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$LAMBDA_STACK-$ENVIRONMENT"
     fi
 elif [ "$ACTION" == "delete" ]
 then

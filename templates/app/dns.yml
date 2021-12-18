@@ -27,9 +27,9 @@ Parameters:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the HostedZoneId for the associated domain and record set. Otherwise, you do not need this paramter."
     Default: ${AWS::NoValue}    
-  gatewayStack:
+  lambdaStack:
     Type: String
-    Default: Innolab-GatewayStack-Dev
+    Default: Innolab-LambdaStack-Dev
   sonarStack:
     Type: String
     Default: Innolab-SonarStack
@@ -96,7 +96,7 @@ Resources:
     Properties:
       DomainName: !Ref RestAPIDomainName
       RestApiId: 
-        Fn::ImportValue: !Sub ${gatewayStack}-RestAPIID
+        Fn::ImportValue: !Sub ${lambdaStack}-RestAPIID
       Stage: !Ref environmentName
 
   RestAPIRoute53RecordSetGroup:

@@ -6,14 +6,9 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
-  environmentName:
-    Description: An environment name that is prefixed to resource names
-    Type: String
-    Default: Dev
-  
   dbKeyName:
     Type: String
-    Default: innolab_db_key_Dev
+    Default: innolab_db_key
 
 Mappings:
   SubnetConfig:
@@ -86,11 +81,13 @@ Resources:
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-VPC
+      - Key: Application
+        Value: !Ref applicationName 
+
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     DependsOn: VPC
+
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     # Notice how you can't attach an IGW to a VPC unless both are created:
@@ -105,8 +102,9 @@ Resources:
       CidrBlock: 10.1.10.0/24
       AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list        
       Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PublicSubnetA
+      - Key: Application
+        Value: !Ref applicationName 
+
   PublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -114,8 +112,9 @@ Resources:
       CidrBlock: 10.1.20.0/24
       AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the second AZ in the list  
       Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PublicSubnetB
+      - Key: Application
+        Value: !Ref applicationName 
+
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -123,8 +122,9 @@ Resources:
       CidrBlock: 10.1.50.0/24
       AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list  
       Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PrivateSubnetA
+      - Key: Application
+        Value: !Ref applicationName 
+
   PrivateSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -132,16 +132,17 @@ Resources:
       CidrBlock: 10.1.60.0/24
       AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the second AZ in the list  
       Tags:
-      - Key: Name
-        Value: !Sub ${AWS::StackName}-PrivateSubnetB
+      - Key: Application
+        Value: !Ref applicationName 
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: Public
+      - Key: Application
+        Value: !Ref applicationName 
+
   PublicRoute1:   # Public route table has direct routing to IGW:
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
@@ -149,13 +150,15 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
+
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: Private
+      - Key: Application
+        Value: !Ref applicationName 
+
   PrivateRoute1:            # Private route table can access web via NAT (created below)
     Type: AWS::EC2::Route
     Properties:
@@ -171,16 +174,19 @@ Resources:
     Properties:
       SubnetId: !Ref PublicSubnetA
       RouteTableId: !Ref PublicRouteTable
+
   PublicSubnetBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnetB
       RouteTableId: !Ref PublicRouteTable
+
   PrivateSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PrivateSubnetA
       RouteTableId: !Ref PrivateRouteTable
+
   PrivateSubnetBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -195,9 +201,9 @@ Resources:
         SubnetIds: 
           - !Ref PrivateSubnetA
           - !Ref PrivateSubnetB
-        Tags: 
-          - Key: Environment
-            Value: !Ref environmentName
+        Tags:
+          - Key: Application
+            Value: !Ref applicationName
     DependsOn:
       - PrivateSubnetA
       - PrivateSubnetB

@@ -8,24 +8,27 @@ Parameters:
   environmentName:
     Type: String
     Default: Dev
+  port:
+    Type: Number
+    Default: 5432
   # Stack Dependencies
   vpcStack:
     Type: String
-    Default: InnoLab-VPCStack-Dev
+    Default: InnoLab-VPCStack
   iamStack:
     Type: String
     Default: InnoLab-IAMStack
 
   ## NOTE: see note below for ``DatabaseConnectPolicy`` resource.
-  # userStack:
+  # iamStack:
     # Type: String
-    # Default: InnoLab-UserStack
+    # Default: InnoLab-IAMStack
 
 Resources:
   PostgresRDS:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub ${applicationName}-Database-${environmentName}
+      DBInstanceIdentifier: !Sub ${applicationName}-database-${environmentName}
       AllocatedStorage: 100
       DBInstanceClass: db.t3.micro
       Engine: "postgres"
@@ -43,6 +46,7 @@ Resources:
       EnablePerformanceInsights: true
       PerformanceInsightsRetentionPeriod: 7
       DeletionProtection: false
+      Port: !Ref port
       DBSubnetGroupName: 
         Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
       VPCSecurityGroups: 

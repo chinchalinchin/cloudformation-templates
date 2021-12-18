@@ -21,17 +21,16 @@ There are three separate stack sets, the **Account** stack set **DevOps** stack 
 | ----- | ---------- |
 | RepoStack | None |
 | PipelineStack | RepoStack, IAMStack, CognitoStack, DNSStack |
-| SonarStack | VPCStack-Dev |
+| SonarStack | VPCStack |
 
 ## Application Stacks
 | Stack  |  Dependency |
 | ------ | ----------- |
 | CognitoStack | None |
-| VPCStack-$ENV | None | 
-| RDSStack-$ENV | VPCStack-$ENV, IAMStack | 
-| LambdaStack-$ENV | VPCStack-$ENV, RepoStack, CognitoStack, IAMStack |
-| GatewayStack-$ENV | UserStack, LambdaStack-$ENV, CognitoStack, IAMStack |
-| DNSStack-$ENV | FrontendStack-$ENV, GatewayStack-$ENV |
+| VPCStack | None | 
+| RDSStack-Dev, RDSStack-Staging, RDSStack-Prod | VPCStack, IAMStack | 
+| LambdaStack | VPCStack, RepoStack, CognitoStack, IAMStack |
+| DNSStack | LambdaStack, SonarStack |
 
 # Steps
 

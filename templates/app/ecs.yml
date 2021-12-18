@@ -6,12 +6,21 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
+  backendPort:
+    Type: Number
+    Default: 8000
+  frontendPort:
+    Type: Number
+    Default: 8080  
   iamStack:
     Type: String
     Default: Innolab-IAMStack
   repoStaack:
     Type: String
     Default: Innolab-RepoStack
+
+  certificateArn:
+    Type: String
 
 Resources:
   BackendDevLogGroup:
@@ -52,19 +61,67 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: 512
-      Memory: 1GB
+      Cpu: 1024
+      Memory: 2GB
       ExecutionRoleArn: Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleARN"
       TaskRoleArn: Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleARN"
       ContainerDefinitions:
-        - Name: !Sub ${applicationName}-backend
-          Image: !Ref Image
+        - Name: !Sub ${applicationName}-backend-dev
+          Image: !Sub
+            - "${imageUri}:${tag}"
+            - imageUri:  
+                Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
+              tag: Dev
           PortMappings:
-            - ContainerPort: !Ref ContainerPort
-          # Send logs to CloudWatch Logs
+            - ContainerPort: !Ref backendPort
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref LogGroup
+              awslogs-group: !Ref BackendDevLogGroup
               awslogs-stream-prefix: ecs
+        - Name: !Sub ${applicationname}-frontend-dev
+          Image: !Sub
+            - "${imageUri}:${tag}"
+            - imageUri:  
+                Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
+              tag: Dev
+           PortMappings:
+            - ContainerPort: !Ref backendPort
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref FrontendDevLogGroup
+              awslogs-stream-prefix: ecs
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: 60
+      Name: !Sub "${applicationName}-load-balancer"
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
+      Subnets:
+        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+
+  ListenerHTTPS:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref certificateArn
+    DependsOn:
+      - LoadBalancer
+          
