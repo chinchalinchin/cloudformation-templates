@@ -15,9 +15,12 @@ Parameters:
   iamStack:
     Type: String
     Default: Innolab-IAMStack
-  repoStaack:
+  repoStack:
     Type: String
     Default: Innolab-RepoStack
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack
 
   certificateArn:
     Type: String
@@ -57,7 +60,7 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     DependsOn: LogGroup
     Properties:
-      Family: !Sub "${applicationName}--dev-task-definition"
+      Family: !Sub "${applicationName}-dev-task-definition"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
@@ -95,6 +98,168 @@ Resources:
               awslogs-group: !Ref FrontendDevLogGroup
               awslogs-stream-prefix: ecs
 
+  FrontendDevTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-frontend-dev-target-group"
+      Port: !Ref frontendPort
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  FrontendDevTargetGroupAlt:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-frontend-dev-target-group-alt"
+      Port: !Ref frontendPort
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  BackendDevTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-backed-dev-target-group"
+      Port: !Ref backendPort
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  BackendDevTargetGroupAlt:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-backend-dev-target-group-alt"
+      Port: !Ref backendPort
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  BackendDevService:
+    Type: AWS::ECS::Service
+    # This dependency is needed so that the load balancer is setup correctly in time
+    DependsOn:
+      - ListenerHTTPS
+    Properties: 
+      ServiceName: !Ref ServiceName
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 2
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: ENABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+          # TODO: THIS
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-backend-dev
+          ContainerPort: !Ref backendPort
+          TargetGroupArn: !Ref BackendDevTargetGroup
+
+  FrontendDevService:
+    Type: AWS::ECS::Service
+    # This dependency is needed so that the load balancer is setup correctly in time
+    DependsOn:
+      - ListenerHTTPS
+    Properties: 
+      ServiceName: !Ref ServiceName
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 2
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: ENABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+          # TODO: THIS
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-backend-dev
+          ContainerPort: !Ref backendPort
+          TargetGroupArn: !Ref BackendDevTargetGroup
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "${applicationName}-container-security-group"
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref frontendPort
+          ToPort: !Ref frontendPort
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+        - IpProtocol: tcp
+          FromPort: !Ref backendPort
+          ToPort: !Ref backendPort
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "${applicationName}-load-balancer-security-group"
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -104,6 +269,7 @@ Resources:
       Name: !Sub "${applicationName}-load-balancer"
       Scheme: internet-facing
       SecurityGroups:
+        # TODO: THIS
         - !Ref LoadBalancerSecurityGroup
       Subnets:
         - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
