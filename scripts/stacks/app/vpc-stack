@@ -8,6 +8,7 @@ source $PROJECT_DIR/.env
 
 # Example Usage:
 # >$     vpc-stack --action <create | update | delete>
+#                   --environment <Dev | Staging | Prod>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
 #   NOTE: This script will generate an SSH key with the name given by the environment
@@ -31,6 +32,11 @@ while [[ $# -gt 0 ]]; do
             shift
             shift 
             ;;
+        --environment)
+            ENVIRONMENT="$2"
+            shift
+            shift
+            ;;
         --help)
             help
             exit 0
@@ -53,18 +59,18 @@ if [ "$ACTION" == "create" ]
 then
     ssh-keygen \
         -t rsa \
-        -C "${APPLICATION}_${SSH_KEY_NAME}" \
-        -f ~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}"
+        -C "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
+        -f ~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
 
     aws ec2 import-key-pair \
-        --key-name "${APPLICATION}_${SSH_KEY_NAME}"  \
-        --public-key-material fileb://~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}.pub"
+        --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"  \
+        --public-key-material fileb://~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
 
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}" \
+                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
                      ParameterKey=applicationName,ParameterValue=$APPLICATION
 
 elif [ "$ACTION" == "update" ]
@@ -73,16 +79,16 @@ then
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
-                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}" \
+                     ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
                      ParameterKey=applicationName,ParameterValue=$APPLICATION
 
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${VPC_STACK}-${ENVIRONMENT}"
+        --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
     
     aws ec2 delete-key-pair \
-        --key-name "${APPLICATION}_${SSH_KEY_NAME}"
+        --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
 
 else
     log "Action not understood"

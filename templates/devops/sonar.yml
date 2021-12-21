@@ -8,6 +8,12 @@ Parameters:
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
+  domain:
+    Type: String
+    Default: makpar-innovation.net
+  subdomain:
+    Type: String
+    Default: innolab
 
 Resources:
   SonarSecurityGroup:
@@ -26,14 +32,28 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub ${vpcStack}-VPC
 
+  SonarRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Sub "${subdomain}-sonar.${domain}"
+          Type: A
+          ResourceRecords: !GetAtt Sonar.PublicIp
+          TTL: 900
+
   Sonar:
     Type: AWS::EC2::Instance
     Properties:
       Tags:
       - Key: Name
         Value: !Sub ${applicationName}-sonarqube
+      - Key: Application
+        Value: ${applicationName}
+      - Key: Environment
+        Value: Dev
       ImageId: ami-0922553b7b0369273
-      InstanceType: t3.medium
+      InstanceType: t3.nano
       NetworkInterfaces:
       - AssociatePublicIpAddress: true
         DeviceIndex: "0"

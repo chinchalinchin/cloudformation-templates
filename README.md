@@ -9,28 +9,33 @@ aws cloudformation create-stack
 
 # Cross Stack Dependencies
 
-There are three separate stack sets, the **Account** stack set **DevOps** stack set and the **Application** stack set. 
+There are three separate stack groups, the **Access** group, the **Application** group and the **DevOps** group. The stacks should be stood up, more or less, in the order listed below, due to cross-stack dependencies, i.e. the *VPCStack* must be stood up before the *RDSStack*, the *LambdaStack* and *SonarStack* must be stood up before the *DNSStack*, etc. 
 
-## Account Stack
+## Access Stacks
 | Stack | Dependency |
-| ----- | --------- |
+| ----- | ---------- |
 | IAMStack | None |
+| CognitoStack | None |
+
+## Application Stacks
+| Stack | Dependency |
+| ----- | ---------- |
+| RepoStack | None |
+### Environment Stacks
+| DynamoStack-$env | None | 
+| VPCStack-$env | None |  
+| ECSStack-$env | VPCStack, IAMStack, RepoStack |
+| RDSStack-$env | VPCStack-$env, IAMStack | 
+| LambdaStack-$env | VPCStack-$env, RepoStack, CognitoStack, IAMStack |
 
 ## DevOps Stacks
 | Stack | Dependency | 
 | ----- | ---------- |
-| RepoStack | None |
-| PipelineStack | RepoStack, IAMStack, CognitoStack, DNSStack |
-| SonarStack | VPCStack |
+| SonarStack | VPCStack-Dev |
+| DNSStack-$env | LambdaStack, SonarStack |
+| PipelineStack-$env | RepoStack, IAMStack, CognitoStack, DNSStack |
 
-## Application Stacks
-| Stack  |  Dependency |
-| ------ | ----------- |
-| CognitoStack | None |
-| VPCStack | None | 
-| RDSStack-Dev, RDSStack-Staging, RDSStack-Prod | VPCStack, IAMStack | 
-| LambdaStack | VPCStack, RepoStack, CognitoStack, IAMStack |
-| DNSStack | LambdaStack, SonarStack |
+**Note**: *SonarStack* only gets deployed into **Dev** environment.
 
 # Steps
 
@@ -44,35 +49,37 @@ Before any of the stack sets can be stood up, the *.env* environment file needs 
 cp .sample.env .env
 ```
 
-## Account Stack
+## Stack Setup
 
-Along with the service roles and permissions, this stack creates the developer accounts with the information in the *.env* file. Password resets will be required.
+The first stack is the *IAMStack*. Along with the service roles and permissions, this stack creates the developer accounts with the information in the *.env* file. The **MASTER_PASSWORD** environment variable is injected into the template. Password resets will be required on first login.
 
 ```
 ./scripts/stacks/devops/iam-stack
 ```
 
-## DevOps Stack
-
-If the DevOps stack needs stood up (i.e., if the pipeline is provisioned on AWS Codepipeline as opposed to Bitbucket), these stacks should be stood up last, after the Application stack set has been stood up. See [next section](/#application-stack).
+There is some leeway with the order of the next few stacks. For the sake of this guide, the next stack will be the *RepoStack*,
 
 ```
 ./scripts/stacks/devops/repo-stack
 ```
 
-After creating the repositories, the Bitbucket repositories will need cloned into the CodeCommit repositores,
+*NOTE*: After creating the repositories, [SSH keys](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-ssh-unixes.html) will need set up on the developer's local machines. The local versions of the repositories will need pushed up; otherwise, the archives on Bitbucket will need cloned into the CodeCommit repositores. Invoke the following script to automate the cloning of each environment,
 
 ```
 ./scripts/aws/clone-bb-repos --environments Dev,Staging,Prod
 ```
 
-The SonarQube resources can be stood up after the **VPCStack** has been setup,
+The *VPCStack*
+
+```
+./scripts/stacks/app/vpc-stack
+```
+
+The SonarQube resources can be stood up after the *VPCStack* has been setup,
 
 ```
 ./scripts/aws/devops/sonar-stack
 ```
-
-## Application Stack
 
 The first two stacks are independent of the application's environment,
 
@@ -83,8 +90,7 @@ The first two stacks are independent of the application's environment,
 After these stacks go up, all subsequent stacks are a function of the environment they are being stood up in,
 
 ```
-./scripts/stacks/app/vpc-stack --environment <Dev | Prod | Test | Staging>
-./scripts/stacks/app/frontend-stack --environment <Dev | Prod | Test | Staging> 
+./scripts/stacks/app/vpc-stack
 ```
 
 At this point, the images for the **Lambda** functions need built for the first time and pushed to ECR.

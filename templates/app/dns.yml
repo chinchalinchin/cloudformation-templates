@@ -119,19 +119,6 @@ Resources:
             DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
     DependsOn:
       - RestAPIDomainName
-  
-  SonarRoute53RecordSetGroup:
-    # NOTE: Condition & The HostedZoneId
-    Condition: DevInstances
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
-      RecordSets:
-        - Name: !Sub "${subdomain}-sonar.${domain}"
-          Type: A
-          ResourceRecords:
-            - Fn::ImportValue: !Sub ${sonarStack}-SonarPublicIP
-          TTL: 900
 
   FrontendBucketLogs:
     Type: AWS::S3::Bucket

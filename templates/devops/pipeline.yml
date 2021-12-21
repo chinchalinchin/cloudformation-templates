@@ -6,6 +6,9 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
+  environmentName:
+    Type: String
+    Default: Dev
   domainName:
     Type: String
     Default: makpar-innovation.com
@@ -51,6 +54,18 @@ Resources:
           - LOCAL_DOCKER_LAYER_CACHE
           - LOCAL_SOURCE_CACHE
 
+  FrontendCodeDeploy:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ComputePlatform: ECS
+      ApplicationName: "${applicationName}-frontend-code-deploy"
+
+  BackendCodeDeploy:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ComputePlatform: ECS
+      ApplicationName: "${applicationName}-backend-code-deploy" 
+
   BackendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
     Properties:
@@ -67,6 +82,22 @@ Resources:
       Name: !Sub ${applicationName}-backend-test-report-group
       Type: TEST
 
+  LambdaCoverageReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-lambda-coverage-report-group
+      Type: CODE_COVERAGE
+
+  LambdaTestReportGroup:
+    Type: AWS::CodeBuild::ReportGroup
+    Properties:
+      ExportConfig:
+        ExportConfigType: NO_EXPORT
+      Name: !Sub ${applicationName}-lambda-test-report-group
+      Type: TEST
+      
   FrontendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
     Properties:
@@ -630,7 +661,6 @@ Resources:
                     
     DependsOn:
       - CodeBuild
-
 
   MasterEventRule:
     Type: AWS::Events::Rule
