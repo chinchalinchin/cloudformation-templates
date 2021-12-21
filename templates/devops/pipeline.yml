@@ -11,7 +11,7 @@ Parameters:
     Default: Dev
   domainName:
     Type: String
-    Default: makpar-innovation.com
+    Default: makpar-innovation.net
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -25,17 +25,33 @@ Parameters:
     Type: String
     Default: Innolab-DNSStack
 
+Conditions:
+  DevResources: !Equals
+    - !Ref environmentName
+    - Dev
+
+Mappings:
+  BranchToLowerCaseMap:
+    Dev: 
+      branch:  "dev"
+    Test: 
+      branch: "test"
+    Staging: 
+      branch: "staging"
+    Prod: 
+      branch: "prod"
+
 Resources:
   PipelineArtifacts:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub "${applicationName}-pipeline-artifacts"
+      BucketName: !Sub "${applicationName}-${environmentName}-pipeline-artifacts"
       
   CodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "${applicationName}-codebuild"
+      Name: !Sub "${applicationName}-${environmentName}-codebuild"
       Artifacts:
         Type: CODEPIPELINE
       ServiceRole:
@@ -58,16 +74,17 @@ Resources:
     Type: AWS::CodeDeploy::Application
     Properties:
       ComputePlatform: ECS
-      ApplicationName: "${applicationName}-frontend-code-deploy"
+      ApplicationName: "${applicationName}-${environmentName}-frontend-code-deploy"
 
   BackendCodeDeploy:
     Type: AWS::CodeDeploy::Application
     Properties:
       ComputePlatform: ECS
-      ApplicationName: "${applicationName}-backend-code-deploy" 
+      ApplicationName: "${applicationName}-${environmentName}-backend-code-deploy" 
 
   BackendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
+    Condition: DevResources
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
@@ -76,6 +93,7 @@ Resources:
 
   BackendTestReportGroup:
     Type: AWS::CodeBuild::ReportGroup
+    Condition: DevResources
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
@@ -84,6 +102,7 @@ Resources:
 
   LambdaCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
+    Condition: DevResources
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
@@ -92,6 +111,7 @@ Resources:
 
   LambdaTestReportGroup:
     Type: AWS::CodeBuild::ReportGroup
+    Condition: DevResources
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
@@ -100,6 +120,7 @@ Resources:
       
   FrontendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
+    Condition: DevResources
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
@@ -108,13 +129,14 @@ Resources:
 
   FrontendTestReportGroup:
     Type: AWS::CodeBuild::ReportGroup
+    Condition: DevResources
     Properties:
       ExportConfig:
         ExportConfigType: NO_EXPORT
       Name: !Sub ${applicationName}-frontend-test-report-group
       Type: TEST
 
-  FrontendDevEventRule:
+  FrontendEventRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
@@ -131,65 +153,17 @@ Resources:
           referenceType:
             - branch
           referenceName:
-            - Dev
+            - !Ref environmentName
       Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-dev-pipeline"
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-${environmentName}-frontend-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-frontend-dev
+          Id: !Sub ${applicationName}-${environmentName}-codepipeline-frontend
 
-  FrontendStagingEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - Staging
-      Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-staging-pipeline"
-          RoleArn: 
-            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id:  !Sub ${applicationName}-codepipeline-frontend-staging
-
-  FrontendProdEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - Prod
-      Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-frontend-prod-pipeline"
-          RoleArn: 
-            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-frontend-prod
-
-  FrontendDevPipeline:
+  FrontendPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-frontend-dev-pipeline"
+      Name: !Sub "${applicationName}-${environmentName}-frontend-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 
@@ -206,11 +180,11 @@ Resources:
                 Version: 1
                 Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-dev-source"    
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-source"    
               Configuration:
                 RepositoryName: 
                   Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
-                BranchName: Dev
+                BranchName: !Ref environmentName
                 PollForSourceChanges: false
         - Name: Build   
           Actions:
@@ -221,114 +195,19 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-dev-source"
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-dev-build"
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-                    distro: 
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-FrontendDistributionID
-                    covDistro:
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
-    DependsOn:
-      - CodeBuild
-
-  FrontendStagingPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-frontend-staging-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-staging-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
-                BranchName: Staging
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-staging-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-staging-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-                    distro: 
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-FrontendDistributionID
-                    covDistro:
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
-    DependsOn:
-      - CodeBuild
-
-  FrontendProdPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-frontend-prod-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-prod-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
-                BranchName: Prod
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-prod-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-frontend-prod-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
+                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
+                  - env: 
+                      Fn::FindInMap:
+                        - BranchToLowerCaseMap
+                        - !Ref environmentName
+                        - branch
+                    app: !Ref applicationName
                     distro: 
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-FrontendDistributionID
                     covDistro:
@@ -353,60 +232,12 @@ Resources:
           referenceType:
             - branch
           referenceName:
-            - Dev
+            - !Ref environmentName
       Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-backend-dev-pipeline"
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-${environmentName}-backend-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-backend-dev
-
-  BackendStagingEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - Staging
-      Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-backend-staging-pipeline"
-          RoleArn: 
-            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id:  !Sub ${applicationName}-codepipeline-backend-staging
-
-  BackendProdEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - Prod
-      Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-backend-prod-pipeline"
-          RoleArn: 
-            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-backend-prod
+          Id: !Sub ${applicationName}-${environmentName}-codepipeline-backend
 
   BackendDevPipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -428,11 +259,11 @@ Resources:
                 Version: 1
                 Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-dev-source"    
+                - Name: !Sub "${applicationName}-${environmentName}-backend-source"    
               Configuration:
                 RepositoryName: 
                   Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
-                BranchName: Dev
+                BranchName: !Ref environmentName
                 PollForSourceChanges: false
         # - Name: Scan
           # Actions:
@@ -462,14 +293,19 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-backend-dev-source"
+                - Name: !Sub "${applicationName}-${environmentName}-backend-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-dev-build"
+                - Name: !Sub "${applicationName}-${environmentName}-backend-dev-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
+                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                  - env: 
+                      Fn::FindInMap:
+                        - BranchToLowerCaseMap
+                        - !Ref environmentName
+                        - branch
+                    app: !Ref applicationName
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
                     cognitoClient:
@@ -477,111 +313,6 @@ Resources:
                     userPool:
                       Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
                     
-    DependsOn:
-      - CodeBuild
-
-  BackendStagingPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-backend-staging-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-staging-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
-                BranchName: Staging
-                PollForSourceChanges: false
-        
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-backend-staging-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-staging-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"staging","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-                    covDistro:
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
-                    cognitoClient:
-                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-                    userPool:
-                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-    DependsOn:
-      - CodeBuild
-
-  BackendProdPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-backend-prod-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-prod-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
-                BranchName: Prod
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-backend-prod-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-backend-prod-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"prod","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-                    covDistro:
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
-                    cognitoClient:
-                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-                    userPool:
-                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
     DependsOn:
       - CodeBuild
 
@@ -602,12 +333,12 @@ Resources:
           referenceType:
             - branch
           referenceName:
-            - Dev
+            - !Ref environmentName
       Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-lambda-pipeline"
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-${environmentName}-lambda-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-lambda-master
+          Id: !Sub ${applicationName}-${environmentName}-codepipeline-lambda
 
   LambdaPipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -650,8 +381,13 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
+                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                  - env: 
+                      Fn::FindInMap:
+                        - BranchToLowerCaseMap
+                        - !Ref environmentName
+                        - branch
+                    app: !Ref applicationName
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
                     cognitoClient:
@@ -664,6 +400,7 @@ Resources:
 
   MasterEventRule:
     Type: AWS::Events::Rule
+    Condition: DevResources
     Properties:
       EventPattern:
         source:
@@ -688,6 +425,7 @@ Resources:
 
   MasterPipeline:
     Type: AWS::CodePipeline::Pipeline
+    Condition: DevResources
     Properties:
       Name: !Sub "${applicationName}-master-pipeline"
       RoleArn:
@@ -727,14 +465,10 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"dev","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
-                    cognitoClient:
-                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-                    userPool:
-                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-                    
+
     DependsOn:
       - CodeBuild

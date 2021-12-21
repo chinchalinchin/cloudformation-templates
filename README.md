@@ -32,6 +32,7 @@ There are three separate stack groups, the **Access** group, the **Application**
 | Stack | Dependency | 
 | ----- | ---------- |
 | SonarStack | VPCStack-Dev |
+### Environment Stacks
 | DNSStack-$env | LambdaStack, SonarStack |
 | PipelineStack-$env | RepoStack, IAMStack, CognitoStack, DNSStack |
 

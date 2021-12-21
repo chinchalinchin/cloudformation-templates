@@ -57,6 +57,7 @@ then
         --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
         --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION"  \
+                     ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
                      ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
@@ -68,7 +69,8 @@ then
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
         --template-body file://pipeline.yml \
-        --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
+        --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION" \
+                     ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
                      ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
