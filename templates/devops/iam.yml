@@ -124,6 +124,19 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
 
+  ECSScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${applicationName}-ecs-scaling-role"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
+
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
       Type: AWS::IAM::Role
@@ -595,6 +608,11 @@ Outputs:
     Description: ARN for ECS Execution Role
     Export:
       Name: !Sub ${AWS::StackName}-ECSTaskRoleArn
+  ECSScalingRoleArn:
+    Value: !GetAtt ECSScalingRole.Arn
+    Description: ARN for ECS Scaling
+    Export:
+      Name: !Sub ${AWS::StackName}-ECSScalingRoleArn
   CodePipelineRoleArn:
     Value: !GetAtt CodePipelineRole.Arn
     Description: ARN for CodePipeline role

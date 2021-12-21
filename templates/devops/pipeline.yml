@@ -215,7 +215,7 @@ Resources:
     DependsOn:
       - CodeBuild
 
-  BackendDevEventRule:
+  BackendEventRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
@@ -242,7 +242,7 @@ Resources:
   BackendDevPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-backend-dev-pipeline"
+      Name: !Sub "${applicationName}-${environmentName}-backend-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 

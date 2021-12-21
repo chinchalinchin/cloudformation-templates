@@ -3,6 +3,8 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: 'Provisions resources for an ECS Fargate Cluster'
 
 Parameters:
+  certificateArn:
+    Type: String
   applicationName:
     Type: String
     Default: innolab
@@ -25,9 +27,6 @@ Parameters:
     Type: String
     Default: Innolab-VPCStack
 
-  certificateArn:
-    Type: String
-
 Resources:
   BackendLogGroup:
     Type: AWS::Logs::LogGroup
@@ -48,7 +47,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-frontend-${environmentName}-target-group"
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target-group"
       Port: !Ref frontendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -67,7 +66,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-frontend-${environmentName}-target-group-alt"
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target-group-alt"
       Port: !Ref frontendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -86,7 +85,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-backend-${environmentName}-target-group"
+      Name: !Sub "${applicationName}-${environmentName}-backend-target-group"
       Port: !Ref backendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -105,7 +104,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-backend-${environmentName}-target-group-alt"
+      Name: !Sub "${applicationName}-${environmentName}-backend-target-group-alt"
       Port: !Ref backendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -119,6 +118,56 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Sub "${applicationName}-${environmentName}-cluster"
+
+  AutoScalingBackendTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 3
+      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt BackendService.Name]]
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN:
+        Fn::ImportValue: !Sub "${iamStack}-ECSScalingRoleArn"
+  
+  AutoScalingBackendPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-backend"
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AutoScalingBackendTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 10
+        ScaleOutCooldown: 10
+        # Keep things at or lower than 50% CPU utilization, for example
+        TargetValue: 50
+  
+  AutoScalingFrontendTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 3
+      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt FrontendService.Name]]
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN: 
+        Fn::ImportValue: !Sub "${iamStack}-ECSScalingRoleArn"
+
+  AutoScalingFrontendPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-frontend"
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AutoScalingFrontendTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 10
+        ScaleOutCooldown: 10
+        # Keep things at or lower than 50% CPU utilization, for example
+        TargetValue: 50
 
   FrontendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -135,7 +184,7 @@ Resources:
       TaskRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleARN"
       ContainerDefinitions:
-        - Name: !Sub ${applicationname}-frontend-${environmentName}
+        - Name: !Sub ${applicationname}-${environmentName}-frontend
           Image: !Sub
             - "${imageUri}:${tag}"
             - imageUri:  
@@ -165,7 +214,7 @@ Resources:
       TaskRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleARN"
       ContainerDefinitions:
-        - Name: !Sub ${applicationName}-backend-${environmentName}
+        - Name: !Sub ${applicationName}-${environmentName}-backend
           Image: !Sub
             - "${imageUri}:${tag}"
             - imageUri:  
@@ -186,7 +235,7 @@ Resources:
     DependsOn:
       - ListenerHTTPS
     Properties: 
-      ServiceName: !Sub ${applicationName}-backend-${environmentName}
+      ServiceName: !Sub ${applicationName}-${environmentName}-backend
       Cluster: !Ref Cluster
       TaskDefinition: !Ref BackendTaskDefinition
       DeploymentConfiguration:
@@ -206,17 +255,17 @@ Resources:
           SecurityGroups:
             - !Ref ContainerSecurityGroup
       LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-backend-${environmentName}
+        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
           ContainerPort: !Ref backendPort
           TargetGroupArn: !Ref BackendTargetGroup
 
-  FrontendDevService:
+  FrontendService:
     Type: AWS::ECS::Service
     # This dependency is needed so that the load balancer is setup correctly in time
     DependsOn:
       - ListenerHTTPS
     Properties: 
-      ServiceName: !Sub ${applicationName}-frontend
+      ServiceName: !Sub ${applicationName}-${environmentName}-frontend
       Cluster: !Ref Cluster
       TaskDefinition: !Ref FrontendTaskDefinition
       DeploymentConfiguration:
@@ -236,7 +285,7 @@ Resources:
           SecurityGroups:
             - !Ref ContainerSecurityGroup
       LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-frontend-dev
+        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
           ContainerPort: !Ref frontendPort
           TargetGroupArn: !Ref FrontendTargetGroup
 
@@ -299,3 +348,14 @@ Resources:
     DependsOn:
       - LoadBalancer
           
+Outputs:
+  LoadBalancerDNS:
+    Value: !GetAtt LoadBalancer.DNSName
+    Description: Load Balancer DNS Name
+    Export:
+      Name: !Sub ${AWS::StackName}-LoadBalancerDNSName
+  LoadBalancerHostedZone:
+    Value: !GetAtt LoadBalancer.CanonicalHostedZoneID
+    Description: Load Balancer Hosted Zone Id
+    Export:
+      Name: !Sub ${AWS::StackName}-HostedZoneID
