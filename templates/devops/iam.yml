@@ -98,8 +98,9 @@ Resources:
   # ECS ROLE
   ECSExecutorRole:
     Type: AWS::IAM::Role
-    Description: Role for ECS execution
+    Description: Role for ECS Task Management execution
     Properties:
+      RoleName: !Sub ${applicationName}-ecs-executor
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement: 
@@ -111,7 +112,6 @@ Resources:
         # TODO: scope to specific resources
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      RoleName: !Sub ${applicationName}-ecs-executor
   
   # ECS TASK TOLE
   ECSTaskRole:
@@ -124,8 +124,46 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
-          # TODO: scope to specific resources
-          # TODO: managed policies and policy statements
+        Policies:
+          - PolicyName: !Sub ${applicationName}-ecs-task-role-policy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Sid: !Sub "${applicationName}-ecs-task-ecr-statement"
+                  Action:
+                    - ecr:GetAuthorizationToken
+                    - ecr:BatchCheckLayerAvailability
+                    - ecr:GetDownloadUrlForLayer
+                    - ecr:BatchGetImage
+                  Effect: Allow
+                  Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+                - Sid: !Sub "${applicationName}-ecs-task-log-statement"
+                  Action: 
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Effect: Allow
+                  Resource: '*' # TODO: figure out arns for loggroups and restrict scope here
+                - Sid: !Sub "${applicationName}-ecs-task-secretmanager-statement"
+                  Action: 
+                    - secretsmanager:GetSecretValue
+                  Effect: Allow
+                  Resource: !Sub ""arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+                - Sid: !Sub "${applicationName}-ecs-task-ec2-statement":
+                  Action:
+                    - ec2:DescribeTags
+                  Effect: Allow
+                  Resource: '*' # TODO: figure out how to scope to ec2 cluster host
+                - Sid: !Sub "${applicationName}-ecs-task-ecs-statement"
+                  Action:
+                    - ecs:CreateCluster
+                    - ecs:DeregisterContainerInstance
+                    - ecs:DiscoverPollEndpoint
+                    - ecs:Poll
+                    - ecs:RegisterContainerInstance
+                    - ecs:StartTelemetrySession
+                    - ecs:UpdateContainerInstancesState
+                  Effect: Allow
+                  Resource: '*' # TODO: scope to ecs cluster? or task definition?
 
   # ECS Scaling Rolle
   ECSScalingRole:
@@ -154,9 +192,10 @@ Resources:
                 - "codedeploy.amazonaws.com"
               Action:
                 - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForECS'
           # TODO: resource scope
-          # TODO: managed policies and policy statements
-          
+
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
       Type: AWS::IAM::Role
@@ -176,7 +215,8 @@ Resources:
             PolicyDocument:
               Version: "2012-10-17"
               Statement:
-                - Action:
+                - Sid: "${applicationName}-codepipeline-role-codecommit-statement"
+                  Action:
                     - codecommit:CancelUploadArchive
                     - codecommit:GetBranch
                     - codecommit:GetCommit
@@ -185,26 +225,32 @@ Resources:
                     - codecommit:UploadArchive
                   Effect: Allow
                   Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
-                - Action:
+                - Sid: !Sub "${applicationName}-codepipeline-cloudwatch-statement"
+                  Action:
                     - cloudwatch:*
-                  Resource: "*"
+                  Resource: "*" # TODO: restrict scope
                   Effect: Allow
-                - Action:
+                - Sid: !Sub "${applicationName}-codepipeline-role-s3-statement"
+                  Action:
                     - s3:*
                   Effect: Allow
                   Resource: 
                     - !Sub "arn:aws:s3:::${applicationName}-*"
-                - Action:
+                - Sid: !Sub "${applicationName}-codepipeline-role-lambda-statement"
+                  Action:
                     - lambda:UpdateFunctionCode
                   Effect: Allow
                   Resource: 
                     - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
-                - Action:
+                - Sid: !Sub "${applicationName}-codepipeline-role-codebuild-statement"
+                  Action:
                     - codebuild:BatchGetBuilds
                     - codebuild:StartBuild
                     - codebuild:BatchGetBuildBatches
                     - codebuild:StartBuildBatch
-                  Resource: "*"
+                  Resource: 
+                    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:build/${applicationName}*"
+                    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:build-batch/${applicationName}*"
                   Effect: Allow
         RoleName: !Sub ${applicationName}-codepipeline-exector
         
@@ -598,6 +644,21 @@ Resources:
         PasswordResetRequired: True
       Path: !Sub "/${applicationName}/"
       UserName: apariseau
+    DependsOn:
+      - BasicAccessGroup
+      - DeveloperGroup
+
+  IAMSelah:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+        - developer-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      Path: !Sub "/${applicationName}/"
+      UserName: skonur
     DependsOn:
       - BasicAccessGroup
       - DeveloperGroup

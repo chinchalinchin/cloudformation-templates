@@ -195,6 +195,32 @@ Resources:
     DependsOn:
       - CognitoUserPool
 
+  CognitoSelah:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "skonur@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email"
+          Value: "skonur@makpar.com"
+        - Name: "name"
+          Value: "Selah Konur"
+    DependsOn:
+      - CognitoUserPool
+  
+  CognitoAurora:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "apariseau@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email"
+          Value: "apariseau@makpar.com"
+        - Name: "name"
+          Value: "Aurora Pariseau"
+    DependsOn:
+      - CognitoUserPool
+
 Outputs:
   CognitoUserPoolArn:
     Value: !GetAtt CognitoUserPool.Arn
