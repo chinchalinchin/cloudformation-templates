@@ -196,7 +196,7 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref FrontendDevLogGroup
+              awslogs-group: !Ref FrontendLogGroup
               awslogs-stream-prefix: ecs
 
   BackendTaskDefinition:
@@ -226,7 +226,7 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref BackendDevLogGroup
+              awslogs-group: !Ref BackendLogGroup
               awslogs-stream-prefix: ecs
 
   BackendService:
@@ -358,4 +358,4 @@ Outputs:
     Value: !GetAtt LoadBalancer.CanonicalHostedZoneID
     Description: Load Balancer Hosted Zone Id
     Export:
-      Name: !Sub ${AWS::StackName}-HostedZoneID
+      Name: !Sub ${AWS::StackName}-LoadBalancerHostedZoneID

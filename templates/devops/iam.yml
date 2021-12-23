@@ -108,6 +108,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action:
               - "sts:AssumeRole"
+        # TODO: scope to specific resources
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       RoleName: !Sub ${applicationName}-ecs-executor
@@ -123,7 +124,10 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
+          # TODO: scope to specific resources
+          # TODO: managed policies and policy statements
 
+  # ECS Scaling Rolle
   ECSScalingRole:
     Type: AWS::IAM::Role
     Properties:
@@ -137,10 +141,26 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
 
+  CodeDeployRole:
+    Type: AWS::IAM::Role
+    Description: Role to allow Innolab CodeDeploy access to other AWS Services
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codedeploy.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+          # TODO: resource scope
+          # TODO: managed policies and policy statements
+          
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
       Type: AWS::IAM::Role
-      Description: Role to allow Innolab Pipeline to access other AWS Services
+      Description: Role to allow Innolab Pipeline access to other AWS Services
       Properties:
         AssumeRolePolicyDocument:
           Version: "2012-10-17"

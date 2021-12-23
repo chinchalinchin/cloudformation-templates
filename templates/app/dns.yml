@@ -125,16 +125,11 @@ Resources:
 
   BucketLogs:
     Type: AWS::S3::Bucket
+    Condition: DevResources
     DeletionPolicy: Delete
     Properties:
       AccessControl: LogDeliveryWrite
-      BucketName: !Sub 
-        - "${applicationName}-frontend${environment}-logs"
-        - environment: 
-            Fn::FindInMap:
-              - SubEnvDomainMap
-              - !Ref environmentName
-              - subdomainEnv
+      BucketName: "${applicationName}-coverage-logs"
 
   CoverageBucket:
     Type: AWS::S3::Bucket
@@ -223,30 +218,6 @@ Resources:
           IncludeCookies: false
           Prefix: 'cov/'
 
-  FrontendRoute53RecordSetGroup:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
-      RecordSets:
-        - Name: !Sub
-            - "${subdomainName}${subdomainEnv}.${domainName}"
-            - subdomainName: !Ref subdomain
-              domainName: !Ref domain
-              subdomainEnv: 
-                Fn::FindInMap:
-                  - SubEnvDomainMap
-                  - !Ref environmentName
-                  - subdomainEnv
-          Type: A
-          AliasTarget:
-            DNSName: !GetAtt FrontendDistribution.DomainName
-            EvaluateTargetHealth: false
-            # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
-            # alias record that routes traffic to a CloudFront distribution.
-            HostedZoneId: Z2FDTNDATAQYW2
-    DependsOn:
-      - FrontendDistribution
-
   CoverageRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Condition: DevResources
@@ -279,8 +250,10 @@ Resources:
               - subdomainEnv
       Type: A
       AliasTarget:
-        DNSName: !GetAtt LoadBalancer.DNSName
-        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+        DNSName: 
+          Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerDNSName" 
+        HostedZoneId:
+          Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerHostedZoneID"
 
 Outputs: 
   RestAPIDomain:
@@ -298,22 +271,14 @@ Outputs:
     Value: !If [NotDNSExists, !Ref HostedZone, !Ref hostedZoneId]
     Export:
       Name: !Sub ${AWS::StackName}-HostedZoneID
-  FrontendDistributionID:
-    Value: !Ref FrontendDistribution
-    Description: Resource ID for CloudFront Distribution
-    Export:
-      Name: !Sub ${AWS::StackName}-FrontendDistributionID
-  FrontendDomain:
-    Value: !GetAtt FrontendDistribution.DomainName
-    Description: Domain name of CloudFront Distribution
-    Export:
-      Name: !Sub ${AWS::StackName}-FrontendDistributionDomain
   CoverageDistributionID:
+    Condition: DevResources
     Value: !Ref CoverageDistribution
     Description: Resource ID for CloudFront Distribution
     Export:
       Name: !Sub ${AWS::StackName}-CoverageDistributionID
   CoverageDomain:
+    Condition: DevResources
     Value: !GetAtt CoverageDistribution.DomainName
     Description: Domain name of CloudFront Distribution
     Export:

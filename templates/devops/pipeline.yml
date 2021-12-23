@@ -239,7 +239,7 @@ Resources:
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
           Id: !Sub ${applicationName}-${environmentName}-codepipeline-backend
 
-  BackendDevPipeline:
+  BackendPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       Name: !Sub "${applicationName}-${environmentName}-backend-pipeline"
@@ -343,7 +343,7 @@ Resources:
   LambdaPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-lambda-pipeline"
+      Name: !Sub "${applicationName}-${environmentName}-lambda-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 
@@ -360,11 +360,11 @@ Resources:
                 Version: 1
                 Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-lambda-source"    
+                - Name: !Sub "${applicationName}-${environmentName}-lambda-source"    
               Configuration:
                 RepositoryName: 
                   Fn::ImportValue: !Sub "${repoStack}-LambdaRepository"
-                BranchName: master
+                BranchName: !Ref environmentName
                 PollForSourceChanges: false
         - Name: Build   
           Actions:
@@ -375,9 +375,9 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-lambda-source"
+                - Name: !Sub "${applicationName}-${environmentName}-lambda-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-lambda-build"
+                - Name: !Sub "${applicationName}-${environmentName}-lambda-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
