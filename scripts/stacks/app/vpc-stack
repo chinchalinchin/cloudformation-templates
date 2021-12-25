@@ -9,12 +9,14 @@ source $PROJECT_DIR/.env
 # Example Usage:
 # >$     vpc-stack --action <create | update | delete>
 #                   --environment <Dev | Staging | Prod>
+#                   --bastion-host <true | false>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
 #   NOTE: This script will generate an SSH key with the name given by the environment
 #           variable $SSH_KEY_NAME in your user's *~/.ssh/* directory. The private key
 #           in this directory can be used to initiate an SSH tunnel with the RDS instance
 #           through the NAT Instance bastion host.
+#   NOTE: '`-bastion-host` will default to true if not provided.
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -29,11 +31,31 @@ while [[ $# -gt 0 ]]; do
     case $key in
         --action)
             ACTION="$2"
+            if [ $ACTION != "create" ] || [ $ACTION != "update" ] || [ $ACTION != "delete" ]
+            then
+                log "'action==$ACTION' not in allowed values: <create | update | delete>"
+                exit 1
+            fi
             shift
             shift 
             ;;
         --environment)
             ENVIRONMENT="$2"
+            if [ $ENVIRONMENT != "Dev" ] || ][ $ENVIRONMENT != "Staging" ] || [ $ENVIRONMENT != "Prod"]
+            then
+                log "'environment==$ENVIRONMENT' not in allowed values: <Dev | Staging | Prod>"
+                exit 1
+            fi
+            shift
+            shift
+            ;;
+        --bastion-host)
+            BASTION_HOST="$2"
+            if [ $BASTION_HOST != "true" ] || [$BASTION_HOST != "false"]
+            then 
+                log "'bastion-host==$BASTION_HOST' not in allowed values: <true | false>"
+                exit 1
+            fi
             shift
             shift
             ;;
@@ -51,6 +73,11 @@ done
 if [ -z "$ACTION" ]
 then
     ACTION="create"
+fi
+
+if [ -z "$BASTION_HOST" ]
+then 
+    BASTION_HOST="true"
 fi
 
 cp $PROJECT_DIR/templates/app/vpc.yml ./vpc.yml
@@ -71,7 +98,8 @@ then
         --template-body file://vpc.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                     ParameterKey=bastionHost,ParameterValue=$BASTION_HOST
 
 elif [ "$ACTION" == "update" ]
 then
@@ -80,7 +108,8 @@ then
         --template-body file://vpc.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                      ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
-                     ParameterKey=applicationName,ParameterValue=$APPLICATION
+                     ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                     ParameterKey=bastionHost,ParameterValue=$BASTION_HOST
 
 elif [ "$ACTION" == "delete" ]
 then
@@ -90,8 +119,6 @@ then
     aws ec2 delete-key-pair \
         --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
 
-else
-    log "Action not understood"
 fi
 
 rm ./vpc.yml

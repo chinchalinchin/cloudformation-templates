@@ -177,8 +177,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: 1024
-      Memory: 2GB
+      Cpu: 512
+      Memory: 256
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleARN"
       TaskRoleArn: 
@@ -207,8 +207,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: 1024
-      Memory: 2GB
+      Cpu: 512
+      Memory: 512
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleARN"
       TaskRoleArn: 

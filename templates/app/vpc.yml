@@ -12,6 +12,19 @@ Parameters:
   dbKeyName:
     Type: String
     Default: innolab_db_key_Dev
+  bastionHost:
+    AllowedValues:
+      - "true"
+      - "false"
+    Type: String
+    Default: "true"
+
+Condition:
+  BastionHost: !Equals
+    - !Ref bastionHost
+    - "true"
+  NotBastionHost: !Not
+    - Condition: BastionHost
 
 Mappings:
   SubnetConfig:
@@ -176,13 +189,22 @@ Resources:
       - Key: Environment
         Value: !Ref environmentName
 
-  PrivateRoute1:            # Private route table can access web via NAT (created below)
+  PrivateRoute1NATInstance:            # Private route table can access web via NAT (created below)
     Type: AWS::EC2::Route
+    Condition: BastionHost
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       # If we are using a NAT Instance, route traffic through the NAT Instance:
       InstanceId:   !Ref NATInstance
+  
+  PrivateRoute1NATGateway:
+    Type: AWS::EC2::Route
+    Condition: NotBastionHost
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
 
   # Attach the public subnets to public route tables, 
   # and attach the private subnets to private route tables:    
@@ -227,9 +249,46 @@ Resources:
       - PrivateSubnetA
       - PrivateSubnetB
 
-  # A security group for our NAT.  Ingress from the VPC IPs only.  Egress is TCP & UDP only:
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupName: !Sub ${applicationName}-${environmentName}-database-security-group
+      GroupDescription: A security group for the lambdas to talk to the RDS
+      VpcId: !Ref VPC
+    DependsOn:
+      - NATSecurityGroup
+
+  PostgresSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt NATSecurityGroup.GroupId
+      FromPort: 5432
+      ToPort: 5432
+
+  ElasticIPAddress:
+   Type: AWS::EC2::EIP
+   Condition: NotBastionHost
+   Properties:
+     Domain: VPC
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Condition: NotBastionHost
+    Properties:
+     AllocationId: !GetAtt ElasticIPAddress.AllocationId
+     SubnetId: !Ref PublicSubnetA
+     Tags:
+      - Key: Application
+        Value: !Ref applicationName
+      - Key: Environment
+        Value: !Ref environmentName
+
+  # A security group for NATInstance.  Ingress from the VPC IPs only.  Egress is TCP & UDP only:
   NATSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    Condition: NotBastionHost
     DependsOn: AttachGateway
     Properties:
       GroupName: !Sub ${applicationName}-${environmentName}-nat-security-group
@@ -250,26 +309,9 @@ Resources:
         ToPort: '65535'
         CidrIp: 0.0.0.0/0
 
-  DatabaseSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties: 
-      GroupName: !Sub ${applicationName}-${environmentName}-database-security-group
-      GroupDescription: A security group for the lambdas to talk to the RDS
-      VpcId: !Ref VPC
-    DependsOn:
-      - NATSecurityGroup
-
-  PostgresSecurityGroupIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref DatabaseSecurityGroup
-      IpProtocol: tcp
-      SourceSecurityGroupId: !GetAtt NATSecurityGroup.GroupId
-      FromPort: 5432
-      ToPort: 5432
-
   NATInstance:
     Type: AWS::EC2::Instance
+    Condition: BastionHost
     DependsOn: PublicRoute1                                           # Must have route to IGW established.
     Properties:
       ImageId: !FindInMap [ AmazonLinuxAMI, !Ref "AWS::Region", AMI]  # We lookup the AMI from the Region Map
