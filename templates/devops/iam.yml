@@ -125,46 +125,46 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
-        Policies:
-          - PolicyName: !Sub ${applicationName}-ecs-task-role-policy
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Sid: !Sub "${applicationName}-ecs-task-ecr-statement"
-                  Action:
-                    - ecr:GetAuthorizationToken
-                    - ecr:BatchCheckLayerAvailability
-                    - ecr:GetDownloadUrlForLayer
-                    - ecr:BatchGetImage
-                  Effect: Allow
-                  Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-                - Sid: !Sub "${applicationName}-ecs-task-log-statement"
-                  Action: 
-                    - logs:CreateLogStream
-                    - logs:PutLogEvents
-                  Effect: Allow
-                  Resource: '*' # TODO: figure out arns for loggroups and restrict scope here
-                - Sid: !Sub "${applicationName}-ecs-task-secretmanager-statement"
-                  Action: 
-                    - secretsmanager:GetSecretValue
-                  Effect: Allow
-                  Resource: !Sub ""arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-                - Sid: !Sub "${applicationName}-ecs-task-ec2-statement":
-                  Action:
-                    - ec2:DescribeTags
-                  Effect: Allow
-                  Resource: '*' # TODO: figure out how to scope to ec2 cluster host
-                - Sid: !Sub "${applicationName}-ecs-task-ecs-statement"
-                  Action:
-                    - ecs:CreateCluster
-                    - ecs:DeregisterContainerInstance
-                    - ecs:DiscoverPollEndpoint
-                    - ecs:Poll
-                    - ecs:RegisterContainerInstance
-                    - ecs:StartTelemetrySession
-                    - ecs:UpdateContainerInstancesState
-                  Effect: Allow
-                  Resource: '*' # TODO: scope to ecs cluster? or task definition?
+      Policies:
+        - PolicyName: !Sub ${applicationName}-ecs-task-role-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: !Sub "${applicationName}EcsTaskEcrStatement"
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                Effect: Allow
+                Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+              - Sid: !Sub "${applicationName}EcsTaskLogStatement"
+                Action: 
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: '*' # TODO: figure out arns for loggroups and restrict scope here
+              - Sid: !Sub "${applicationName}EcsTaskSecretmanagerStatement"
+                Action: 
+                  - secretsmanager:GetSecretValue
+                Effect: Allow
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+              - Sid: !Sub "${applicationName}EcsTaskEc2Statement"
+                Action:
+                  - ec2:DescribeTags
+                Effect: Allow
+                Resource: '*' # TODO: figure out how to scope to ec2 cluster host
+              - Sid: !Sub "${applicationName}EcsTaskEcsStatement"
+                Action:
+                  - ecs:CreateCluster
+                  - ecs:DeregisterContainerInstance
+                  - ecs:DiscoverPollEndpoint
+                  - ecs:Poll
+                  - ecs:RegisterContainerInstance
+                  - ecs:StartTelemetrySession
+                  - ecs:UpdateContainerInstancesState
+                Effect: Allow
+                Resource: '*' # TODO: scope to ecs cluster? or task definition?
 
   # ECS SCALING ROLE
   ECSScalingRole:
@@ -192,10 +192,10 @@ Resources:
             Principal:
               Service:
                 - "codedeploy.amazonaws.com"
-              Action:
-                - "sts:AssumeRole"
+            Action:
+              - "sts:AssumeRole"
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForECS'
+        - 'arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS'
           # TODO: resource scope
 
   # CODEPIPELINE SERVICE ROLE
@@ -217,7 +217,7 @@ Resources:
             PolicyDocument:
               Version: "2012-10-17"
               Statement:
-                - Sid: "${applicationName}-codepipeline-role-codecommit-statement"
+                - Sid: !Sub "${applicationName}CodepipelineRoleCodecommitStatement"
                   Action:
                     - codecommit:CancelUploadArchive
                     - codecommit:GetBranch
@@ -227,24 +227,24 @@ Resources:
                     - codecommit:UploadArchive
                   Effect: Allow
                   Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
-                - Sid: !Sub "${applicationName}-codepipeline-cloudwatch-statement"
+                - Sid: !Sub "${applicationName}CodepipelineCloudwatchStatement"
                   Action:
                     - cloudwatch:*
                   Resource: "*" # TODO: restrict scope
                   Effect: Allow
-                - Sid: !Sub "${applicationName}-codepipeline-role-s3-statement"
+                - Sid: !Sub "${applicationName}CodepipelineRoleS3Statement"
                   Action:
                     - s3:*
                   Effect: Allow
                   Resource: 
                     - !Sub "arn:aws:s3:::${applicationName}-*"
-                - Sid: !Sub "${applicationName}-codepipeline-role-lambda-statement"
+                - Sid: !Sub "${applicationName}CodepipelineRoleLambdaStatement"
                   Action:
                     - lambda:UpdateFunctionCode
                   Effect: Allow
                   Resource: 
                     - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
-                - Sid: !Sub "${applicationName}-codepipeline-role-codebuild-statement"
+                - Sid: !Sub "${applicationName}CodepipelineRoleCodebuildStatement"
                   Action:
                     - codebuild:BatchGetBuilds
                     - codebuild:StartBuild
