@@ -14,18 +14,32 @@ Parameters:
   masterPassword:
     Type: String
     Description: Initial password for IAM users before required password reset.
+  BitbucketFlag:
+    Type: String
+    Default: false
+    AllowedValues: 
+      - true
+      - false
+
+Conditions:
+  Bitbucket: !Equals
+    - !Ref BitbucketFlag
+    - true
+  
 
 Resources:
 
   ## BITBUCKET PIPELINE USER & POLICY
   BitbucketPipelineUser:
     Type: AWS::IAM::User
+    Condition: Bitbucket
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
 
   BitbucketPipelinePolicy:
     Type: AWS::IAM::Policy
+    Condition: Bitbucket
     Properties:
       PolicyName: !Sub pipeline-${applicationName}-policy
       PolicyDocument:
@@ -415,7 +429,7 @@ Resources:
                     - codecommit:GetTree
                     - codecommit:ListRepositories
                   Resource:
-                    - !Sub "arn:aws:codecommit:$AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+                    - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
 
       RoleName: !Sub ${applicationName}-lambda-executor
       
@@ -668,11 +682,13 @@ Resources:
 
 Outputs:
   BitbucketPipelineUserArn:
+    Condition: Bitbucket
     Value: !GetAtt BitbucketPipelineUser.Arn
     Description: ARN for BitBucket Pipeline User
     Export:
       Name: !Sub ${AWS::StackName}-BitbucketPipelineUserArn
   BitbucketPipelineUserName:
+    Condition: Bitbucket
     Value: !Ref pipelineUser
     Description: Username for BitBucket Pipeline User
     Export:
