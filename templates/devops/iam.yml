@@ -78,6 +78,7 @@ Resources:
         - !Ref BitbucketPipelineUser
 
   ## SERVICE ROLES
+  # RDS MONITOR
   RDSMonitoringRole:
     Type: AWS::IAM::Role
     Description: Role to allow monitoring of RDS
@@ -165,7 +166,7 @@ Resources:
                   Effect: Allow
                   Resource: '*' # TODO: scope to ecs cluster? or task definition?
 
-  # ECS Scaling Rolle
+  # ECS SCALING ROLE
   ECSScalingRole:
     Type: AWS::IAM::Role
     Properties:
@@ -179,6 +180,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
 
+  # CODEDEPLOY EXECUTION ROLE
   CodeDeployRole:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab CodeDeploy access to other AWS Services
@@ -435,6 +437,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       RoleName: !Sub ${applicationName}-apigateway-logger
 
+  # CLOUDWATCH ROLE
   CloudWatchEventRole:
     Type: AWS::IAM::Role
     Properties:
