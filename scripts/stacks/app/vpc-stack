@@ -41,11 +41,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         --environment)
             ENVIRONMENT="$2"
-            if [ $ENVIRONMENT != "Dev" ] || ][ $ENVIRONMENT != "Staging" ] || [ $ENVIRONMENT != "Prod"]
-            then
-                log "'environment==$ENVIRONMENT' not in allowed values: <Dev | Staging | Prod>"
-                exit 1
-            fi
+            # if [ "$ENVIRONMENT" != "Dev" ] || [ "$ENVIRONMENT" != "Staging" ] || [ "$ENVIRONMENT" != "Prod" ]
+            # then
+            #     log "'environment==$ENVIRONMENT' not in allowed values: <Dev | Staging | Prod>"
+            #     exit 1
+            # fi
             shift
             shift
             ;;

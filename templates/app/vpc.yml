@@ -19,7 +19,7 @@ Parameters:
     Type: String
     Default: "true"
 
-Condition:
+Conditions:
   BastionHost: !Equals
     - !Ref bastionHost
     - "true"
@@ -288,7 +288,7 @@ Resources:
   # A security group for NATInstance.  Ingress from the VPC IPs only.  Egress is TCP & UDP only:
   NATSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    Condition: NotBastionHost
+    Condition: BastionHost
     DependsOn: AttachGateway
     Properties:
       GroupName: !Sub ${applicationName}-${environmentName}-nat-security-group
