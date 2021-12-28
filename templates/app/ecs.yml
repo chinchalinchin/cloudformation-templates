@@ -25,7 +25,7 @@ Parameters:
     Default: Innolab-RepoStack
   vpcStack:
     Type: String
-    Default: Innolab-VPCStack
+    Default: Innolab-VPCStack-Dev
 
 Resources:
   BackendLogGroup:
@@ -47,7 +47,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-frontend-target-group"
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target"
       Port: !Ref frontendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -66,7 +66,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-frontend-target-group-alt"
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target-2"
       Port: !Ref frontendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -85,7 +85,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-backend-target-group"
+      Name: !Sub "${applicationName}-${environmentName}-backend-target"
       Port: !Ref backendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -104,7 +104,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-backend-target-group-alt"
+      Name: !Sub "${applicationName}-${environmentName}-backend-target-2"
       Port: !Ref backendPort
       Protocol: HTTP
       TargetGroupAttributes:
@@ -171,26 +171,26 @@ Resources:
 
   FrontendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: LogGroup
+    DependsOn: FrontendLogGroup
     Properties:
       Family: !Sub "${applicationName}-${environmentName}-frontend-task-definition"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: 512
-      Memory: 256
+      Cpu: 256
+      Memory: 512
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleARN"
+        Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleArn"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleARN"
+        Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleArn"
       ContainerDefinitions:
-        - Name: !Sub ${applicationname}-${environmentName}-frontend
+        - Name: !Sub ${applicationName}-${environmentName}-frontend
           Image: !Sub
             - "${imageUri}:${tag}"
             - imageUri:  
                 Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
               tag: !Ref environmentName
-           PortMappings:
+          PortMappings:
             - ContainerPort: !Ref frontendPort
           LogConfiguration:
             LogDriver: awslogs
@@ -201,18 +201,18 @@ Resources:
 
   BackendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: LogGroup
+    DependsOn: BackendLogGroup
     Properties:
       Family: !Sub "${applicationName}-${environmentName}-backend-task-definition"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
       Cpu: 512
-      Memory: 512
+      Memory: 1024
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleARN"
+        Fn::ImportValue: !Sub "${iamStack}-ECSExecutorRoleArn"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleARN"
+        Fn::ImportValue: !Sub "${iamStack}-ECSTaskRoleArn"
       ContainerDefinitions:
         - Name: !Sub ${applicationName}-${environmentName}-backend
           Image: !Sub
@@ -329,8 +329,6 @@ Resources:
         # TODO: THIS
         - !Ref LoadBalancerSecurityGroup
       Subnets:
-        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
-        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
         - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
         - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
 
