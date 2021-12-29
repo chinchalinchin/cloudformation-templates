@@ -14,6 +14,8 @@ Parameters:
   subdomain:
     Type: String
     Default: innolab
+  hostedZoneId:
+    Type: String
 
 Resources:
   SonarSecurityGroup:
@@ -39,7 +41,8 @@ Resources:
       RecordSets:
         - Name: !Sub "${subdomain}-sonar.${domain}"
           Type: A
-          ResourceRecords: !GetAtt Sonar.PublicIp
+          ResourceRecords: 
+            - !GetAtt Sonar.PublicIp
           TTL: 900
 
   Sonar:
