@@ -60,7 +60,7 @@ then
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
-                            ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}" \
+                            ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                             ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                             ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM
@@ -74,7 +74,7 @@ then
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
                             ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
-                            ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}" \
+                            ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                             ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                             ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
               --capabilities CAPABILITY_NAMED_IAM  

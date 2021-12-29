@@ -20,10 +20,15 @@ Parameters:
     Default: Innolab-VPCStack-Dev
   cognitoStack:
     Type: String
-    Default: Innolab-CognitoStack
+    Default: Innolab-CognitoStack-Dev
   repoStack:
     Type: String
     Default: Innolab-RepoStack
+
+Conditions:
+  DevResources: !Equals
+    - !Ref environmentName
+    - Dev
 
 Resources:
   # API Gateway Path Lambda
@@ -52,10 +57,10 @@ Resources:
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POOL_ID:
             Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          POSTGRES_DB: !Ref applicationName
-          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
+          # POSTGRES_DB: !Ref applicationName
+          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   # API Gateway Path Param Lambda
@@ -84,10 +89,10 @@ Resources:
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POOL_ID:
             Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          POSTGRES_DB: !Ref applicationName
-          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
+          # POSTGRES_DB: !Ref applicationName
+          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   LambdaGamma:
@@ -116,10 +121,10 @@ Resources:
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POOL_ID:
             Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          POSTGRES_DB: !Ref applicationName
-          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
+          # POSTGRES_DB: !Ref applicationName
+          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   LambdaDelta:
@@ -147,10 +152,10 @@ Resources:
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POOL_ID:
             Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          POSTGRES_DB: !Ref applicationName
-          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
+          # POSTGRES_DB: !Ref applicationName
+          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   # API Gateway Token Lambda
@@ -221,7 +226,7 @@ Resources:
   LambdaZeta: 
     Type: AWS::Lambda::Function
     Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta
+      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
       Code:
         ImageUri: !Sub
           - "${ecrUri}:${tag}"
@@ -407,118 +412,6 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn:
       - PathParamResource
-  
-  TokenResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:   
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: token
-    DependsOn:
-      - RestAPI
-
-  TokenResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref TokenResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateways transform all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaEpsilon.Arn}/invocations"
-    DependsOn:
-      - TokenResource
-
-  TokenResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref TokenResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - TokenResource
-
-  RegisterResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:   
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: register
-    DependsOn:
-      - RestAPI
-
-  RegisterResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref RegisterResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateways transform all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaEta.Arn}/invocations"
-    DependsOn:
-      - TokenResource
-
-  RegisterResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref RegisterResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - RegisterResource
 
   LambdaAlphaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -542,30 +435,9 @@ Resources:
     DependsOn:
       - RestAPIDeployment
 
-  LamdbaEpsilonApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaEpsilon.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/token
-    DependsOn:
-      - RestAPIDeployment
-
-  LamdbaEtaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaEta.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/register
-    DependsOn:
-      - RestAPIDeployment
-
   ## CLOUDWATCH EVENT INTEGRATIONS
-  LambdaZetaBackendDevEventRule:
+  ### MULTIPLE ENVIRONMENT RULES
+  LambdaZetaBackendEventRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
@@ -582,12 +454,12 @@ Resources:
           referenceType:
             - branch
           referenceName:
-            - Dev
+            - !Ref environmentName
       Targets:
         - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-cloudwatch-backend-dev"
+          Id: !Sub "${applicationName}-cloudwatch-backend-${environmentName}"
 
-  LambdaZetaFrontendDevEventRule:
+  LambdaZetaFrontendEventRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
@@ -604,13 +476,37 @@ Resources:
           referenceType:
             - branch
           referenceName:
-            - Dev
+            - !Ref environmentName
       Targets:
         - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-cloudwatch-frontend-dev"
+          Id: !Sub "${applicationName}-cloudwatch-frontend-${environmentName}"
 
-  LambdaZetaCloudFormationMasterEventRule:
+  LambdaZetaLambdaEventRule:
     Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - Fn::ImportValue: !Sub "${repoStack}-LambdaRepositoryARN"
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - !Ref environmentName
+      Targets:
+        - Arn: !GetAtt LambdaZeta.Arn
+          Id: !Sub "${applicationName}-cloudwatch-lambda-${environmentName}"
+
+  ### SINGLE ENVIRONMENT RULES (note Condition!)
+  LambdaZetaCloudFormationEventRule:
+    Type: AWS::Events::Rule
+    Condition: DevResources
     Properties:
       EventPattern:
         source:
@@ -631,8 +527,9 @@ Resources:
         - Arn: !GetAtt LambdaZeta.Arn
           Id: !Sub "${applicationName}-cloudwatch-cloudformation-master"
   
-  LambdaZetaLambdaMasterEventRule:
+  LambdaZetaMasterEventRule:
     Type: AWS::Events::Rule
+    Condition: DevResources
     Properties:
       EventPattern:
         source:
@@ -640,7 +537,7 @@ Resources:
         detail-type:
           - 'CodeCommit Repository State Change'
         resources:
-          - Fn::ImportValue: !Sub "${repoStack}-LambdaRepositoryARN"
+          - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
         detail:
           event:
             - referenceCreated
@@ -651,47 +548,61 @@ Resources:
             - master
       Targets:
         - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-cloudwatch-lambda-master"
-  
-  LambdaZetaCloudWatchCloudFormationMasterInvoke: 
-    Type: AWS::Lambda::Permission
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaCloudFormationMasterEventRule.Arn
-    DependsOn:
-      - LambdaZetaCloudFormationMasterEventRule
-  
-  LambdaZetaCloudWatchLambdaMasterInvoke: 
-    Type: AWS::Lambda::Permission
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaLambdaMasterEventRule.Arn
-    DependsOn:
-      - LambdaZetaLambdaMasterEventRule
+          Id: !Sub "${applicationName}-cloudwatch-master"
 
-  LambdaZetaCloudWatchFrontendDevInvoke: 
+  ### MULTIPLE ENVIRONMENT INVOCATIONS        
+  LambdaZetaCloudWatchLambdaInvoke: 
     Type: AWS::Lambda::Permission
     Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta
+      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaFrontendDevEventRule.Arn
+      SourceArn: !GetAtt LambdaZetaLambdaEventRule.Arn
     DependsOn:
-      - LambdaZetaFrontendDeEventRule
+      - LambdaZetaLambdaEventRule
 
-  LambdaZetaCloudWatchBackendDevInvoke: 
+  LambdaZetaCloudWatchFrontendInvoke: 
     Type: AWS::Lambda::Permission
     Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta
+      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaBackendDevEventRule.Arn
+      SourceArn: !GetAtt LambdaZetaFrontendEventRule.Arn
     DependsOn:
-      - LambdaZetaBackendDevEventRule
+      - LambdaZetaFrontendEventRule
+
+  LambdaZetaCloudWatchBackendInvoke: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LambdaZetaBackendEventRule.Arn
+    DependsOn:
+      - LambdaZetaBackendEventRule
+
+  ### SINGLE ENVIROMENT INVOCATIONS (note Condition!)
+  LambdaZetaCloudWatchMasterInvoke: 
+    Type: AWS::Lambda::Permission
+    Condition: DevResources
+    Properties: 
+      FunctionName: !Sub ${applicationName}-lambda-zeta-Dev
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LambdaZetaMasterEventRule.Arn
+    DependsOn:
+      - LambdaZetaMasterEventRule
+  
+  LambdaZetaCloudWatchCloudFormationInvoke: 
+    Type: AWS::Lambda::Permission
+    Condition: DevResources
+    Properties: 
+      FunctionName: !Sub ${applicationName}-lambda-zeta-Dev
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LambdaZetaCloudFormationEventRule.Arn
+    DependsOn:
+      - LambdaZetaCloudFormationEventRule
 
 Outputs:
   LambdaAlphaArn:

@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "The top of the DevOps stackset. This stack creates the CI/CD pipelines for the ${applicationName} lambda function, hooks them into a CodeBuild project configured to use the Amazon Linux Standard 5.0 as a build environment. CloudWatch event rules are used to trigger the pipeline anytime a commit is made to the lambda repository on the environment branches: Dev, Staging, Prod. "
+
+Parameters:
+  applicationName:
+    Type: String
+    Default: innolab
+  environmentName:
+    Type: String
+    Default: Dev
+  domainName:
+    Type: String
+    Default: makpar-innovation.net
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+  repoStack:
+    Type: String
+    Default: Innolab-RepoStack
+  cognitoStack:
+    Type: String
+    Default: Innolab-CognitoStack
+  dnsStack:
+    Type: String
+    Default: Innolab-DNSStack
+
+Conditions:
+  DevResources: !Equals
+    - !Ref environmentName
+    - Dev
+
+Mappings:
+  BranchToLowerCaseMap:
+    Dev: 
+      branch:  "dev"
+    Test: 
+      branch: "test"
+    Staging: 
+      branch: "staging"
+    Prod: 
+      branch: "prod"
+
+Resources:
+    PipelineArtifacts:
+      Type: AWS::S3::Bucket
+      DeletionPolicy: Delete
+      Properties:
+        BucketName: !Sub "${applicationName}-${environment}-lambda-pipeline-artifacts"
+    
+    CodeBuild:
+      Type: AWS::CodeBuild::Project
+      Properties:
+        Name: !Sub "${applicationName}-${environment}-lambda-codebuild"
+        Artifacts:
+          Type: CODEPIPELINE
+        ServiceRole:
+          Fn::ImportValue: !Sub "${iamStack}-CodeBuildRoleArn"
+        Environment:
+          Type: LINUX_CONTAINER
+          ComputeType: BUILD_GENERAL1_MEDIUM
+          Image: aws/codebuild/standard:4.0
+          PrivilegedMode: true
+        Source:
+          Type: CODEPIPELINE
+        Cache:
+          Type: LOCAL
+          Modes: # You can specify one or more cache mode, 
+            - LOCAL_CUSTOM_CACHE
+            - LOCAL_DOCKER_LAYER_CACHE
+            - LOCAL_SOURCE_CACHE
+    
+    LambdaCoverageReportGroup:
+      Type: AWS::CodeBuild::ReportGroup
+      Condition: DevResources
+      Properties:
+        ExportConfig:
+          ExportConfigType: NO_EXPORT
+        Name: !Sub ${applicationName}-lambda-coverage-report-group
+        Type: CODE_COVERAGE
+    
+    LambdaTestReportGroup:
+      Type: AWS::CodeBuild::ReportGroup
+      Condition: DevResources
+      Properties:
+        ExportConfig:
+          ExportConfigType: NO_EXPORT
+        Name: !Sub ${applicationName}-lambda-test-report-group
+        Type: TEST
+      
+    LambdaEventRule:
+      Type: AWS::Events::Rule
+      Properties:
+        EventPattern:
+          source:
+            - aws.codecommit
+          detail-type:
+            - 'CodeCommit Repository State Change'
+          resources:
+            - Fn::ImportValue: !Sub "${repoStack}-LambdaRepositoryARN"
+          detail:
+            event:
+              - referenceCreated
+              - referenceUpdated
+            referenceType:
+              - branch
+            referenceName:
+              - !Ref environmentName
+        Targets:
+          - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-${environmentName}-lambda-pipeline"
+            RoleArn: 
+              Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+            Id: !Sub ${applicationName}-${environmentName}-codepipeline-lambda
+
+    LambdaPipeline:
+      Type: AWS::CodePipeline::Pipeline
+      Properties:
+        Name: !Sub "${applicationName}-${environmentName}-lambda-pipeline"
+        RoleArn:
+          Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+        ArtifactStore: 
+          Type: S3 
+          Location: !Ref PipelineArtifacts
+        Stages:
+          - Name: Source
+            Actions:
+              - Name: Source
+                InputArtifacts: []
+                ActionTypeId:
+                  Category: Source
+                  Owner: AWS
+                  Version: 1
+                  Provider: CodeCommit
+                OutputArtifacts:
+                  - Name: !Sub "${applicationName}-${environmentName}-lambda-source"    
+                Configuration:
+                  RepositoryName: 
+                    Fn::ImportValue: !Sub "${repoStack}-LambdaRepository"
+                  BranchName: !Ref environmentName
+                  PollForSourceChanges: false
+          - Name: Build   
+            Actions:
+              - Name: CodeBuild
+                ActionTypeId:
+                  Category: Build
+                  Owner: AWS
+                  Provider: CodeBuild
+                  Version: '1'
+                InputArtifacts:
+                  - Name: !Sub "${applicationName}-${environmentName}-lambda-source"
+                OutputArtifacts:
+                  - Name: !Sub "${applicationName}-${environmentName}-lambda-build"
+                Configuration: 
+                  ProjectName: !Ref CodeBuild
+                  EnvironmentVariables: !Sub 
+                    - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                    - env: 
+                        Fn::FindInMap:
+                          - BranchToLowerCaseMap
+                          - !Ref environmentName
+                          - branch
+                      app: !Ref applicationName
+                      covDistro:
+                        Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                      cognitoClient:
+                        Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
+                      userPool:
+                        Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
+                      
+      DependsOn:
+        - CodeBuild

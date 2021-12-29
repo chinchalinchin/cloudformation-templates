@@ -99,24 +99,6 @@ Resources:
         ExportConfigType: NO_EXPORT
       Name: !Sub ${applicationName}-backend-test-report-group
       Type: TEST
-
-  LambdaCoverageReportGroup:
-    Type: AWS::CodeBuild::ReportGroup
-    Condition: DevResources
-    Properties:
-      ExportConfig:
-        ExportConfigType: NO_EXPORT
-      Name: !Sub ${applicationName}-lambda-coverage-report-group
-      Type: CODE_COVERAGE
-
-  LambdaTestReportGroup:
-    Type: AWS::CodeBuild::ReportGroup
-    Condition: DevResources
-    Properties:
-      ExportConfig:
-        ExportConfigType: NO_EXPORT
-      Name: !Sub ${applicationName}-lambda-test-report-group
-      Type: TEST
       
   FrontendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
@@ -296,88 +278,6 @@ Resources:
                 - Name: !Sub "${applicationName}-${environmentName}-backend-source"
               OutputArtifacts:
                 - Name: !Sub "${applicationName}-${environmentName}-backend-dev-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
-                  - env: 
-                      Fn::FindInMap:
-                        - BranchToLowerCaseMap
-                        - !Ref environmentName
-                        - branch
-                    app: !Ref applicationName
-                    covDistro:
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
-                    cognitoClient:
-                      Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-                    userPool:
-                      Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-                    
-    DependsOn:
-      - CodeBuild
-
-  LambdaEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-LambdaRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - !Ref environmentName
-      Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-${environmentName}-lambda-pipeline"
-          RoleArn: 
-            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-${environmentName}-codepipeline-lambda
-
-  LambdaPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub "${applicationName}-${environmentName}-lambda-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-${environmentName}-lambda-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-LambdaRepository"
-                BranchName: !Ref environmentName
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-${environmentName}-lambda-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-${environmentName}-lambda-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 

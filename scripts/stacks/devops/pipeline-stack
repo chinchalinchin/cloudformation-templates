@@ -8,6 +8,7 @@ source $PROJECT_DIR/.env
 
 # Example Usage:
 # >$     pipeline-stack --environment <Dev | Prod | Test | Staging> \
+#                   --pipeline <app | lambda | master>
 #                   --action <create | update | delete> 
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
@@ -21,27 +22,32 @@ function help(){
 }
 
 while [[ $# -gt 0 ]]; do
-       key="$1"
-       case $key in
-                --action)
-                    ACTION="$2"
-                    shift
-                    shift 
-                    ;;
-                --help)
-                    help
-                    exit 0
-                    ;;
-                --environment)
-                    ENVIRONMENT="$2"
-                    shift
-                    shift
-                    ;;
-                *)
-                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                    exit 1
-                    ;;
-       esac
+    key="$1"
+    case $key in
+        --action)
+            ACTION="$2"
+            shift
+            shift 
+            ;;
+        --help)
+            help
+            exit 0
+            ;;
+        --environment)
+            ENVIRONMENT="$2"
+            shift
+            shift
+            ;;
+        --pipeline)
+            PIPELINE="$2"
+            shift
+            shift
+            ;;
+        *)
+            log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+            exit 1
+            ;;
+    esac
 done
 
 if [ -z "$ACTION" ]
@@ -49,7 +55,27 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/devops/pipeline.yml ./pipeline.yml
+if [ -z "$PIPELINE" ]
+then
+    PIPELINE="app"
+fi
+
+case $PIPELINE in 
+    master)
+        cp $PROJECT_DIR/templates/devops/pipelines/master.yml ./pipeline.yml
+        ENVIRONMENT="Dev" # Master repository only has one environment/pipeline!
+        ;;
+    lambda)
+        cp $PROJECT_DIR/templates/devops/pipelines/lambda.yml ./pipeline.yml
+        ;;
+    app)
+        cp $PROJECT_DIR/templates/devops/pipelines/app.yml ./pipeline.yml
+        ;;
+    *)
+        log "\e3[m--pipeline\e[0m input not understood; must be <app | lambda | master>"
+        exit 1
+        ;;
+esac
 
 if [ "$ACTION" == "create" ]
 then
@@ -62,7 +88,7 @@ then
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                      ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
-                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}"
+                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
@@ -75,7 +101,7 @@ then
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                      ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
-                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}"
+                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}"
 
          
 elif [ "$ACTION" == "delete" ]
