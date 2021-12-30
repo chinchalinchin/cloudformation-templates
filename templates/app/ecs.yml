@@ -181,7 +181,7 @@ Resources:
     Properties:
       HealthCheckIntervalSeconds: 10
       # will look for a 200 status code by default unless specified otherwise
-      HealthCheckPath: /ping
+      HealthCheckPath: /
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
@@ -200,7 +200,7 @@ Resources:
     Properties:
       HealthCheckIntervalSeconds: 10
       # will look for a 200 status code by default unless specified otherwise
-      HealthCheckPath: /ping
+      HealthCheckPath: /
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
@@ -255,6 +255,7 @@ Resources:
       LoadBalancerArn: !Ref BackendLoadBalancer
       Port: !Ref backendPort
       Protocol: HTTP
+      
   #####################
   ## FRONTEND RESOURCES
   #####################
@@ -263,44 +264,6 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/ecs/${applicationName}/${environmentName}/frontend/"
-
-  FrontendTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckIntervalSeconds: 10
-      # will look for a 200 status code by default unless specified otherwise
-      HealthCheckPath: /ping
-      HealthCheckTimeoutSeconds: 5
-      UnhealthyThresholdCount: 2
-      HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-frontend-target"
-      Port: !Ref frontendPort
-      Protocol: HTTP
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: 60 # default is 300
-      TargetType: ip
-      VpcId: 
-        Fn::ImportValue: !Sub "${vpcStack}-VPC"
-
-  FrontendTargetGroupAlt:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckIntervalSeconds: 10
-      # will look for a 200 status code by default unless specified otherwise
-      HealthCheckPath: /ping
-      HealthCheckTimeoutSeconds: 5
-      UnhealthyThresholdCount: 2
-      HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-frontend-target-2"
-      Port: !Ref frontendPort
-      Protocol: HTTP
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: 60 # default is 300
-      TargetType: ip
-      VpcId: 
-        Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
   AutoScalingFrontendTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
@@ -397,6 +360,44 @@ Resources:
         - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
           ContainerPort: !Ref frontendPort
           TargetGroupArn: !Ref FrontendTargetGroup
+
+  FrontendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target"
+      Port: !Ref frontendPort
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  FrontendTargetGroupAlt:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target-2"
+      Port: !Ref frontendPort
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
   FrontendLoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
