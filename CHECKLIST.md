@@ -6,40 +6,38 @@
 
 # Stacks
 
-- [x] IAMStack
-- [x] RepoStack
-- [x] ECRStack
-- [x] VPCStack
-- [x] FrontendStack
-- [x] RDSStack
-- [x] CognitoStack
-- [x] LambdaStack
-- [x] SonarStack
-- [x] GatewayStack
-- [x] DNSStack
+- [] IAMStack
+- [] RepoStack
+- [] VPCStack
+- [] RDSStack
+- [] CognitoStack
+- [] LambdaStack
+- [] SonarStack
+- [] DNSStack
 - [] PipelineStack
 
 # Non-Stack Operations
 
-- [x] generate credentials && configure AWS cli
-- [x] build ECR images
-- [x] upload ssh key to profile
-- [x] upload database ssh keys to bucket
-- [x] add IPs to Bastion host security group rule for SSH
-- [x] script to initialize coverage bucket
-- [x] script for cloning repositories
-- [x] script for branch rules
-- [x] script for RDS host secret 
-- [x] login into Sonar and change admin password
-- [x] generate Sonar token
-- [x] script for Sonar host secret
-- [x] script for Sonar token secret
-- [x] add Null condition to Developer group (see below)
-- [x] get Cognito auth domain, change password and add to secrets
-- [x] tag local *postgres* image with ECR and push for pipeline to use
+- [] generate credentials && configure AWS cli
+- [] build ECR images
+- [] upload ssh key to profile
+- [] upload database ssh keys to bucket
+- [] upload container .env to bucket
+- [] add IPs to Bastion host security group rule for SSH
+- [] script to initialize coverage bucket
+- [] script for cloning repositories
+- [] script for branch rules
+- [] script for RDS host secret 
+- [] login into Sonar and change admin password
+- [] generate Sonar token
+- [] script for Sonar host secret
+- [] script for Sonar token secret
+- [] add Null condition to Developer group (see below)
+- [] get Cognito auth domain, change password and add to secrets
+- [] tag local *postgres* image with ECR and push for pipeline to use
 
 ### Conditionally Required
-- [x] script to add API key secret
+- [] script to add API key secret
 
 # Presentation
 

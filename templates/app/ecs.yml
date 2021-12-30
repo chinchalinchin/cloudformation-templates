@@ -1,31 +1,52 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for an ECS Fargate Cluster'
+Description: 'Provisions resources for an ECS Fargate Cluster that contains a frontend and backend services. All the necessary resources for continuously updating these services through a blue-green deployment are provisioned in this stack, i.e. the security groups, the Application Load Balancers, the target groups, etc. The actual CodeDeploy resource is contained in the ${applicationName}-PipelineStack.'
 
 Parameters:
-  certificateArn:
-    Type: String
   applicationName:
     Type: String
     Default: innolab
+    Description: The name of the application being deployed.
   environmentName:
     Type: String
     Default: Dev
+    Description: The environment into which the application is being deployed.
+  certificateArn:
+    Type: String
+    Description: AWS Arn of the domain certificate.
   backendPort:
     Type: Number
     Default: 8000
+    Description: Port mapping for backend service
   frontendPort:
     Type: Number
-    Default: 8080  
+    Default: 8080 
+    Description: Port mapping for frontend service 
   iamStack:
     Type: String
     Default: Innolab-IAMStack
+    Description: Name of the IAM Cross Stack reference
   repoStack:
     Type: String
     Default: Innolab-RepoStack
+    Description: Name of the Repo Cross Stack reference
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
+    Description: Name of the VPC Cross Stack reference
+
+Mappings:
+  BranchToLowerCaseMap:
+    Dev: 
+      branch:  "dev"
+    Test: 
+      branch: "test"
+    Staging: 
+      branch: "staging"
+    Prod: 
+      branch: "prod"
+
+# TODOS: move security groups into VPCstack and use crossstack reference once this stack is working.
 
 Resources:
   ## CLUSTER RESOURCES
@@ -107,6 +128,17 @@ Resources:
               tag: !Ref environmentName
           PortMappings:
             - ContainerPort: !Ref backendPort
+          EnvironmentFiles:
+            - Type: S3
+              Value: !Sub
+                - "${bucketArn}/app.${env}.env"
+                - bucketArn: 
+                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
+                  env:
+                    Fn::FindInMap:
+                      - BranchToLowerCaseMap
+                      - !Ref environmentName
+                      - branch
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -318,6 +350,17 @@ Resources:
               tag: !Ref environmentName
           PortMappings:
             - ContainerPort: !Ref frontendPort
+          EnvironmentFiles:
+            - Type: S3
+              Value: !Sub
+                - "${bucketArn}/web.${env}.env"
+                - bucketArn: 
+                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
+                  env:
+                    Fn::FindInMap:
+                      - BranchToLowerCaseMap
+                      - !Ref environmentName
+                      - branch
           LogConfiguration:
             LogDriver: awslogs
             Options:

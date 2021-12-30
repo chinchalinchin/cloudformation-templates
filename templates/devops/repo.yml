@@ -26,6 +26,25 @@ Resources:
       #       KMSMasterKeyID: "YOUR KMS KEY ARN" 
       BucketName: !Sub "${applicationName}-env"
 
+  # TODO
+  # DataBucket:
+  #   Type: AWS::S3::Bucket
+  #   DeletionPolicy: Delete
+  #   Properties:
+  #     AccessControl: Private
+  #     PublicAccessBlockConfiguration:
+  #       BlockPublicAcls: true
+  #       BlockPublicPolicy: true
+  #       IgnorePublicAcls: true
+  #       RestrictPublicBuckets: true
+  #     # TODO!
+  #     # BucketEncryption: 
+  #     #   ServerSideEncryptionConfiguration: 
+  #     #   - ServerSideEncryptionByDefault:
+  #     #       SSEAlgorithm: aws:kms
+  #     #       KMSMasterKeyID: "YOUR KMS KEY ARN" 
+  #     BucketName: !Sub "${applicationName}-data-files"
+
   MasterRepo:
     Type: AWS::CodeCommit::Repository
     Properties:
@@ -290,6 +309,12 @@ Resources:
           Value: !Ref applicationName
 
 Outputs:
+  EnvironmentBucket:
+    Value: !Ref EnvironmentBucket.Arn
+    Description: Bucket arn for Environment bucket
+    Export:
+      Name: !Sub ${AWS::StackName}-EnvironmentBucketARN
+
   DockerRepository:
     Value: !GetAtt DockerRepo.Name
     Description: Repository name for Dockerfile repository

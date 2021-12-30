@@ -1,1 +1,2 @@
-1. unpack dns stack. remove environment dependency and deploy all at once. environments are only germaine to rds. ecs manages environments in cluster.
+1. update initialize coverage bucket script
+2. script to upload env files? 
