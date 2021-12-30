@@ -56,7 +56,7 @@ Resources:
       - Key: Environment
         Value: Dev
       ImageId: ami-0922553b7b0369273
-      InstanceType: t3.nano
+      InstanceType: t3.small
       NetworkInterfaces:
       - AssociatePublicIpAddress: true
         DeviceIndex: "0"

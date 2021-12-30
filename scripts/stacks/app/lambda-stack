@@ -1,9 +1,9 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="function-stack"
+SCRIPT_NAME="lambda-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../../../..
+PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
@@ -58,7 +58,6 @@ then
               --template-body file://lambda.yml \
               --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                            ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                             ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                             ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
@@ -72,7 +71,6 @@ then
               --template-body file://lambda.yml \
               --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                            ParameterKey=ecrStack,ParameterValue="${APPLICATION^}-${ECR_STACK}" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                             ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                             ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \

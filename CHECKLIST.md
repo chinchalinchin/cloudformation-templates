@@ -2,7 +2,7 @@
 - [x] Get Hosted Zone ID
 - [x] Get Certificate Arn
 - [] Configure Gateway Endpoints
-- [x] Configure image name in backend repo
+- [x] Configure image name in lambda repo
 
 # Stacks
 

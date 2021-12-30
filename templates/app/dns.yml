@@ -19,6 +19,9 @@ Parameters:
   environmentName:
     Type: String
     Default: Dev
+  applicationName:
+    Type: String
+    Default: innoalb
   certificateId:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the CertificateId for the associated domain. Otherwise, you do not need this parameter."
@@ -129,7 +132,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       AccessControl: LogDeliveryWrite
-      BucketName: "${applicationName}-coverage-logs"
+      BucketName: !Sub "${applicationName}-coverage-logs"
 
   CoverageBucket:
     Type: AWS::S3::Bucket
@@ -139,7 +142,7 @@ Resources:
       AccessControl: PublicRead
       BucketName: !Sub "${applicationName}-coverage"
       LoggingConfiguration:
-        DestinationBucketName: !Ref FrontendBucketLogs
+        DestinationBucketName: !Ref BucketLogs
         LogFilePrefix: 'cov/'
       WebsiteConfiguration:
         IndexDocument: 'index.html'
@@ -235,25 +238,25 @@ Resources:
     DependsOn:
       - CoverageDistribution
 
-  ECSRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
-      Name: !Sub
-        - "${subdomainName}${subdomainEnv}.${domainName}"
-        - subdomainName: !Ref subdomain
-          domainName: !Ref domain
-          subdomainEnv: 
-            Fn::FindInMap:
-              - SubEnvDomainMap
-              - !Ref environmentName
-              - subdomainEnv
-      Type: A
-      AliasTarget:
-        DNSName: 
-          Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerDNSName" 
-        HostedZoneId:
-          Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerHostedZoneID"
+  # ECSRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
+  #     Name: !Sub
+  #       - "${subdomainName}${subdomainEnv}.${domainName}"
+  #       - subdomainName: !Ref subdomain
+  #         domainName: !Ref domain
+  #         subdomainEnv: 
+  #           Fn::FindInMap:
+  #             - SubEnvDomainMap
+  #             - !Ref environmentName
+  #             - subdomainEnv
+  #     Type: A
+  #     AliasTarget:
+  #       DNSName: 
+  #         Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerDNSName" 
+  #       HostedZoneId:
+  #         Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerHostedZoneID"
 
 Outputs: 
   RestAPIDomain:

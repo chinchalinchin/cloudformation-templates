@@ -56,7 +56,6 @@ Resources:
 
   MasterEventRule:
     Type: AWS::Events::Rule
-    Condition: DevResources
     Properties:
       EventPattern:
         source:
@@ -81,7 +80,6 @@ Resources:
 
   MasterPipeline:
     Type: AWS::CodePipeline::Pipeline
-    Condition: DevResources
     Properties:
       Name: !Sub "${applicationName}-master-pipeline"
       RoleArn:

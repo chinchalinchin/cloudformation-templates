@@ -46,12 +46,19 @@ Resources:
       Type: AWS::S3::Bucket
       DeletionPolicy: Delete
       Properties:
-        BucketName: !Sub "${applicationName}-${environment}-lambda-pipeline-artifacts"
+        BucketName: !Sub 
+          - "${app}-${env}-lambda-pipeline-artifacts"
+          - app: !Ref applicationName
+            env: 
+              Fn::FindInMap:
+                - BranchToLowerCaseMap
+                - !Ref environmentName
+                - branch
     
     CodeBuild:
       Type: AWS::CodeBuild::Project
       Properties:
-        Name: !Sub "${applicationName}-${environment}-lambda-codebuild"
+        Name: !Sub "${applicationName}-${environmentName}-lambda-codebuild"
         Artifacts:
           Type: CODEPIPELINE
         ServiceRole:

@@ -80,7 +80,7 @@ esac
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
+        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}" \
         --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION"  \
                      ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
@@ -93,7 +93,7 @@ then
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE_STACK}" \
+        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}" \
         --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION" \
                      ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
@@ -107,7 +107,7 @@ then
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE_STACK}"
+        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}"
 else
     log "Action not understood"
 fi

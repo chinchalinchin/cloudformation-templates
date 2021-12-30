@@ -37,5 +37,5 @@ aws codecommit create-approval-rule-template \
                 --approval-rule-template-content "$RULE_TEMPLATE"
 
 aws codecommit batch-associate-approval-rule-template-with-repositories \
-                --repository-names "$APPLICATION-frontend" "$APPLICATION-backend" \
+                --repository-names "$APPLICATION-frontend" "$APPLICATION-backend" "$APPLICATION-lambdas"\
                 --approval-rule-template-name "$RULE_NAME"

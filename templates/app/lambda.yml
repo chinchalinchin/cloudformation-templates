@@ -12,9 +12,6 @@ Parameters:
   iamStack:
     Type: String
     Default: Innolab-IAMStack
-  ecrStack:
-    Type: String
-    Default: Innolab-ECRStack
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
@@ -40,7 +37,7 @@ Resources:
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
           - ecrRepo: 
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaAlphaImageRepository
+              Fn::ImportValue: !Sub ${repoStack}-LambdaAlphaImageRepository
             environment: !Ref environmentName
       PackageType: Image
       Role: 
@@ -72,7 +69,7 @@ Resources:
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
           - ecrRepo: 
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaBetaImageRepository
+              Fn::ImportValue: !Sub ${repoStack}-LambdaBetaImageRepository
             environment: !Ref environmentName
       PackageType: Image
       Role: 
@@ -103,7 +100,7 @@ Resources:
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
           - ecrRepo: 
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaGammaImageRepository
+              Fn::ImportValue: !Sub ${repoStack}-LambdaGammaImageRepository
             environment: !Ref environmentName
       PackageType: Image
       Role: 
@@ -135,7 +132,7 @@ Resources:
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
           - ecrRepo: 
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaDeltaImageRepository
+              Fn::ImportValue: !Sub ${repoStack}-LambdaDeltaImageRepository
             environment: !Ref environmentName
       PackageType: Image
       Role: 
@@ -167,7 +164,7 @@ Resources:
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
           - ecrRepo:
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaEpsilonImageRepository
+              Fn::ImportValue: !Sub ${repoStack}-LambdaEpsilonImageRepository
             environment: !Ref environmentName
       PackageType: Image
       Role:
@@ -184,10 +181,10 @@ Resources:
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POOL_ID:
             Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          POSTGRES_DB: !Ref applicationName
-          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
+          # POSTGRES_DB: !Ref applicationName
+          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
 
   # API Gateway Register Lamdba
@@ -199,7 +196,7 @@ Resources:
         ImageUri: !Sub
           - "${ecrRepo}:${environment}"
           - ecrRepo:
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaEtaImageRepository
+              Fn::ImportValue: !Sub ${repoStack}-LambdaEtaImageRepository
             environment: !Ref environmentName
       PackageType: Image
       Role:
@@ -216,10 +213,10 @@ Resources:
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POOL_ID:
             Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          POSTGRES_DB: !Ref applicationName
-          POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
+          # POSTGRES_DB: !Ref applicationName
+          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
+          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
+          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
   
   # JIRA Integration Lambda
@@ -231,8 +228,8 @@ Resources:
         ImageUri: !Sub
           - "${ecrUri}:${tag}"
           - ecrUri:
-              Fn::ImportValue: !Sub ${ecrStack}-LambdaZetaImageRepository
-            tag: latest
+              Fn::ImportValue: !Sub ${repoStack}-LambdaZetaImageRepository
+            tag: !Ref environmentName
       PackageType: Image
       Role:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
@@ -279,10 +276,8 @@ Resources:
     DependsOn:
       - CloudWatch
       - CloudWatchLogGroup
-      - AlphaResourceMethod
-      - AlphaQueryResourceMethod
-      - BetaResourceMethod
-      - BetaQueryResourceMethod
+      - PathResourceMethod
+      - PathParamResourceMethod
 
   ApiGatewayAuthorizer:
     Type: "AWS::ApiGateway::Authorizer"
@@ -417,7 +412,7 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaAlpha,Arn
+      FunctionName: !GetAtt LambdaAlpha.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/path
@@ -633,3 +628,12 @@ Outputs:
     Value: !GetAtt LambdaZeta.Arn
     Export:
       Name: !Sub ${AWS::StackName}-LambdaZetaARN
+
+  GatewayEndpoint:
+    Value: !Sub https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/${environmentName}
+    Export:
+      Name: !Sub ${AWS::StackName}-GatewayEndpoint
+  RestAPIID: 
+    Value: !Ref RestAPI
+    Export:
+      Name: !Sub ${AWS::StackName}-RestAPIID

@@ -416,3 +416,11 @@ Outputs:
     Value: !GetAtt LambdaEpsilonECR.RepositoryUri
     Export:
       Name: !Sub ${AWS::StackName}-LambdaEpsilonImageRepository
+  LambdaEtaImageRepositry:
+    Value: !GetAtt LambdaEtaECR.RepositoryUri
+    Export: 
+      Name: !Sub ${AWS::StackName}-LambdaEtaImageRepository
+  LambdaZetaImageRepository:
+    Value: !GetAtt LambdaZetaECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaZetaImageRepository
