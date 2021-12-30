@@ -60,11 +60,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref frontendPort
           ToPort: !Ref frontendPort
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
         - IpProtocol: tcp
           FromPort: !Ref backendPort
           ToPort: !Ref backendPort
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          SourceSecurityGroupId: !Ref BackendLoadBalancerSecurityGroup
 
   Cluster:
     Type: AWS::ECS::Cluster
@@ -150,7 +150,7 @@ Resources:
     Type: AWS::ECS::Service
     # This dependency is needed so that the load balancer is setup correctly in time
     DependsOn:
-      - ListenerHTTPS
+      - BackendLoadBalancerListener
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-backend
       Cluster: !Ref Cluster
@@ -255,7 +255,7 @@ Resources:
       LoadBalancerArn: !Ref BackendLoadBalancer
       Port: !Ref backendPort
       Protocol: HTTP
-      
+
   #####################
   ## FRONTEND RESOURCES
   #####################
@@ -335,7 +335,7 @@ Resources:
     Type: AWS::ECS::Service
     # This dependency is needed so that the load balancer is setup correctly in time
     DependsOn:
-      - ListenerHTTPS
+      - FrontendLoadBalancerListenerHTTPS
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-frontend
       Cluster: !Ref Cluster
@@ -425,7 +425,7 @@ Resources:
         - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
         - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
 
-  FrontendListenerHTTPS:
+  FrontendLoadBalancerListenerHTTPS:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
