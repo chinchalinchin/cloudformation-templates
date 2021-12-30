@@ -8,6 +8,24 @@ Parameters:
     Default: innolab
 
 Resources:
+  EnvironmentBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      # TODO!
+      # BucketEncryption: 
+      #   ServerSideEncryptionConfiguration: 
+      #   - ServerSideEncryptionByDefault:
+      #       SSEAlgorithm: aws:kms
+      #       KMSMasterKeyID: "YOUR KMS KEY ARN" 
+      BucketName: !Sub "${applicationName}-env"
+
   MasterRepo:
     Type: AWS::CodeCommit::Repository
     Properties:

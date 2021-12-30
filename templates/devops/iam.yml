@@ -211,11 +211,22 @@ Resources:
                   - secretsmanager:GetSecretValue
                 Effect: Allow
                 Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+              - Sid: !Sub "${applicationName}EcsTaskS3ObjectStatement"
+                Action: 
+                  - s3:GetObject
+                Effect: Allow
+                Resource: !Sub "arn:aws:s3:::${applicationName}-env/*.env"
+              - Sid: !Sub "${applicationName}EcsTaskS3BucketStatement"
+                Action:
+                  - s3:GetBucketLocation
+                Effect: Allow
+                Resource: !Sub "arn:aws:s3:::${applicationName}-env"
+              # TODO: unsure if need this
               # - Sid: !Sub "${applicationName}EcsTaskEc2Statement"
               #   Action:
               #     - ec2:DescribeTags
               #   Effect: Allow
-                Resource: '*' # TODO: figure out how to scope to ec2 cluster host
+              #   Resource: '*' # TODO: figure out how to scope to ec2 cluster host
               # - Sid: !Sub "${applicationName}EcsTaskEcsStatement"
               #   Action:
               #     - ecs:CreateCluster
