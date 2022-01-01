@@ -310,7 +310,7 @@ Resources:
 
 Outputs:
   EnvironmentBucket:
-    Value: !Ref EnvironmentBucket.Arn
+    Value: !GetAtt EnvironmentBucket.Arn
     Description: Bucket arn for Environment bucket
     Export:
       Name: !Sub ${AWS::StackName}-EnvironmentBucketARN

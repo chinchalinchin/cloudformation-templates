@@ -46,7 +46,14 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub "${applicationName}-${environmentName}-pipeline-artifacts"
+      BucketName: !Sub 
+        - "${app}-${env}-pipeline-artifacts"
+        - app: !Ref applicationName
+          env: 
+            Fn::FindInMap:
+              - BranchToLowerCaseMap
+              - !Ref environmentName
+              - branch
       
   CodeBuild:
     Type: AWS::CodeBuild::Project
@@ -74,13 +81,13 @@ Resources:
     Type: AWS::CodeDeploy::Application
     Properties:
       ComputePlatform: ECS
-      ApplicationName: "${applicationName}-${environmentName}-frontend-code-deploy"
+      ApplicationName: !Sub "${applicationName}-${environmentName}-frontend-code-deploy"
 
   BackendCodeDeploy:
     Type: AWS::CodeDeploy::Application
     Properties:
       ComputePlatform: ECS
-      ApplicationName: "${applicationName}-${environmentName}-backend-code-deploy" 
+      ApplicationName: !Sub "${applicationName}-${environmentName}-backend-code-deploy" 
 
   BackendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
@@ -183,15 +190,13 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"}, {"name": "FRONTEND_DISTRIBUTION_ID", "value": "${distro}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
                   - env: 
                       Fn::FindInMap:
                         - BranchToLowerCaseMap
                         - !Ref environmentName
                         - branch
                     app: !Ref applicationName
-                    distro: 
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-FrontendDistributionID
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
     DependsOn:
@@ -251,14 +256,14 @@ Resources:
           # Actions:
             # - Name: Scan
               # InputArtifacts:
-                # - Name: !Sub "${applicationName}-backend-dev-source"
+                # - Name: !Sub "${applicationName}-${environmentName}-backend-source"
               # ActionTypeId:
                 # Category: Invoke
                 # Owner: ThirdParty
                 # Version: 1
                 # Provider: Snyk
               # OutputArtifacts:
-                # - Name: !Sub "${applicationName}-synk-scan"  
+                # - Name: !Sub "${applicationName}-${environmentName}-snyk-scan"  
                 
                 ## TODO: the configuration fro this Action isn't documented anywhere, but 
                 ##      without these two properties, CloudFormation complains about not 
@@ -295,80 +300,5 @@ Resources:
                     userPool:
                       Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
                     
-    DependsOn:
-      - CodeBuild
-
-  MasterEventRule:
-    Type: AWS::Events::Rule
-    Condition: DevResources
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - master
-      Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-master-pipeline"
-          RoleArn: 
-            Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-master
-
-  MasterPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Condition: DevResources
-    Properties:
-      Name: !Sub "${applicationName}-master-pipeline"
-      RoleArn:
-        Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
-      ArtifactStore: 
-        Type: S3 
-        Location: !Ref PipelineArtifacts
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeCommit
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-master-source"    
-              Configuration:
-                RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-MasterRepository"
-                BranchName: master
-                PollForSourceChanges: false
-        - Name: Build   
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              InputArtifacts:
-                - Name: !Sub "${applicationName}-master-source"
-              OutputArtifacts:
-                - Name: !Sub "${applicationName}-master-build"
-              Configuration: 
-                ProjectName: !Ref CodeBuild
-                EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
-                  - app: !Ref applicationName
-                    covDistro:
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
-
     DependsOn:
       - CodeBuild

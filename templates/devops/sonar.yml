@@ -24,10 +24,6 @@ Resources:
       GroupDescription: "Allow access to Sonar by everyone."
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 9000
-          ToPort: 9000
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
@@ -56,7 +52,7 @@ Resources:
       - Key: Environment
         Value: Dev
       ImageId: ami-0922553b7b0369273
-      InstanceType: t3.small
+      InstanceType: t3.medium
       NetworkInterfaces:
       - AssociatePublicIpAddress: true
         DeviceIndex: "0"

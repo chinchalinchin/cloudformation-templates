@@ -116,7 +116,7 @@ Resources:
       Cpu: 512
       Memory: 1024
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExceutionRoleArn"
+        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
       TaskRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSBackendTaskRoleArn"
       ContainerDefinitions:
@@ -129,7 +129,7 @@ Resources:
           PortMappings:
             - ContainerPort: !Ref backendPort
           EnvironmentFiles:
-            - Type: S3
+            - Type: s3
               Value: !Sub
                 - "${bucketArn}/app.${env}.env"
                 - bucketArn: 
@@ -314,7 +314,7 @@ Resources:
           PortMappings:
             - ContainerPort: !Ref frontendPort
           EnvironmentFiles:
-            - Type: S3
+            - Type: s3
               Value: !Sub
                 - "${bucketArn}/web.${env}.env"
                 - bucketArn: 

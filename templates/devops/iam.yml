@@ -199,7 +199,8 @@ Resources:
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage
                 Effect: Allow
-                Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+                Resource: '*'
+                # Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
               - Sid: !Sub "${applicationName}EcsTaskLogStatement"
                 Action: 
                   - logs:CreateLogStream
