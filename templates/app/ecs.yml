@@ -22,6 +22,10 @@ Parameters:
     Type: Number
     Default: 8080 
     Description: Port mapping for frontend service 
+  domain:
+    Type: String
+    Default: makpar-innovation.net
+    Description: Domain for the application cluster
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -36,15 +40,19 @@ Parameters:
     Description: Name of the VPC Cross Stack reference
 
 Mappings:
-  BranchToLowerCaseMap:
+  BranchMap:
     Dev: 
       branch:  "dev"
+      subdomain: "-dev"
     Test: 
       branch: "test"
+      subdomain: "-test"
     Staging: 
       branch: "staging"
+      subdomain: "-staging"
     Prod: 
       branch: "prod"
+      subdomain: ""
 
 # TODOS: move security groups into VPCstack and use crossstack reference once this stack is working.
 
@@ -70,6 +78,53 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Sub "${applicationName}-${environmentName}-cluster"
+
+  PrivateNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+        Name: !Sub
+          - "${app}${subEnv}.{dom}"
+          - app: !Ref applicationName
+            subEnv: 
+              Fn::FindInMap:
+                - BranchMap
+                - !Ref environmentName
+                - subdomain
+            dom: !Ref domain
+        Vpc: 
+          Fn::ImportValue: !Sub "${vpcStack}-VPC"
+  
+  FrontendDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} frontend service"
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+          - TTL: 60
+            Type: SRV
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: !Sub ${applicationName}-${environmentName}-frontend
+      NamespaceId: !Ref PrivateNamespace
+
+  BackendDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} backend service"
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+          - TTL: 60
+            Type: SRV
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: !Sub ${applicationName}-${environmentName}-backend
+      NamespaceId: !Ref PrivateNamespace
 
   ####################
   ## BACKEND RESOURCES
@@ -117,8 +172,6 @@ Resources:
       Memory: 1024
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
-      TaskRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSBackendTaskRoleArn"
       ContainerDefinitions:
         - Name: !Sub ${applicationName}-${environmentName}-backend
           Image: !Sub
@@ -136,7 +189,7 @@ Resources:
                     Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
                   env:
                     Fn::FindInMap:
-                      - BranchToLowerCaseMap
+                      - BranchMap
                       - !Ref environmentName
                       - branch
           LogConfiguration:
@@ -175,6 +228,9 @@ Resources:
         - ContainerName: !Sub ${applicationName}-${environmentName}-backend
           ContainerPort: !Ref backendPort
           TargetGroupArn: !Ref BackendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
+          Port: !Ref backendPort
 
   BackendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -302,8 +358,6 @@ Resources:
       Memory: 512
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
-      TaskRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSFrontendTaskRoleArn"
       ContainerDefinitions:
         - Name: !Sub ${applicationName}-${environmentName}-frontend
           Image: !Sub
@@ -321,7 +375,7 @@ Resources:
                     Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
                   env:
                     Fn::FindInMap:
-                      - BranchToLowerCaseMap
+                      - BranchMap
                       - !Ref environmentName
                       - branch
           LogConfiguration:
@@ -360,6 +414,9 @@ Resources:
         - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
           ContainerPort: !Ref frontendPort
           TargetGroupArn: !Ref FrontendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
+          Port: !Ref frontendPort
 
   FrontendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup

@@ -63,6 +63,7 @@ then
         --template-body file://ecs.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=domain,ParameterValue=$DOMAIN \
                         ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=backendPort,ParameterValue="8000" \
                         ParameterKey=frontendPort,ParameterValue="8080" \
@@ -78,6 +79,7 @@ then
         --template-body file://ecs.yml \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=domain,ParameterValue=$DOMAIN \
                         ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=backendPort,ParameterValue="8000" \
                         ParameterKey=frontendPort,ParameterValue="8080" \

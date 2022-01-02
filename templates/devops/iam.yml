@@ -199,8 +199,7 @@ Resources:
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage
                 Effect: Allow
-                Resource: '*'
-                # Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+                Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
               - Sid: !Sub "${applicationName}EcsTaskLogStatement"
                 Action: 
                   - logs:CreateLogStream
@@ -395,6 +394,7 @@ Resources:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
               - Sid: !Sub ${applicationName}CodebuildECROps
                 Action:
+                  - "ecr:GetAuthorizationToken"
                   - "ecr:BatchCheckLayerAvailability"
                   - "ecr:GetDownloadUrlForLayer"
                   - "ecr:GetRepositoryPolicy"
@@ -409,11 +409,6 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-              - Sid: !Sub ${applicationName}CodebuildECRTokenOps
-                Action:
-                  - "ecr:GetAuthorizationToken"
-                Effect: Allow
-                Resource: '*'
               - Sid: !Sub ${applicationName}CodebuildLambdaUpdateOps
                 Action:
                   - lambda:UpdateFunctionCode
