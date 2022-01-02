@@ -134,7 +134,7 @@ Resources:
   BackendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 10
+      HealthCheckIntervalSeconds: 60
       # will look for a 200 status code by default unless specified otherwise
       HealthCheckPath: /
       HealthCheckTimeoutSeconds: 5
@@ -153,7 +153,7 @@ Resources:
   BackendTargetGroupAlt:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 10
+      HealthCheckIntervalSeconds: 60
       # will look for a 200 status code by default unless specified otherwise
       HealthCheckPath: /
       HealthCheckTimeoutSeconds: 5
@@ -333,7 +333,7 @@ Resources:
   FrontendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 10
+      HealthCheckIntervalSeconds: 60
       # will look for a 200 status code by default unless specified otherwise
       HealthCheckPath: /
       HealthCheckTimeoutSeconds: 5
@@ -352,7 +352,7 @@ Resources:
   FrontendTargetGroupAlt:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 10
+      HealthCheckIntervalSeconds: 60
       # will look for a 200 status code by default unless specified otherwise
       HealthCheckPath: /
       HealthCheckTimeoutSeconds: 5
@@ -509,3 +509,35 @@ Outputs:
     Description: Load Balancer Hosted Zone Id
     Export:
       Name: !Sub ${AWS::StackName}-FrontendLoadBalancerHostedZoneID
+
+  ClusterName:
+    Value: !Ref Cluster
+    Description: Name of Innovation Lab ECS Cluster
+    Export:
+      Name: !Sub ${AWS::StackName}-CluserName
+  ClusterARN:
+    Value: !GetAtt Cluster.Arn
+    Description: Arn of the Innovation Lab ECS Cluster
+    Export:
+      Name: !Sub ${AWS::StackName}-ClusterARN
+
+  BackendServiceName:
+    Value: !Ref BackendService
+    Description: Name of the backend service
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendServiceName
+  BackendTaskDefinitionArn:
+    Value: !Ref BackendTaskDefinition
+    Description: Arn of the backend task definition
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendTaskARN
+  FrontendServiceName:
+    Value: !Ref FrontendService
+    Description: Name of the frontend service
+    Export: 
+      Name: !Sub ${AWS::StackName}-FrontendServiceName
+  FrontendTaskDefinitionArn:
+    Value: !Ref FrontendTaskDefinition
+    Description: Arn of the frontend task definition
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendTaskARN
