@@ -83,7 +83,7 @@ Resources:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
         Name: !Sub
-          - "${app}${subEnv}.{dom}"
+          - "${app}${subEnv}.${dom}"
           - app: !Ref applicationName
             subEnv: 
               Fn::FindInMap:
@@ -330,7 +330,7 @@ Resources:
         # Keep things at or lower than 50% CPU utilization, for example
         TargetValue: 50
 
-    FrontendTargetGroup:
+  FrontendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 10
