@@ -94,38 +94,6 @@ Resources:
         Vpc: 
           Fn::ImportValue: !Sub "${vpcStack}-VPC"
   
-  FrontendDiscoveryService:
-    Type: AWS::ServiceDiscovery::Service
-    Properties: 
-      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} frontend service"
-      DnsConfig:
-        RoutingPolicy: MULTIVALUE
-        DnsRecords:
-          - TTL: 60
-            Type: A
-          - TTL: 60
-            Type: SRV
-      HealthCheckCustomConfig: 
-        FailureThreshold: 1
-      Name: !Sub ${applicationName}-${environmentName}-frontend
-      NamespaceId: !Ref PrivateNamespace
-
-  BackendDiscoveryService:
-    Type: AWS::ServiceDiscovery::Service
-    Properties: 
-      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} backend service"
-      DnsConfig:
-        RoutingPolicy: MULTIVALUE
-        DnsRecords:
-          - TTL: 60
-            Type: A
-          - TTL: 60
-            Type: SRV
-      HealthCheckCustomConfig: 
-        FailureThreshold: 1
-      Name: !Sub ${applicationName}-${environmentName}-backend
-      NamespaceId: !Ref PrivateNamespace
-
   ####################
   ## BACKEND RESOURCES
   ####################
@@ -159,78 +127,6 @@ Resources:
         ScaleOutCooldown: 10
         # Keep things at or lower than 50% CPU utilization, for example
         TargetValue: 50
-
-  BackendTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    DependsOn: BackendLogGroup
-    Properties:
-      Family: !Sub "${applicationName}-${environmentName}-backend-task-definition"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: 512
-      Memory: 1024
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
-      ContainerDefinitions:
-        - Name: !Sub ${applicationName}-${environmentName}-backend
-          Image: !Sub
-            - "${imageUri}:${tag}"
-            - imageUri:  
-                Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
-              tag: !Ref environmentName
-          PortMappings:
-            - ContainerPort: !Ref backendPort
-          EnvironmentFiles:
-            - Type: s3
-              Value: !Sub
-                - "${bucketArn}/app.${env}.env"
-                - bucketArn: 
-                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
-                  env:
-                    Fn::FindInMap:
-                      - BranchMap
-                      - !Ref environmentName
-                      - branch
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref BackendLogGroup
-              awslogs-stream-prefix: ecs
-
-  BackendService:
-    Type: AWS::ECS::Service
-    # This dependency is needed so that the load balancer is setup correctly in time
-    DependsOn:
-      - BackendLoadBalancerListener
-    Properties: 
-      ServiceName: !Sub ${applicationName}-${environmentName}-backend
-      Cluster: !Ref Cluster
-      TaskDefinition: !Ref BackendTaskDefinition
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-      DesiredCount: 1
-      # This may need to be adjusted if the container takes a while to start up
-      HealthCheckGracePeriodSeconds: 30
-      LaunchType: FARGATE
-      NetworkConfiguration: 
-        AwsvpcConfiguration:
-          # change to DISABLED if you're using private subnets that have access to a NAT gateway
-          AssignPublicIp: DISABLED
-          Subnets:
-            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
-            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-          SecurityGroups:
-            - !Ref ContainerSecurityGroup
-      LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
-          ContainerPort: !Ref backendPort
-          TargetGroupArn: !Ref BackendTargetGroup
-      ServiceRegistries:
-        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
-          Port: !Ref backendPort
 
   BackendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -312,6 +208,94 @@ Resources:
       Port: !Ref backendPort
       Protocol: HTTP
 
+  BackendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: BackendLogGroup
+    Properties:
+      Family: !Sub "${applicationName}-${environmentName}-backend-task-definition"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 512
+      Memory: 1024
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
+      ContainerDefinitions:
+        - Name: !Sub ${applicationName}-${environmentName}-backend
+          Image: !Sub
+            - "${imageUri}:${tag}"
+            - imageUri:  
+                Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
+              tag: !Ref environmentName
+          PortMappings:
+            - ContainerPort: !Ref backendPort
+          EnvironmentFiles:
+            - Type: s3
+              Value: !Sub
+                - "${bucketArn}/app.${env}.env"
+                - bucketArn: 
+                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
+                  env:
+                    Fn::FindInMap:
+                      - BranchMap
+                      - !Ref environmentName
+                      - branch
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref BackendLogGroup
+              awslogs-stream-prefix: ecs
+
+  BackendService:
+    Type: AWS::ECS::Service
+    # This dependency is needed so that the load balancer is setup correctly in time
+    DependsOn:
+      - BackendLoadBalancerListener
+    Properties: 
+      ServiceName: !Sub ${applicationName}-${environmentName}-backend
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref BackendTaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: DISABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
+          ContainerPort: !Ref backendPort
+          TargetGroupArn: !Ref BackendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
+          Port: !Ref backendPort
+
+  BackendDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} backend service"
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+          - TTL: 60
+            Type: SRV
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: !Sub ${applicationName}-${environmentName}-backend
+      NamespaceId: !Ref PrivateNamespace
+
   #####################
   ## FRONTEND RESOURCES
   #####################
@@ -346,80 +330,7 @@ Resources:
         # Keep things at or lower than 50% CPU utilization, for example
         TargetValue: 50
 
-  FrontendTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    DependsOn: FrontendLogGroup
-    Properties:
-      Family: !Sub "${applicationName}-${environmentName}-frontend-task-definition"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: 256
-      Memory: 512
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
-      ContainerDefinitions:
-        - Name: !Sub ${applicationName}-${environmentName}-frontend
-          Image: !Sub
-            - "${imageUri}:${tag}"
-            - imageUri:  
-                Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
-              tag: !Ref environmentName
-          PortMappings:
-            - ContainerPort: !Ref frontendPort
-          EnvironmentFiles:
-            - Type: s3
-              Value: !Sub
-                - "${bucketArn}/web.${env}.env"
-                - bucketArn: 
-                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
-                  env:
-                    Fn::FindInMap:
-                      - BranchMap
-                      - !Ref environmentName
-                      - branch
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref FrontendLogGroup
-              awslogs-stream-prefix: ecs
-
-  FrontendService:
-    Type: AWS::ECS::Service
-    # This dependency is needed so that the load balancer is setup correctly in time
-    DependsOn:
-      - FrontendLoadBalancerListenerHTTPS
-      - BackendService
-    Properties: 
-      ServiceName: !Sub ${applicationName}-${environmentName}-frontend
-      Cluster: !Ref Cluster
-      TaskDefinition: !Ref FrontendTaskDefinition
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-      DesiredCount: 1
-      # This may need to be adjusted if the container takes a while to start up
-      HealthCheckGracePeriodSeconds: 30
-      LaunchType: FARGATE
-      NetworkConfiguration: 
-        AwsvpcConfiguration:
-          # change to DISABLED if you're using private subnets that have access to a NAT gateway
-          AssignPublicIp: ENABLED
-          Subnets:
-            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
-            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
-          SecurityGroups:
-            - !Ref ContainerSecurityGroup
-      LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
-          ContainerPort: !Ref frontendPort
-          TargetGroupArn: !Ref FrontendTargetGroup
-      ServiceRegistries:
-        - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
-          Port: !Ref frontendPort
-
-  FrontendTargetGroup:
+    FrontendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 10
@@ -496,7 +407,97 @@ Resources:
         - CertificateArn: !Ref certificateArn
     DependsOn:
       - FrontendLoadBalancer
-          
+  
+  FrontendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: FrontendLogGroup
+    Properties:
+      Family: !Sub "${applicationName}-${environmentName}-frontend-task-definition"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
+      ContainerDefinitions:
+        - Name: !Sub ${applicationName}-${environmentName}-frontend
+          Image: !Sub
+            - "${imageUri}:${tag}"
+            - imageUri:  
+                Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
+              tag: !Ref environmentName
+          PortMappings:
+            - ContainerPort: !Ref frontendPort
+          EnvironmentFiles:
+            - Type: s3
+              Value: !Sub
+                - "${bucketArn}/web.${env}.env"
+                - bucketArn: 
+                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
+                  env:
+                    Fn::FindInMap:
+                      - BranchMap
+                      - !Ref environmentName
+                      - branch
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref FrontendLogGroup
+              awslogs-stream-prefix: ecs
+
+  FrontendService:
+    Type: AWS::ECS::Service
+    # This dependency is needed so that the load balancer is setup correctly in time
+    DependsOn:
+      - FrontendLoadBalancerListenerHTTPS
+      - BackendService
+    Properties: 
+      ServiceName: !Sub ${applicationName}-${environmentName}-frontend
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref FrontendTaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: ENABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
+          ContainerPort: !Ref frontendPort
+          TargetGroupArn: !Ref FrontendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
+          Port: !Ref frontendPort
+
+  FrontendDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} frontend service"
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+          - TTL: 60
+            Type: SRV
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: !Sub ${applicationName}-${environmentName}-frontend
+      NamespaceId: !Ref PrivateNamespace
+
+        
 Outputs:
   FrontendLoadBalancerDNS:
     Value: !GetAtt FrontendLoadBalancer.DNSName
