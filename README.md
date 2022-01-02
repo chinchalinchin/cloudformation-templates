@@ -1,3 +1,5 @@
+# AWS CloudFormation Environment Setup
+
 A sweet collection of **CloudFormation** templates.
 
 ```
@@ -15,26 +17,32 @@ There are three separate stack groups, the **Access** group, the **Application**
 | Stack | Dependency |
 | ----- | ---------- |
 | IAMStack | None |
-| CognitoStack | None |
+| CognitoStack-$env | None |
 
 ## Application Stacks
 | Stack | Dependency |
 | ----- | ---------- |
 | RepoStack | None |
+
 ### Environment Stacks
+| Stack | Dependency | 
+| ----- | ---------- |
 | DynamoStack-$env | None | 
 | VPCStack-$env | None |  
-| ECSStack-$env | VPCStack, IAMStack, RepoStack |
+| ECSStack-$env | VPCStack-$env, IAMStack, RepoStack |
 | RDSStack-$env | VPCStack-$env, IAMStack | 
-| LambdaStack-$env | VPCStack-$env, RepoStack, CognitoStack, IAMStack |
+| LambdaStack-$env | VPCStack-$env, RepoStack, CognitoStack-$env, IAMStack |
 
 ## DevOps Stacks
 | Stack | Dependency | 
 | ----- | ---------- |
 | SonarStack | VPCStack-Dev |
+
 ### Environment Stacks
-| DNSStack-$env | LambdaStack, SonarStack |
-| PipelineStack-$env | RepoStack, IAMStack, CognitoStack, DNSStack |
+| Stack | Dependency | 
+| ----- | ---------- |
+| DNSStack-$env | LambdaStack-$env, SonarStack |
+| PipelineStack-$env | RepoStack, IAMStack, CognitoStack-$env, DNSStack-$env |
 
 **Note**: *SonarStack* only gets deployed into **Dev** environment.
 
@@ -70,49 +78,50 @@ There is some leeway with the order of the next few stacks. For the sake of this
 ./scripts/aws/clone-bb-repos --environments Dev,Staging,Prod
 ```
 
-The *VPCStack*
+At this point, the images for the *innolab-lambdas* functions, *innolab-backend* and the *innolab-frontend* need built for the first time and pushed to **ECR**. In addition, there are **ECR** repositories to hold images for the Innovation Lab versions of **nginx**, **node**, **postgres** and **python**. These images need tags and pushed to the repositories. They are used in the pipeline to avoid rate limits.
 
-```
-./scripts/stacks/app/vpc-stack
+The *VPCStack* can be stood up while the images are building and pushing.
+
+```shell
+./scripts/stacks/app/vpc-stack --environment
 ```
 
 The SonarQube resources can be stood up after the *VPCStack* has been setup,
 
-```
+```shell
 ./scripts/aws/devops/sonar-stack
 ```
 
-The first two stacks are independent of the application's environment,
+Once the *SonarStack* goes up, log into SonarQube and reset the default username and password. Generate an API token and store in the **SONAR_TOKEN** variable in the *.env*. This will need stored in the **SecretManager**. Steps for storing secrets are detailed after the *RDSStack* goes up; for now, follow along. 
 
-```
-./scripts/stacks/app/cognito-stack
-```
+The Cognito stack can be deployed next,
 
-After these stacks go up, all subsequent stacks are a function of the environment they are being stood up in,
-
-```
-./scripts/stacks/app/vpc-stack
+```shell
+./scripts/stacks/app/cognito-stack --environment <Dev | Staging | Prod>
 ```
 
-At this point, the images for the **Lambda** functions need built for the first time and pushed to ECR.
+Emails will be sent to all users hardcoded into the stack. The *HostedUI* web link in the **Cognito** console under *App Client Settings* can be used to the reset user passwords. It is recommended to updated the message template so future registration email messages include the password reset link. (TODO: configure cloudformation template to edit message template; need **SES** for this.)
+
+Next, the *RDSStack* can be stood up,
 
 ```
 ./scripts/stacks/app/rds-stack --environment <Dev | Prod | Test | Staging>
 ```
 
-At this point, the **RDS** host secret needs passed into AWS **SecretManager**. If an API key is required, add it to the *.env* file and use the following scripts,
+After the *RDSStack* successfully stands up, all the prerequisites for updating the secrets in the **SecretManager** have been met; the **RDS** host secret needs passed into AWS **SecretManager**; The **Sonar** url and token needed added; If an API key is required, add it to the *.env* file and use this time to a the following scripts,
 
 ```
 ./scripts/secrets/secret-rds-host --environment <Dev | Prod | Test | Staging>
+./scripts/secrets/secret-sonar-token
+./scripts/secrets/secret-sonar-host
 ./scripts/secrets/secret-api-key --environment <Dev | Prod | Test | Staging>
 ```
 
-Note: The username and password secrets for the RDS are created during the `rds-stack` script, but the host URL secret creation cannot be automated since it doesn't exist until the RDS stack is provisioned. After this is done, then the final sequence of stacks can be stood up,
+After this is done, then the final sequence of stacks can be stood up,
 
 ```
-./scripts/stacks/app/lambda-stack --components <one | two | three | four | five> \
-                                  --environment <Dev | Prod | Test | Staging>
-./scripts/stacks/app/gateway-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/lambda-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/app/ecs-stack --environment <Dev | Prod | Test | Staging>
 ./scripts/stacks/app/dns-stack [--dns-exists] \
                                 --environment <Dev | Prod | Test | Staging> 
 ```
@@ -121,10 +130,11 @@ All scripts have an optional argument ``--action`` with allowable values of `cre
 
 ## Pipeline
 
-After all the preceding stacks have been set up and initialized, the final stack, the PipelineStack, can be stood up to kick off the CI/CD process,
+After all the preceding stacks have been set up and initialized, the final stack, the *PipelineStack*, can be stood up to kick off the CI/CD process. The pipeline has been split into three components, `master`, `app` and `lambdas`. `master` is a pipeline for generating documentation for the coverage **S3** bucket and **CloudFront** distribution provisioned in the **DNSStack**, `app` is a pipeline for building and deploying the services in *ECSStack* into the **Fargate ECS** cluster also provisioned within the stack and `lambdas` is a pipeline for building and deploying the **Lambda** functions in the *LambdaStack*,
 
 ```
-./scripts/stacks/devops/pipeline-stack
+./scripts/stacks/devops/pipeline-stack --environment <Dev | Prod | Test | Staging> \
+                                        --pipeline <master | app | lambdas>
 ```
 
 # Notes
@@ -154,8 +164,3 @@ aws cloudformation create-stack
 - [ECR](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ECR.html)
 - [IAM](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_IAM.html)
 - [Lambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_Lambda.html)
-
-# TODOS
-
-1. distribute jira integration across stacks. 
-2. simplify lambda and gateway stack into lambda and lambda-integration stack. extend the possible use cases of lambda in a single stack.

@@ -82,15 +82,14 @@ Resources:
   PrivateNamespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
-        Name: !Sub
-          - "${app}${subEnv}.${dom}"
+        Name: !Sub 
+          - "${app}-${env}-ecs"
           - app: !Ref applicationName
-            subEnv: 
+            env: 
               Fn::FindInMap:
                 - BranchMap
                 - !Ref environmentName
-                - subdomain
-            dom: !Ref domain
+                - branch
         Vpc: 
           Fn::ImportValue: !Sub "${vpcStack}-VPC"
   
