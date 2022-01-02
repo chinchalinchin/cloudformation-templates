@@ -390,6 +390,7 @@ Resources:
     # This dependency is needed so that the load balancer is setup correctly in time
     DependsOn:
       - FrontendLoadBalancerListenerHTTPS
+      - BackendService
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-frontend
       Cluster: !Ref Cluster
