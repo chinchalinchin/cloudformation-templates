@@ -61,7 +61,8 @@ Resources:
   ContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub "${applicationName}-${environmentName}-container-security-group"
+      GroupName: !Sub "${applicationName}-${environmentName}-container-sg"
+      GroupDescription: "Security group for ECS containers"
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
       SecurityGroupIngress:
@@ -69,6 +70,13 @@ Resources:
           SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
         - IpProtocol: -1
           SourceSecurityGroupId: !Ref BackendLoadBalancerSecurityGroup
+  
+  ContainerSecurityGroupSelfIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref ContainerSecurityGroup
 
   Cluster:
     Type: AWS::ECS::Cluster
@@ -164,17 +172,14 @@ Resources:
   BackendLoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: !Sub "!${applicationName}-${environmentName}-backend-alb-sg"
       GroupDescription: Access to the internal load balancer
       VpcId:
         Fn::ImportValue: !Sub ${vpcStack}-VPC
-
-  BackendLoadBalancerIngressFromECS:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Only accept traffic from a container in the fargate container security group
-      GroupId: !Ref BackendLoadBalancerSecurityGroup
-      IpProtocol: -1
-      SourceSecurityGroupId: !Ref ContainerSecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          Description: Accept all traffic from the frontend load balancer
+          SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
 
   BackendLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
