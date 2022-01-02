@@ -23,7 +23,7 @@
 - [] upload ssh key to profile
 - [] upload database ssh keys to bucket
 - [] upload container .env to bucket
-- [] add IPs to Bastion host security group rule for SSH
+- [] add IPs to Bastion host security group rule for SSH tunnels
 - [] script to initialize coverage bucket
 - [] script for cloning repositories
 - [] script for branch rules
