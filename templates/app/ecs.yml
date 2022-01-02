@@ -83,7 +83,7 @@ Resources:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
         Name: !Sub 
-          - "${app}-${env}-ecs"
+          - "${app}-${env}-ecs.net"
           - app: !Ref applicationName
             env: 
               Fn::FindInMap:
