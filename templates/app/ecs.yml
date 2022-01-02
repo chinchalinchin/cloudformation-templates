@@ -65,13 +65,9 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Ref frontendPort
-          ToPort: !Ref frontendPort
+        - IpProtocol: -1
           SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
-        - IpProtocol: tcp
-          FromPort: !Ref backendPort
-          ToPort: !Ref backendPort
+        - IpProtocol: -1
           SourceSecurityGroupId: !Ref BackendLoadBalancerSecurityGroup
 
   Cluster:

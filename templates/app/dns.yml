@@ -21,7 +21,7 @@ Parameters:
     Default: Dev
   applicationName:
     Type: String
-    Default: innoalb
+    Default: innolab
   certificateId:
     Type: String
     Description: "If the DNS has been configured prior to this template, you must pass in the CertificateId for the associated domain. Otherwise, you do not need this parameter."
@@ -238,25 +238,25 @@ Resources:
     DependsOn:
       - CoverageDistribution
 
-  # ECSRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
-  #     Name: !Sub
-  #       - "${subdomainName}${subdomainEnv}.${domainName}"
-  #       - subdomainName: !Ref subdomain
-  #         domainName: !Ref domain
-  #         subdomainEnv: 
-  #           Fn::FindInMap:
-  #             - SubEnvDomainMap
-  #             - !Ref environmentName
-  #             - subdomainEnv
-  #     Type: A
-  #     AliasTarget:
-  #       DNSName: 
-  #         Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerDNSName" 
-  #       HostedZoneId:
-  #         Fn::ImportValue: !Sub "${ecsStack}-LoadBalancerHostedZoneID"
+  ECSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [DNSExists, !Ref hostedZoneId, !Ref HostedZone]
+      Name: !Sub
+        - "${subdomainName}${subdomainEnv}.${domainName}"
+        - subdomainName: !Ref subdomain
+          domainName: !Ref domain
+          subdomainEnv: 
+            Fn::FindInMap:
+              - SubEnvDomainMap
+              - !Ref environmentName
+              - subdomainEnv
+      Type: A
+      AliasTarget:
+        DNSName: 
+          Fn::ImportValue: !Sub "${ecsStack}-FrontendLoadBalancerDNSName" 
+        HostedZoneId:
+          Fn::ImportValue: !Sub "${ecsStack}-FrontendLoadBalancerHostedZoneID"
 
 Outputs: 
   RestAPIDomain:

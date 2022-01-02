@@ -75,7 +75,8 @@ then
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                          ParameterKey=DNS,ParameterValue=true \
                          ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
-                         ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}"
+                         ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
+                         ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
     else
         aws cloudformation create-stack \
             --stack-name "${APPLICATION^}-${DNS_STACK}-${ENVIRONMENT}" \
@@ -85,7 +86,8 @@ then
                          ParameterKey=domain,ParameterValue=$DOMAIN \
                          ParameterKey=subdomain,ParameterValue=$APPLICATION \
                          ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
-                         ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}"
+                         ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
+                         ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
     fi
 
 elif [ "$ACTION" == "update" ]
@@ -102,16 +104,19 @@ then
                          ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
                          ParameterKey=DNS,ParameterValue=true \
                          ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
-                         ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$LAMBDA_STACK-$ENVIRONMENT"
+                         ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-$LAMBDA_STACK-$ENVIRONMENT" \
+                         ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
     else
         aws cloudformation update-stack \
             --stack-name "${APPLICATION^}-${DNS_STACK}-${ENVIRONMENT}" \
             --template-body file://dns.yml \
             --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
+                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
                          ParameterKey=domain,ParameterValue=$DOMAIN \
                          ParameterKey=subdomain,ParameterValue=$APPLICATION \
                          ParameterKey=sonarStack,ParameterValue="${APPLICATION^}-${SONAR_STACK}" \
-                         ParameterKey=gatewayStack,ParameterValue="${APPLICATION^}-$LAMBDA_STACK-$ENVIRONMENT"
+                         ParameterKey=lambdaStack,ParameterValue="${APPLICATION^}-$LAMBDA_STACK-$ENVIRONMENT" \
+                         ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
     fi
 elif [ "$ACTION" == "delete" ]
 then

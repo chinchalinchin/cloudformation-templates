@@ -9,46 +9,47 @@ aws cloudformation create-stack
     --parameters ParameterKey=<key>,ParameterValue=<value> ParameterKey=<key>,ParameterValue=<value>
 ```
 
-# Cross Stack Dependencies
+## Cross Stack Dependencies
 
 There are three separate stack groups, the **Access** group, the **Application** group and the **DevOps** group. The stacks should be stood up, more or less, in the order listed below, due to cross-stack dependencies, i.e. the *VPCStack* must be stood up before the *RDSStack*, the *LambdaStack* and *SonarStack* must be stood up before the *DNSStack*, etc. 
 
-## Access Stacks
+### Access Stacks
 | Stack | Dependency |
 | ----- | ---------- |
 | IAMStack | None |
-| CognitoStack-$env | None |
+
+**Environment Stacks**
+| CognitoStack-@env | None |
 
 ## Application Stacks
 | Stack | Dependency |
 | ----- | ---------- |
 | RepoStack | None |
 
-### Environment Stacks
+**Environment Stacks**
 | Stack | Dependency | 
 | ----- | ---------- |
-| DynamoStack-$env | None | 
-| VPCStack-$env | None |  
-| ECSStack-$env | VPCStack-$env, IAMStack, RepoStack |
-| RDSStack-$env | VPCStack-$env, IAMStack | 
-| LambdaStack-$env | VPCStack-$env, RepoStack, CognitoStack-$env, IAMStack |
+| DynamoStack-@env | None | 
+| VPCStack-@env | None |  
+| ECSStack-@env | VPCStack-@env, IAMStack, RepoStack |
+| RDSStack-@env | VPCStack-@env, IAMStack | 
+| LambdaStack-@env | VPCStack-@env, RepoStack, CognitoStack-@env, IAMStack |
 
 ## DevOps Stacks
 | Stack | Dependency | 
 | ----- | ---------- |
 | SonarStack | VPCStack-Dev |
 
-### Environment Stacks
+**Environment Stacks**
 | Stack | Dependency | 
 | ----- | ---------- |
-| DNSStack-$env | LambdaStack-$env, SonarStack |
-| PipelineStack-$env | RepoStack, IAMStack, CognitoStack-$env, DNSStack-$env |
+| DNSStack-@env | ECSStack-@env, LambdaStack-@env, SonarStack |
+| PipelineStack-@env | RepoStack, IAMStack, CognitoStack-@env, DNSStack-@env |
 
 **Note**: *SonarStack* only gets deployed into **Dev** environment.
 
-# Steps
-
 A more detailed version of what follows (with pictures!) can be found on the [Confluence page](https://makpar.atlassian.net/wiki/spaces/IN/pages/358580264/Sandbox+Environment+Setup)
+
 
 ## Configuration
 
@@ -137,7 +138,7 @@ After all the preceding stacks have been set up and initialized, the final stack
                                         --pipeline <master | app | lambdas>
 ```
 
-# Notes
+## Notes
 
 1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
 
@@ -150,16 +151,16 @@ aws cloudformation create-stack
 
 2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfully deploy.
 
-
-# Documentation
-## CloudFormation
-### CLI
+ 
+## Documentation
+### CloudFormation
+**CLI**
 - [create-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/create-stack.html)
 - [delete-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/delete-stack.html)
 - [describe-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stacks.html)
 - [list-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-stacks.html)
 
-### Template References
+**Template References**
 - [API Gateway](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ApiGateway.html)
 - [ECR](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ECR.html)
 - [IAM](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_IAM.html)
