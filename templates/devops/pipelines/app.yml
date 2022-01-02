@@ -77,24 +77,36 @@ Resources:
           - LOCAL_DOCKER_LAYER_CACHE
           - LOCAL_SOURCE_CACHE
 
-  FrontendCodeDeploy:
-    Type: AWS::CodeDeploy::Application
-    Properties:
-      ComputePlatform: ECS
-      ApplicationName: !Sub "${applicationName}-${environmentName}-frontend-code-deploy"
+  # FrontendCodeDeploy:
+  #   Type: AWS::CodeDeploy::Application
+  #   Properties:
+  #     ComputePlatform: ECS
+  #     ApplicationName: !Sub "${applicationName}-${environmentName}-frontend-code-deploy"
 
-  BackendCodeDeploy:
-    Type: AWS::CodeDeploy::Application
-    Properties:
-      ComputePlatform: ECS
-      ApplicationName: !Sub "${applicationName}-${environmentName}-backend-code-deploy" 
+  # BackendCodeDeploy:
+  #   Type: AWS::CodeDeploy::Application
+  #   Properties:
+  #     ComputePlatform: ECS
+  #     ApplicationName: !Sub "${applicationName}-${environmentName}-backend-code-deploy" 
 
-  BackendDeploymentGroup:
-    Type: AWS::CodeDeploy::DeploymentGroup
-    Properties:
-      ECSService:
-        ClusterName: 
-        ServiceName:
+  # BackendDeploymentGroup:
+  #   Type: AWS::CodeDeploy::DeploymentGroup
+  #   Properties:
+  #     ECSService:
+  #       ClusterName: 
+  #         Fn::ImportValue: !Sub "${ecsStack}-ClusterName"
+  #       ServiceName:
+  #         Fn::ImportValue: !Sub "${ecsStack}-BackendServiceName"
+  #     LoadBalancerInfo:
+  #       TargetGroupInfoList:
+  #         - Name:
+  #             Fn::ImportValue: !Sub ${ecsStack}-BackendTargetGroup
+  #         - Name:
+  #             Fn::ImportValue: !Sub ${ecsStack}-BackendTargetGroupAlt
+  #     DeploymentStyle:
+  #       DeploymentOption: WITH_TRAFFIC_CONTROL
+  #       DeploymentType: BLUE_GREEN
+
   BackendCoverageReportGroup:
     Type: AWS::CodeBuild::ReportGroup
     Condition: DevResources

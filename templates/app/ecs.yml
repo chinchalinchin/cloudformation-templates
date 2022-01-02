@@ -54,8 +54,35 @@ Mappings:
       branch: "prod"
       subdomain: ""
 
-# TODOS: move security groups into VPCstack and use crossstack reference once this stack is working.
+Transform:
+  - AWS::CodeDeployBlueGreen
 
+Hooks:
+  CodeDeployBlueGreenHook:
+    Properties: 
+      TrafficRoutingConfig:
+        Type: TimeBasedCanary
+        TimeBasedCanary:
+          StepPercentage: 15
+          BakeTimeMins: 5
+        Applications:
+          - Target:
+              Type: AWS::ECS::Service
+              LogicalID: BackendService
+            ECSAttributes:
+              TaskDefinitions:
+                - BackendTaskDefinition
+                - BackendTaskDefinitionAlt
+              TrafficRouting:
+                ProdTrafficRoute:
+                  Type: 'AWS::ElasticLoadBalancingV2::Listener'
+                  LogicalId: BacknedLoadBalancer
+                TargetGroups: 
+                  - BackendTargetGroup
+                  - BackendTargetGroupAlt
+    Type: 'AWS::CodeDeploy::BlueGreen'
+
+# TODOS: move security groups into VPCstack and use crossstack reference once this stack is working.
 Resources:
   ## CLUSTER RESOURCES
   ContainerSecurityGroup:
@@ -499,9 +526,14 @@ Resources:
 
         
 Outputs:
+  FrontendLoadBalancerName:
+    Value: !GetAtt FrontendLoadBalancer.LoadBalancerName
+    Description: Name of frontend load balancer
+    Export: 
+      Name: !Sub ${AWS::StackName}-FrontendLoadBalancerName
   FrontendLoadBalancerDNS:
     Value: !GetAtt FrontendLoadBalancer.DNSName
-    Description: Load Balancer DNS Name
+    Description: DNS name of frontend load balancer
     Export:
       Name: !Sub ${AWS::StackName}-FrontendLoadBalancerDNSName
   FrontendLoadBalancerHostedZone:
@@ -509,6 +541,34 @@ Outputs:
     Description: Load Balancer Hosted Zone Id
     Export:
       Name: !Sub ${AWS::StackName}-FrontendLoadBalancerHostedZoneID
+
+  BackendLoadBalancerName:
+    Value: !GetAtt BackendLoadBalancer.LoadBalancerName
+    Description: Name of backend load balancer
+    Export: 
+      Name: !Sub ${AWS::StackName}-BackendLoadBalancerName
+
+  BackendTargetGroup:
+    Value: !GetAtt BackendTargetGroup.TargetGroupName
+    Description: Name of first backend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendTargetGroup
+  BackendTargetGroupAlt:
+    Value: !GetAtt BackendTargetGroupAlt.TargetGroupName
+    Description: Name of second backend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendTargetGroupAlt
+
+  FrontendTargetGroup:
+    Value: !GetAtt FrontendTargetGroup.TargetGroupName
+    Description: Name of first frontend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendTargetGroup
+  FrontendTargetGroupAlt:
+    Value: !GetAtt FrontendTargetGroupAlt.TargetGroupName
+    Description: Name of second frontend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendTargetGroupAlt
 
   ClusterName:
     Value: !Ref Cluster
