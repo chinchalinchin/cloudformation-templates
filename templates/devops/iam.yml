@@ -385,27 +385,37 @@ Resources:
                   - codecommit:GitPull
                 Effect: Allow
                 Resource:
-                  - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"  
+                  - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*" 
+              - Sid: !Sub ${applicationName}CodeBuildCodeDeployOps
+                Action:
+                  - codedeploy:Get*
+                  - codedeploy:CreateCloudFormationDeployment
+                Effect: Allow
+                Resource: '*' # TODO: figure out which resources to scope this to... 
               - Sid: !Sub ${applicationName}CodeBuildSecretsOps
                 Action:
                   - secretsmanager:GetSecretValue
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-              - Sid: !Sub ${applicationName}CodebuildECROps
+              - Sid: !Sub ${applicationName}CodeBuildECRAuthOps
                 Action:
-                  - "ecr:GetAuthorizationToken"
-                  - "ecr:BatchCheckLayerAvailability"
-                  - "ecr:GetDownloadUrlForLayer"
-                  - "ecr:GetRepositoryPolicy"
-                  - "ecr:DescribeRepositories"
-                  - "ecr:ListImages"
-                  - "ecr:DescribeImages"
-                  - "ecr:BatchGetImage"
-                  - "ecr:InitiateLayerUpload"
-                  - "ecr:UploadLayerPart"
-                  - "ecr:CompleteLayerUpload"
-                  - "ecr:PutImage"
+                  - ecr:GetAuthorizationToken
+                Effect: Allow
+                Resource: '*'
+              - Sid: !Sub ${applicationName}CodebuildECROtherOps
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
+                  - ecr:DescribeRepositories
+                  - ecr:ListImages
+                  - ecr:DescribeImages
+                  - ecr:BatchGetImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:PutImage
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
@@ -418,8 +428,8 @@ Resources:
               - Sid: !Sub ${applicationName}CognitoOps
                 Effect: Allow
                 Action:
-                  - "cognito-idp:AdminInitiateAuth"
-                  - "cognito-idp:AdminCreateUser"
+                  - cognito-idp:AdminInitiateAuth
+                  - cognito-idp:AdminCreateUser
                 Resource: 
                   - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
       RoleName: !Sub ${applicationName}-codebuild-exector

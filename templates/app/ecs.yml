@@ -26,6 +26,12 @@ Parameters:
     Type: String
     Default: makpar-innovation.net
     Description: Domain for the application cluster
+  backendTag:
+    Type: String
+    Default: Dev-v0.0.0
+  frontendTag:
+    Type: String
+    Default: Dev-v0.0.0
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -76,10 +82,24 @@ Hooks:
               TrafficRouting:
                 ProdTrafficRoute:
                   Type: 'AWS::ElasticLoadBalancingV2::Listener'
-                  LogicalId: BacknedLoadBalancer
+                  LogicalID: BackendLoadBalancer
                 TargetGroups: 
                   - BackendTargetGroup
                   - BackendTargetGroupAlt
+          - Target:
+              Type: AWS::ECS::Service
+              LogicalID: FrontendService
+            ECSAttributes:
+              TaskDefinitions:
+                - FrontendTaskDefinition
+                - FrontendTaskDefinitionAlt
+              TrafficRouting:
+                ProdTrafficRoute:
+                  Type: 'AWS::ElasticLoadBalancingV2::Listener'
+                  LogicalID: FrontendLoadBalancer
+                TargetGroups:
+                  - FrontendTargetGroup
+                  - FrontendTargetGroupAlt
     Type: 'AWS::CodeDeploy::BlueGreen'
 
 # TODOS: move security groups into VPCstack and use crossstack reference once this stack is working.
@@ -250,10 +270,10 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub ${applicationName}-${environmentName}-backend
           Image: !Sub
-            - "${imageUri}:${tag}"
+            - "${imageUri}:${whichTag}"
             - imageUri:  
                 Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
-              tag: !Ref environmentName
+              whichTag: !Ref backendTag
           PortMappings:
             - ContainerPort: !Ref backendPort
           EnvironmentFiles:
@@ -450,10 +470,10 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub ${applicationName}-${environmentName}-frontend
           Image: !Sub
-            - "${imageUri}:${tag}"
+            - "${imageUri}:${whichTag}"
             - imageUri:  
                 Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
-              tag: !Ref environmentName
+              whichTag: !Ref frontendTag
           PortMappings:
             - ContainerPort: !Ref frontendPort
           EnvironmentFiles:

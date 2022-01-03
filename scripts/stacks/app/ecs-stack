@@ -37,6 +37,16 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
+        --frontend-tag)
+            FRONTEND_TAG="$2"
+            shift
+            shift
+            ;;
+        --backend-tag)
+            BACKEND_TAG="$2"
+            shift
+            shift
+            ;;
         --help)
             help
             exit 0
@@ -48,9 +58,25 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if [ -z "$ENVIRONMENT" ]
+then
+    log "Specifiy environment with \e[3m--environment\e[0m flag."
+    exit 1
+fi
+
 if [ -z "$ACTION" ]
 then
     ACTION="create"
+fi
+
+if [ -z "$FRONTEND_TAG" ]
+then
+    FRONTEND_TAG="$ENVIRONMENT-v0.0.0"
+fi
+
+if [ -z "$BACKEND_TAG" ]
+then
+    BACKEND_TAG="$ENVIRONMENT-v0.0.0"
 fi
 
 cp $PROJECT_DIR/templates/app/ecs.yml ./ecs.yml
@@ -61,12 +87,15 @@ then
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}" \
         --template-body file://ecs.yml \
+        --capabilities CAPABILITY_AUTO_EXPAND \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
                         ParameterKey=domain,ParameterValue=$DOMAIN \
                         ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=backendPort,ParameterValue="8000" \
                         ParameterKey=frontendPort,ParameterValue="8080" \
+                        ParameterKey=backendTag,ParameterValue=$BACKEND_TAG \
+                        ParameterKey=frontendTag,ParameterValue=$FRONTEND_TAG \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-$VPC_STACK-$ENVIRONMENT"
@@ -77,12 +106,15 @@ then
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}" \
         --template-body file://ecs.yml \
+        --capabilities CAPABILITY_AUTO_EXPAND \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
                         ParameterKey=domain,ParameterValue=$DOMAIN \
                         ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=backendPort,ParameterValue="8000" \
                         ParameterKey=frontendPort,ParameterValue="8080" \
+                        ParameterKey=backendTag,ParameterValue=$BACKEND_TAG \
+                        ParameterKey=frontendTag,ParameterValue=$FRONTEND_TAG \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-$VPC_STACK-$ENVIRONMENT"
