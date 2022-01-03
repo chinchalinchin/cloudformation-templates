@@ -71,35 +71,35 @@ Hooks:
         TimeBasedCanary:
           StepPercentage: 15
           BakeTimeMins: 5
-        Applications:
-          - Target:
-              Type: AWS::ECS::Service
-              LogicalID: BackendService
-            ECSAttributes:
-              TaskDefinitions:
-                - BackendTaskDefinition
-                - BackendTaskDefinitionAlt
-              TrafficRouting:
-                ProdTrafficRoute:
-                  Type: 'AWS::ElasticLoadBalancingV2::Listener'
-                  LogicalID: BackendLoadBalancer
-                TargetGroups: 
-                  - BackendTargetGroup
-                  - BackendTargetGroupAlt
-          - Target:
-              Type: AWS::ECS::Service
-              LogicalID: FrontendService
-            ECSAttributes:
-              TaskDefinitions:
-                - FrontendTaskDefinition
-                - FrontendTaskDefinitionAlt
-              TrafficRouting:
-                ProdTrafficRoute:
-                  Type: 'AWS::ElasticLoadBalancingV2::Listener'
-                  LogicalID: FrontendLoadBalancer
-                TargetGroups:
-                  - FrontendTargetGroup
-                  - FrontendTargetGroupAlt
+      Applications:
+        # - Target:
+        #     Type: AWS::ECS::Service
+        #     LogicalID: BackendService
+        #   ECSAttributes:
+        #     TaskDefinitions:
+        #       - BackendTaskDefinition
+        #       - BackendTaskDefinitionAlt
+        #     TrafficRouting:
+        #       ProdTrafficRoute:
+        #         Type: 'AWS::ElasticLoadBalancingV2::Listener'
+        #         LogicalID: BackendLoadBalancer
+        #       TargetGroups: 
+        #         - BackendTargetGroup
+        #         - BackendTargetGroupAlt
+        - Target:
+            Type: AWS::ECS::Service
+            LogicalID: FrontendService
+          ECSAttributes:
+            TaskDefinitions:
+              - FrontendTaskDefinition
+              - FrontendTaskDefinitionAlt
+            TrafficRouting:
+              ProdTrafficRoute:
+                Type: 'AWS::ElasticLoadBalancingV2::Listener'
+                LogicalID: FrontendLoadBalancer
+              TargetGroups:
+                - FrontendTargetGroup
+                - FrontendTargetGroupAlt
     Type: 'AWS::CodeDeploy::BlueGreen'
 
 # TODOS: move security groups into VPCstack and use crossstack reference once this stack is working.
@@ -294,6 +294,40 @@ Resources:
               awslogs-group: !Ref BackendLogGroup
               awslogs-stream-prefix: ecs
 
+  FrontendTaskSet:
+    Type: 'AWS::ECS::TaskSet'
+    Properties:
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsVpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      PlatformVersion: 1.4.0
+      Scale:
+        Unit: PERCENT
+        Value: 100
+      Service: !Ref BackendService
+      TaskDefinition: !Ref BackendTaskDefinition
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
+          ContainerPort: 80
+          TargetGroupArn: !Ref BackendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
+          Port: !Ref backendPort
+
+  FrontendPrimaryTaskSet:
+    Type: 'AWS::ECS::PrimaryTaskSet'
+    Properties:
+      Cluster: !Ref Cluster
+      Service: !Ref BackendService
+      TaskSetId: !GetAtt BackendTaskSet.Id
+
   BackendService:
     Type: AWS::ECS::Service
     # This dependency is needed so that the load balancer is setup correctly in time
@@ -302,30 +336,32 @@ Resources:
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-backend
       Cluster: !Ref Cluster
-      TaskDefinition: !Ref BackendTaskDefinition
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
+      # TaskDefinition: !Ref BackendTaskDefinition
+      # DeploymentConfiguration:
+      #   MinimumHealthyPercent: 100
+      #   MaximumPercent: 200
       DesiredCount: 1
       # This may need to be adjusted if the container takes a while to start up
-      HealthCheckGracePeriodSeconds: 30
-      LaunchType: FARGATE
-      NetworkConfiguration: 
-        AwsvpcConfiguration:
-          # change to DISABLED if you're using private subnets that have access to a NAT gateway
-          AssignPublicIp: DISABLED
-          Subnets:
-            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
-            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-          SecurityGroups:
-            - !Ref ContainerSecurityGroup
-      LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
-          ContainerPort: !Ref backendPort
-          TargetGroupArn: !Ref BackendTargetGroup
-      ServiceRegistries:
-        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
-          Port: !Ref backendPort
+      # HealthCheckGracePeriodSeconds: 30
+      # LaunchType: FARGATE
+      # NetworkConfiguration: 
+      #   AwsvpcConfiguration:
+      #     # change to DISABLED if you're using private subnets that have access to a NAT gateway
+      #     AssignPublicIp: DISABLED
+      #     Subnets:
+      #       - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+      #       - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      #     SecurityGroups:
+      #       - !Ref ContainerSecurityGroup
+      # LoadBalancers:
+      #   - ContainerName: !Sub ${applicationName}-${environmentName}-backend
+      #     ContainerPort: !Ref backendPort
+      #     TargetGroupArn: !Ref BackendTargetGroup
+      # ServiceRegistries:
+      #   - RegistryArn: !GetAtt BackendDiscoveryService.Arn
+      #     Port: !Ref backendPort
+      DeploymentController:
+        Type: EXTERNAL
 
   BackendDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
@@ -494,6 +530,40 @@ Resources:
               awslogs-group: !Ref FrontendLogGroup
               awslogs-stream-prefix: ecs
 
+  FrontendTaskSet:
+    Type: 'AWS::ECS::TaskSet'
+    Properties:
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsVpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+      PlatformVersion: 1.4.0
+      Scale:
+        Unit: PERCENT
+        Value: 100
+      Service: !Ref FrontendService
+      TaskDefinition: !Ref FrontendTaskDefinition
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
+          ContainerPort: 80
+          TargetGroupArn: !Ref FrontendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
+          Port: !Ref frontendPort
+
+  FrontendPrimaryTaskSet:
+    Type: 'AWS::ECS::PrimaryTaskSet'
+    Properties:
+      Cluster: !Ref Cluster
+      Service: !Ref FrontendService
+      TaskSetId: !GetAtt FrontendTaskSet.Id
+
   FrontendService:
     Type: AWS::ECS::Service
     # This dependency is needed so that the load balancer is setup correctly in time
@@ -503,30 +573,32 @@ Resources:
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-frontend
       Cluster: !Ref Cluster
-      TaskDefinition: !Ref FrontendTaskDefinition
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
+      # TaskDefinition: !Ref FrontendTaskDefinition
+      # DeploymentConfiguration:
+      #   MinimumHealthyPercent: 100
+      #   MaximumPercent: 200
       DesiredCount: 1
-      # This may need to be adjusted if the container takes a while to start up
-      HealthCheckGracePeriodSeconds: 30
-      LaunchType: FARGATE
-      NetworkConfiguration: 
-        AwsvpcConfiguration:
-          # change to DISABLED if you're using private subnets that have access to a NAT gateway
-          AssignPublicIp: ENABLED
-          Subnets:
-            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
-            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
-          SecurityGroups:
-            - !Ref ContainerSecurityGroup
-      LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
-          ContainerPort: !Ref frontendPort
-          TargetGroupArn: !Ref FrontendTargetGroup
-      ServiceRegistries:
-        - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
-          Port: !Ref frontendPort
+      # # This may need to be adjusted if the container takes a while to start up
+      # HealthCheckGracePeriodSeconds: 30
+      # LaunchType: FARGATE
+      # NetworkConfiguration: 
+      #   AwsvpcConfiguration:
+      #     # change to DISABLED if you're using private subnets that have access to a NAT gateway
+      #     AssignPublicIp: ENABLED
+      #     Subnets:
+      #       - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+      #       - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+      #     SecurityGroups:
+      #       - !Ref ContainerSecurityGroup
+      # LoadBalancers:
+      #   - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
+      #     ContainerPort: !Ref frontendPort
+      #     TargetGroupArn: !Ref FrontendTargetGroup
+      # ServiceRegistries:
+      #   - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
+      #     Port: !Ref frontendPort
+      DeploymentController:
+        Type: EXTERNAL
 
   FrontendDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
