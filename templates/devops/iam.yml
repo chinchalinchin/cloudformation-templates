@@ -192,9 +192,13 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: !Sub "${applicationName}EcsTaskEcrStatement"
+              - Sid: !Sub "${applicationName}EcsTaskEcrAuthStatement"
                 Action:
                   - ecr:GetAuthorizationToken
+                Effect: Allow
+                Resource: '*'
+              - Sid: !Sub "${applicationName}EcsTaskEcrStatement"
+                Action:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage

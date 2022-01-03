@@ -94,8 +94,8 @@ then
                         ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=backendPort,ParameterValue="8000" \
                         ParameterKey=frontendPort,ParameterValue="8080" \
-                        ParameterKey=backendTag,ParameterValue=$BACKEND_TAG \
-                        ParameterKey=frontendTag,ParameterValue=$FRONTEND_TAG \
+                        ParameterKey=backendTag,ParameterValue="$BACKEND_TAG" \
+                        ParameterKey=frontendTag,ParameterValue="$FRONTEND_TAG" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-$VPC_STACK-$ENVIRONMENT"
@@ -113,8 +113,8 @@ then
                         ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=backendPort,ParameterValue="8000" \
                         ParameterKey=frontendPort,ParameterValue="8080" \
-                        ParameterKey=backendTag,ParameterValue=$BACKEND_TAG \
-                        ParameterKey=frontendTag,ParameterValue=$FRONTEND_TAG \
+                        ParameterKey=backendTag,ParameterValue="$BACKEND_TAG" \
+                        ParameterKey=frontendTag,ParameterValue="$FRONTEND_TAG" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-$VPC_STACK-$ENVIRONMENT"

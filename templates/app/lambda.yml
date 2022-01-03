@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline user from the ${applicationName}-IAMStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-ECRStack.'
+Description: 'Provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline role from the ${applicationName}-IAMStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-RepoStack.'
 
 Parameters:
   environmentName:
@@ -155,7 +155,6 @@ Resources:
           # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
-  # API Gateway Token Lambda
   LambdaEpsilon:
     Type: AWS::Lambda::Function
     Properties: 
@@ -187,7 +186,6 @@ Resources:
           # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
 
-  # API Gateway Register Lamdba
   LambdaEta:
     Type: AWS::Lambda::Function
     Properties: 
@@ -243,7 +241,7 @@ Resources:
   RestAPI:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: !Sub ${applicationName}-rest-api-${environmentName}
+      Name: !Sub ${applicationName}-${environmentName}-rest-api
 
   CloudWatch:
     Type: AWS::ApiGateway::Account
@@ -276,112 +274,69 @@ Resources:
     DependsOn:
       - CloudWatch
       - CloudWatchLogGroup
-      - PathResourceMethod
-      - PathParamResourceMethod
+      - InnoLabImageVersionResourceMethod
 
-  ApiGatewayAuthorizer:
-    Type: "AWS::ApiGateway::Authorizer"
-    Properties:
-      RestApiId: !Ref RestAPI
-      Name: !Sub ${AWS::StackName}-Authorizer
-      Type: "COGNITO_USER_POOLS"
-      IdentitySource: method.request.header.authorization
-      ProviderARNs:
-        - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
+  # ApiGatewayAuthorizer:
+  #   Type: "AWS::ApiGateway::Authorizer"
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     Name: !Sub ${AWS::StackName}-Authorizer
+  #     Type: "COGNITO_USER_POOLS"
+  #     IdentitySource: method.request.header.authorization
+  #     ProviderARNs:
+  #       - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
 
-  PathResource: 
+  InnoLabRootResource: 
     Type: 'AWS::ApiGateway::Resource'
     Properties: 
       RestApiId: !Ref RestAPI
       ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: path
+      PathPart: innolab
     DependsOn:
       - RestAPI
 
-  PathResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref PathResource
-      HttpMethod: ANY
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayAuthorizer
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-         # NOTE: API Gateway transforms all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaAlpha.Arn}/invocations"
-    DependsOn:
-      - PathResource
-  
-  PathResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref PathResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'*'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn: 
-      - PathResource
-
-  PathParamResource:
+  InnoLabImageResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
-      ParentId: !Ref PathResource
-      PathPart: "{param}"
+      ParentId: !Ref InnoLabRootResource
+      PathPart: images
     DependsOn:
-      - RestAPI
-      - PathResource
-  
-  PathParamResourceMethod:
+      - InnoLabRootResource
+
+  InnoLabImageVersionResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ParentId: !Ref InnoLabImageResource
+      PathPart: "{repo}"
+    DependsOn:
+      - InnoLabImageResource
+
+  InnoLabImageVersionResourceMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref PathParamResource
-      HttpMethod: ANY
+      ResourceId: !Ref InnoLabImageVersionResource
+      HttpMethod: GET
       RequestParameters:
-        "method.request.path.param": true
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayAuthorizer
+        "method.request.path.repo": true
+      AuthorizationType: None
       Integration:
         Type: AWS_PROXY
         # INTEGRATION HTTP METHOD MUST BE POST
         #   NOTE: API Gateway transforms all incoming requests into POSTS
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaBeta.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaAlpha.Arn}/invocations"
     DependsOn:
-      - PathResource
-      - PathParamResource
+      - InnoLabImageVersionResource
 
-  PathParamResourceCORS:
+  InnoLabImageVersionResourceCORS:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref RestAPI
-      ResourceId: !Ref PathParamResource
+      ResourceId: !Ref InnoLabImageVersionResource
       HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
@@ -406,7 +361,7 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: false
             method.response.header.Access-Control-Allow-Origin: false
     DependsOn:
-      - PathParamResource
+      - InnoLabImageVersionResource
 
   LambdaAlphaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -415,18 +370,7 @@ Resources:
       FunctionName: !GetAtt LambdaAlpha.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/path
-    DependsOn:
-      - RestAPIDeployment
-
-  LambdaBetaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaBeta.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/path/*
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/innolab/images/*
     DependsOn:
       - RestAPIDeployment
 
@@ -637,3 +581,128 @@ Outputs:
     Value: !Ref RestAPI
     Export:
       Name: !Sub ${AWS::StackName}-RestAPIID
+
+
+  ## EXAMPLE PATH INTEGRATIONS
+  ### PATH INTEGRATION
+  #### RESOURCE
+  # InnoLabRootResource: 
+  #   Type: 'AWS::ApiGateway::Resource'
+  #   Properties: 
+  #     RestApiId: !Ref RestAPI
+  #     ParentId: !GetAtt RestAPI.RootResourceId
+  #     PathPart: innolab
+  #   DependsOn:
+  #     - RestAPI
+  #### RESOURCE METHOD
+  # PathResourceMethod:
+  #   Type: 'AWS::ApiGateway::Method'
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     ResourceId: !Ref PathResource
+  #     HttpMethod: ANY
+  #     AuthorizationType: COGNITO_USER_POOLS
+  #     AuthorizerId: !Ref ApiGatewayAuthorizer
+  #     Integration:
+  #       Type: AWS_PROXY
+  #       # INTEGRATION HTTP METHOD MUST BE POST
+  #        # NOTE: API Gateway transforms all incoming requests into POSTS
+  #       IntegrationHttpMethod: POST
+  #       Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaAlpha.Arn}/invocations"
+  #   DependsOn:
+  #     - PathResource
+  #### CORS RESOURCE METHOD
+  # PathResourceCORS:
+  #   Type: AWS::ApiGateway::Method
+  #   Properties:
+  #     AuthorizationType: NONE
+  #     RestApiId: !Ref RestAPI
+  #     ResourceId: !Ref PathResource
+  #     HttpMethod: OPTIONS
+  #     Integration:
+  #       IntegrationResponses:
+  #       - StatusCode: 200
+  #         ResponseParameters:
+  #           method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  #           method.response.header.Access-Control-Allow-Methods: "'*'"
+  #           method.response.header.Access-Control-Allow-Origin: "'*'"
+  #         ResponseTemplates:
+  #           application/json: ''
+  #       PassthroughBehavior: WHEN_NO_MATCH
+  #       RequestTemplates:
+  #         application/json: '{"statusCode": 200}'
+  #       Type: MOCK
+  #     MethodResponses:
+  #     - StatusCode: 200
+  #       ResponseModels:
+  #         application/json: 'Empty'
+  #       ResponseParameters:
+  #           method.response.header.Access-Control-Allow-Headers: false
+  #           method.response.header.Access-Control-Allow-Methods: false
+  #           method.response.header.Access-Control-Allow-Origin: false
+  #   DependsOn: 
+  #     - PathResource
+  # 
+  ### PATH PARAMETER INTEGRATION
+  #### RESOURCE
+  # PathParamResource:
+  #   Type: 'AWS::ApiGateway::Resource'
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     ParentId: !Ref PathResource
+  #     PathPart: "{param}"
+  #   DependsOn:
+  #     - RestAPI
+  #     - PathResource
+  #### RESOURCE METHOD
+  # PathParamResourceMethod:
+  #   Type: 'AWS::ApiGateway::Method'
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     ResourceId: !Ref PathParamResource
+  #     HttpMethod: ANY
+  #     RequestParameters:
+  #       "method.request.path.param": true
+  #     AuthorizationType: COGNITO_USER_POOLS
+  #     AuthorizerId: !Ref ApiGatewayAuthorizer
+  #     Integration:
+  #       Type: AWS_PROXY
+  #       # INTEGRATION HTTP METHOD MUST BE POST
+  #       #   NOTE: API Gateway transforms all incoming requests into POSTS
+  #       IntegrationHttpMethod: POST
+  #       Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaBeta.Arn}/invocations"
+  #   DependsOn:
+  #     - PathResource
+  #     - PathParamResource
+  #### CORS RESOURCE METHOD
+  # PathParamResourceCORS:
+  #   Type: AWS::ApiGateway::Method
+  #   Properties:
+  #     AuthorizationType: NONE
+  #     RestApiId: !Ref RestAPI
+  #     ResourceId: !Ref PathParamResource
+  #     HttpMethod: OPTIONS
+  #     Integration:
+  #       IntegrationResponses:
+  #       - StatusCode: 200
+  #         ResponseParameters:
+  #           method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  #           # method.response.header.Access-Control-Allow-Methods: "'*'"
+  #           method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+  #           method.response.header.Access-Control-Allow-Origin: "'*'"
+  #         ResponseTemplates:
+  #           application/json: ''
+  #       PassthroughBehavior: WHEN_NO_MATCH
+  #       RequestTemplates:
+  #         application/json: '{"statusCode": 200}'
+  #       Type: MOCK
+  #     MethodResponses:
+  #     - StatusCode: 200
+  #       ResponseModels:
+  #         application/json: 'Empty'
+  #       ResponseParameters:
+  #           method.response.header.Access-Control-Allow-Headers: false
+  #           method.response.header.Access-Control-Allow-Methods: false
+  #           method.response.header.Access-Control-Allow-Origin: false
+  #   DependsOn:
+  #     - PathParamResource
