@@ -192,57 +192,40 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: !Sub "${applicationName}EcsTaskEcrAuthStatement"
+              - Sid: ECRAuthPermissions
                 Action:
                   - ecr:GetAuthorizationToken
                 Effect: Allow
                 Resource: '*'
-              - Sid: !Sub "${applicationName}EcsTaskEcrStatement"
+              - Sid: ECRPermissions
                 Action:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage
                 Effect: Allow
                 Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-              - Sid: !Sub "${applicationName}EcsTaskLogStatement"
+              - Sid: LogPermissions
                 Action: 
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Effect: Allow
                 Resource: '*' # TODO: figure out arns for loggroups and restrict scope here
-              - Sid: !Sub "${applicationName}EcsTaskSecretmanagerStatement"
+              - Sid: SecretManagerPermissions
                 Action: 
                   - secretsmanager:GetSecretValue
                 Effect: Allow
                 Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-              - Sid: !Sub "${applicationName}EcsTaskS3ObjectStatement"
+              - Sid: S3FilePermissions
                 Action: 
                   - s3:GetObject
                 Effect: Allow
                 Resource: !Sub "arn:aws:s3:::${applicationName}-env/*.env"
-              - Sid: !Sub "${applicationName}EcsTaskS3BucketStatement"
+              - Sid: S3BucketPermissions
                 Action:
                   - s3:GetBucketLocation
                 Effect: Allow
                 Resource: !Sub "arn:aws:s3:::${applicationName}-env"
-              # TODO: unsure if need this
-              # - Sid: !Sub "${applicationName}EcsTaskEc2Statement"
-              #   Action:
-              #     - ec2:DescribeTags
-              #   Effect: Allow
-              #   Resource: '*' # TODO: figure out how to scope to ec2 cluster host
-              # - Sid: !Sub "${applicationName}EcsTaskEcsStatement"
-              #   Action:
-              #     - ecs:CreateCluster
-              #     - ecs:DeregisterContainerInstance
-              #     - ecs:DiscoverPollEndpoint
-              #     - ecs:Poll
-              #     - ecs:RegisterContainerInstance
-              #     - ecs:StartTelemetrySession
-              #     - ecs:UpdateContainerInstancesState
-              #   Effect: Allow
-              #   Resource: '*' # TODO: scope to ecs cluster? or task definition?
-
+                
   # ECS SCALING ROLE
   ECSScalingRole:
     Type: AWS::IAM::Role
@@ -294,7 +277,7 @@ Resources:
             PolicyDocument:
               Version: "2012-10-17"
               Statement:
-                - Sid: !Sub "${applicationName}CodepipelineRoleCodecommitStatement"
+                - Sid: CodeCommitPermissions
                   Action:
                     - codecommit:CancelUploadArchive
                     - codecommit:GetBranch
@@ -304,24 +287,24 @@ Resources:
                     - codecommit:UploadArchive
                   Effect: Allow
                   Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
-                - Sid: !Sub "${applicationName}CodepipelineCloudwatchStatement"
+                - Sid: CloudWatchPermissions
                   Action:
                     - cloudwatch:*
                   Resource: "*" # TODO: restrict scope
                   Effect: Allow
-                - Sid: !Sub "${applicationName}CodepipelineRoleS3Statement"
+                - Sid: S3Permissions
                   Action:
                     - s3:*
                   Effect: Allow
                   Resource: 
                     - !Sub "arn:aws:s3:::${applicationName}-*"
-                - Sid: !Sub "${applicationName}CodepipelineRoleLambdaStatement"
+                - Sid: LambdaPermissions
                   Action:
                     - lambda:UpdateFunctionCode
                   Effect: Allow
                   Resource: 
                     - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
-                - Sid: !Sub "${applicationName}CodepipelineRoleCodebuildStatement"
+                - Sid: CodeBuildPermissions
                   Action:
                     - codebuild:BatchGetBuilds
                     - codebuild:StartBuild
@@ -351,7 +334,7 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: !Sub ${applicationName}CodeBuildLogOps
+              - Sid: LogPermisisons
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
@@ -363,7 +346,7 @@ Resources:
                   - cloudfront:CreateInvalidation
                 Effect: Allow
                 Resource: '*'
-              - Sid: !Sub ${applicationName}CodeBuildS3Ops
+              - Sid: S3Permissions
                 Action:
                   - s3:PutObject
                   - s3:GetObject
@@ -374,7 +357,7 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:s3:::${applicationName}-*"
-              - Sid: !Sub ${applicationName}CodeBuildTestReportOps
+              - Sid: CodeBuildPermissions
                 Action:
                   - codebuild:CreateReportGroup
                   - codebuild:CreateReport
@@ -384,19 +367,19 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${applicationName}*"
-              - Sid: !Sub ${applicationName}CodeBuildCodeCommitOps
+              - Sid: CodeCommitPermissions
                 Action:
                   - codecommit:GitPull
                 Effect: Allow
                 Resource:
                   - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*" 
-              - Sid: !Sub ${applicationName}CodeBuildCodeDeployOps
+              - Sid: CodeDeployPermissions
                 Action:
                   - codedeploy:Get*
                   - codedeploy:CreateCloudFormationDeployment
                 Effect: Allow
                 Resource: '*' # TODO: figure out which resources to scope this to... 
-              - Sid: !Sub ${applicationName}CodeBuildSecretsOps
+              - Sid: SecretManagerPermissions
                 Action:
                   - secretsmanager:GetSecretValue
                 Effect: Allow
@@ -407,7 +390,7 @@ Resources:
                   - ecr:GetAuthorizationToken
                 Effect: Allow
                 Resource: '*'
-              - Sid: !Sub ${applicationName}CodebuildECROtherOps
+              - Sid: ECRPermissions
                 Action:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
@@ -423,13 +406,13 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-              - Sid: !Sub ${applicationName}CodebuildLambdaUpdateOps
+              - Sid: LambdaPermissions
                 Action:
                   - lambda:UpdateFunctionCode
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
-              - Sid: !Sub ${applicationName}CognitoOps
+              - Sid: CognitoPermissions
                 Effect: Allow
                 Action:
                   - cognito-idp:AdminInitiateAuth
@@ -453,6 +436,7 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       ManagedPolicyArns:
+      # TODO: 
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
@@ -468,10 +452,6 @@ Resources:
                   - "cognito-idp:AdminCreateUser"
                 Resource: 
                   - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
-        - PolicyName: !Sub "${applicationName}-dynamodb-policy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
               - Sid: DynamoPermissions
                 Effect: Allow
                 Action:
@@ -484,20 +464,28 @@ Resources:
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Dev"
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Staging"
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Prod"
-        - PolicyName: !Sub "${applicationName}-codecommit-policy"
-          PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Sid: CodeCommitPermissions
-                  Effect: Allow
-                  Action: 
-                    - codecommit:GetCommit
-                    - codecommit:BatchGetCommit
-                    - codecommit:GetDifferences
-                    - codecommit:GetTree
-                    - codecommit:ListRepositories
-                  Resource:
-                    - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+              - Sid: CodeCommitPermissions
+                Effect: Allow
+                Action: 
+                  - codecommit:GetCommit
+                  - codecommit:BatchGetCommit
+                  - codecommit:GetDifferences
+                  - codecommit:GetTree
+                  - codecommit:ListRepositories
+                Resource:
+                  - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+              - Sid: ECRPermissions
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
+                  - ecr:DescribeRepositories
+                  - ecr:ListImages
+                  - ecr:DescribeImages
+                  - ecr:BatchGetImage
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
 
       RoleName: !Sub ${applicationName}-lambda-executor
       

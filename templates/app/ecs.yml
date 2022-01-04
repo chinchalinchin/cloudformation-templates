@@ -93,6 +93,9 @@ Hooks:
             TaskDefinitions:
               - FrontendTaskDefinition
               - FrontendTaskDefinitionAlt
+            TaskSets:
+              - FrontendTaskSet
+              - FrontendTaskSetAlt
             TrafficRouting:
               ProdTrafficRoute:
                 Type: 'AWS::ElasticLoadBalancingV2::Listener'
@@ -294,7 +297,7 @@ Resources:
               awslogs-group: !Ref BackendLogGroup
               awslogs-stream-prefix: ecs
 
-  FrontendTaskSet:
+  BackendTaskSet:
     Type: 'AWS::ECS::TaskSet'
     Properties:
       Cluster: !Ref Cluster
@@ -314,14 +317,14 @@ Resources:
       Service: !Ref BackendService
       TaskDefinition: !Ref BackendTaskDefinition
       LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
-          ContainerPort: 80
+        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
+          ContainerPort: !Ref backendPort
           TargetGroupArn: !Ref BackendTargetGroup
       ServiceRegistries:
         - RegistryArn: !GetAtt BackendDiscoveryService.Arn
           Port: !Ref backendPort
 
-  FrontendPrimaryTaskSet:
+  BackendPrimaryTaskSet:
     Type: 'AWS::ECS::PrimaryTaskSet'
     Properties:
       Cluster: !Ref Cluster
@@ -361,7 +364,7 @@ Resources:
       #   - RegistryArn: !GetAtt BackendDiscoveryService.Arn
       #     Port: !Ref backendPort
       DeploymentController:
-        Type: EXTERNAL
+        Type: CODE_DEPLOY
 
   BackendDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
@@ -551,7 +554,7 @@ Resources:
       TaskDefinition: !Ref FrontendTaskDefinition
       LoadBalancers:
         - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
-          ContainerPort: 80
+          ContainerPort: !Ref frontendPort
           TargetGroupArn: !Ref FrontendTargetGroup
       ServiceRegistries:
         - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
@@ -598,7 +601,7 @@ Resources:
       #   - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
       #     Port: !Ref frontendPort
       DeploymentController:
-        Type: EXTERNAL
+        Type: CODE_DEPLOY
 
   FrontendDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
