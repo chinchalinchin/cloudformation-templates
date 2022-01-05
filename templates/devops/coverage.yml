@@ -1,20 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Provisions the resources for a static HTML website hosted through S3 and distributed through a CloudFront distribution. Another S3 bucket is provisioned to hold web logs. A Route53 record is added to the application domain's hosted zone.
 
 Parameters:
   ## APPLICATION CONFIGURATION
-  environmentName:
-    Type: String
-    Default: Dev
   applicationName:
     Type: String
     Default: innolab
   certificateArn:
     Type: String
     Description: ARN of the ACM certificate used to sign requests on the domain.
-    Default: ${AWS::NoValue}
   hostedZoneId:
     Type: String
     Description: Physical ID of the hosted zone where the domain is being served.
-    Default: ${AWS::NoValue}   
+  domainName:
+    Type: String
+    Description: Domain name that is serving the application
 
 Resources:
   BucketLogs:
@@ -58,7 +59,7 @@ Resources:
     Properties:
       DistributionConfig: 
         Aliases: 
-          - !Sub "${subdomain}-coverage.${domain}"
+          - !Sub "${applicationName}-coverage.${domainName}"
         Origins: 
         - ConnectionAttempts: 3
           ConnectionTimeout: 10
@@ -113,7 +114,7 @@ Resources:
     Properties:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
-        - Name: !Sub "${subdomain}-coverage.${domain}"
+        - Name: !Sub "${applicationName}-coverage.${domainName}"
           Type: A
           AliasTarget:
             DNSName: !GetAtt CoverageDistribution.DomainName

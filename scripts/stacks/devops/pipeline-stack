@@ -80,33 +80,31 @@ esac
 if [ "$ACTION" == "create" ]
 then
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}" \
+        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}" \
         --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION"  \
                      ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
                      ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
+                     ParameterKey=coverageStack,ParameterValue="${APPLICATION^}-${COVERAGE_STACK}" \
                      ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
+                     ParameterKey=clusterStack,ParameterValue="${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}" \
+        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}" \
         --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION" \
                      ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
                      ParameterKey=domainName,ParameterValue="$DOMAIN" \
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                     ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
+                     ParameterKey=coverageStack,ParameterValue="${APPLICATION^}-${COVERAGE_STACK}" \
                      ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
-                     ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
+                     ParameterKey=clusterStack,ParameterValue="${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}"
 
-
-         
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \

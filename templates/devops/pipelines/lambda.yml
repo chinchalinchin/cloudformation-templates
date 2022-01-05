@@ -18,12 +18,15 @@ Parameters:
   repoStack:
     Type: String
     Default: Innolab-RepoStack
+  coverageStack:
+    Type: String
+    Default: Innolab-CoverageStack
   cognitoStack:
     Type: String
-    Default: Innolab-CognitoStack
-  dnsStack:
+    Default: Innolab-CognitoStack-Dev
+  clusterStack:
     Type: String
-    Default: Innolab-DNSStack
+    Default: Innolab-ClusterStack-Dev
 
 Conditions:
   DevResources: !Equals
@@ -31,15 +34,19 @@ Conditions:
     - Dev
 
 Mappings:
-  BranchToLowerCaseMap:
+  BranchMap:
     Dev: 
       branch:  "dev"
+      subdomain: "-dev"
     Test: 
       branch: "test"
+      subdomin: "-test"
     Staging: 
       branch: "staging"
+      subdomain: "-staging"
     Prod: 
       branch: "prod"
+      subdomain: ""
 
 Resources:
     PipelineArtifacts:
@@ -51,7 +58,7 @@ Resources:
           - app: !Ref applicationName
             env: 
               Fn::FindInMap:
-                - BranchToLowerCaseMap
+                - BranchMap
                 - !Ref environmentName
                 - branch
     
@@ -163,12 +170,12 @@ Resources:
                     - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
                     - env: 
                         Fn::FindInMap:
-                          - BranchToLowerCaseMap
+                          - BranchMap
                           - !Ref environmentName
                           - branch
                       app: !Ref applicationName
                       covDistro:
-                        Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                        Fn::ImportValue: !Sub ${coverageStack}-CoverageDistributionID
                       cognitoClient:
                         Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
                       userPool:

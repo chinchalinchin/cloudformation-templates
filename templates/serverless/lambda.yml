@@ -23,10 +23,13 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
+  domainName: 
+    Type: String
+    Default: makpar-innovation.net
   hostedZoneId:
     Type: String
     Description: Physical ID of the hosted zone where the domain is being served.
-  certficiateArn:
+  certificateArn:
     Type: String
     Description: ARN of the ACM SSL Certificate used to sign requests to domain.
 
@@ -304,14 +307,14 @@ Resources:
   #     AuthorizationType: COGNITO_USER_POOL
   #     AuthorizerId: !Ref ApiAuthorizer
   ApiGatewayAuthorizer:
-    Type: "AWS::ApiGateway::Authorizer"
+    Type: AWS::ApiGateway::Authorizer
     Properties:
       RestApiId: !Ref RestAPI
       Name: !Sub ${AWS::StackName}-Authorizer
-      Type: "COGNITO_USER_POOLS"
+      Type: COGNITO_USER_POOLS
       IdentitySource: method.request.header.authorization
       ProviderARNs:
-        - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
+        - Fn::ImportValue: !Sub ${cognitoStack}-UserPoolArn
 
   InnoLabRootResource: 
     Type: 'AWS::ApiGateway::Resource'
@@ -322,11 +325,20 @@ Resources:
     DependsOn:
       - RestAPI
 
+  InnoLabLambdaResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestAPI
+      ParentId: !Ref InnoLabRootResource
+      PathPart: lambdas
+    DependsOn:
+      - InnoLabRootResource
+
   InnoLabImageResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref RestAPI
-      ParentId: !Ref InnoLabRootResource
+      ParentId: !Ref InnoLabLambdaResource
       PathPart: images
     DependsOn:
       - InnoLabRootResource
@@ -580,14 +592,13 @@ Resources:
     Properties:
       CertificateArn: !Ref certificateArn
       DomainName: !Sub 
-        - "api-${subdomain}${subdomainEnv}.${domainName}"
+        - "apigateway${subdomainEnv}.${domain}"
         - subdomainEnv: 
             Fn::FindInMap:
               - BranchMap
               - !Ref environmentName
               - subdomain
-          subdomain: !Ref applicationName
-          domainName: !Ref domain
+          domain: !Ref domainName
       EndpointConfiguration:
         Types:
           - EDGE
@@ -605,14 +616,13 @@ Resources:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
         - Name: !Sub 
-            - "api-${subdomain}${subdomainEnv}.${domainName}"
+            - "apigateway${subdomainEnv}.${domain}"
             - subdomainEnv: 
                 Fn::FindInMap:
                   - BranchMap
                   - !Ref environmentName
-                  - subdomainEnv
-              subdomain: !Ref applicationName
-              domainName: !Ref domain
+                  - subdomain
+              domain: !Ref domainName
           Type: A
           AliasTarget:
             HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId

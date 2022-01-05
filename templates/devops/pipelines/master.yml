@@ -21,9 +21,12 @@ Parameters:
   cognitoStack:
     Type: String
     Default: Innolab-CognitoStack
-  dnsStack:
+  coverageStack:
     Type: String
-    Default: Innolab-DNSStack
+    Default: Innolab-CoverageStack
+  clusterStack:
+    Type: String
+    Default: Innolab-ClusterStack
 
 Resources:
   PipelineArtifacts:
@@ -122,7 +125,7 @@ Resources:
                   - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
                     covDistro:
-                      Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+                      Fn::ImportValue: !Sub ${coverageStack}-CoverageDistributionID
 
     DependsOn:
       - CodeBuild
