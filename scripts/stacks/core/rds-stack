@@ -21,37 +21,37 @@ function help(){
 }
 
 while [[ $# -gt 0 ]]; do
-       key="$1"
-       case $key in
-                --action)
-                    ACTION="$2"
-                    shift
-                    shift 
-                    ;;
-                --help)
-                    help
-                    exit 0
-                    ;;
-                --type)
-                    TYPE="$2"
-                    shift
-                    shift
-                    ;;
-                --port)
-                    PORT="$2"
-                    shift
-                    shift
-                    ;;
-                --environment)
-                    ENVIRONMENT="$2"
-                    shift
-                    shift
-                    ;;
-                *)
-                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                    exit 1
-                    ;;
-       esac
+    key="$1"
+    case $key in
+        --action|-action|--a|-a)
+            ACTION="$2"
+            shift
+            shift 
+            ;;
+        --help|-help|--h|-h)
+            help
+            exit 0
+            ;;
+        --type|-type|--t|o-t)
+            TYPE="$2"
+            shift
+            shift
+            ;;
+        --port|-port|--p|-p)
+            PORT="$2"
+            shift
+            shift
+            ;;
+        --environment|--env|--e|-e)
+            ENVIRONMENT="$2"
+            shift
+            shift
+            ;;
+        *)
+            log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+            exit 1
+            ;;
+    esac
 done
 
 if [ -z "$ACTION" ]
@@ -61,12 +61,12 @@ fi
 
 if [ "$TYPE" == 'postgres ']
 then
-    cp $PROJECT_DIR/templates/app/rds/postgres.yml ./rds.yml
+    cp $PROJECT_DIR/templates/core/rds/postgres.yml ./rds.yml
 elif [ "$TYPE" == "mysql" ]
     echo "TODO"
 else
     # default to postgres
-    cp $PROJECT_DIR/templates/app/rds/postgres.yml ./rds.yml
+    cp $PROJECT_DIR/templates/core/rds/postgres.yml ./rds.yml
 fi
 
 if [ "$ACTION" == "create" ]

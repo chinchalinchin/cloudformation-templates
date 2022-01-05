@@ -22,24 +22,20 @@ function help(){
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-            --action)
+            --action|-action|--a|-a)
                 ACTION="$2"
                 shift
                 shift 
                 ;;
-            --help)
-                help
-                exit 0
-                ;;
-            --environment)
+            --environment|--env|--e|-e)
                 ENVIRONMENT="$2"
                 shift
                 shift
                 ;;
-            *)
-                log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                exit 1
-                ;;
+            --help|-help|--h|-h)
+                help
+                exit 0
+                ;;   
        esac
 done
 
@@ -48,7 +44,7 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/app/cognito.yml ./cognito.yml
+cp $PROJECT_DIR/templates/core/cognito.yml ./cognito.yml
 
 if [ "$ACTION" == "create" ]
 then

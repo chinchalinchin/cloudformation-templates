@@ -1,0 +1,289 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'Provisions resources for the backendend service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack frontend ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created. Note: the backend service needs stood up before the frontend service.'
+
+Parameters:
+  ## CROSS STACK REFERENCES
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+    Description: Name of the IAM Cross Stack reference
+  repoStack:
+    Type: String
+    Default: Innolab-RepoStack
+    Description: Name of the Repo Cross Stack reference
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack-Dev
+    Description: Name of the VPC Cross Stack reference
+  clusterStack:
+    Type: String
+    Default: Innolab-ClusterStack-Dev
+  ## APPLICATION CONFIGURATION
+  applicationName:
+    Type: String
+    Default: innolab
+    Description: The name of the application being deployed.
+  environmentName:
+    Type: String
+    Default: Dev
+    Description: The environment into which the application is being deployed.
+  ## SERVICE CONFIGURATION
+  port:
+    Type: Number
+    Default: 8000
+    Description: Port mapping for backend service
+  tag:
+    Type: String
+    Default: Dev-v0.0.0
+    Description: Image tag for the backend service ECR
+
+Mappings:
+  BranchMap:
+    Dev: 
+      branch:  "dev"
+      subdomain: "-dev"
+    Test: 
+      branch: "test"
+      subdomain: "-test"
+    Staging: 
+      branch: "staging"
+      subdomain: "-staging"
+    Prod: 
+      branch: "prod"
+      subdomain: ""
+
+Resources:
+  
+  BackendLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/${environmentName}/backend/"
+
+  AutoScalingBackendTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 3
+      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt BackendService.Name]]
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN:
+        Fn::ImportValue: !Sub "${iamStack}-ECSScalingRoleArn"
+  
+  AutoScalingBackendPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-backend"
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AutoScalingBackendTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 10
+        ScaleOutCooldown: 10
+        # Keep things at or lower than 50% CPU utilization, for example
+        TargetValue: 50
+
+  BackendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 60
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-${environmentName}-backend-target"
+      Port: !Ref port
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  BackendTargetGroupAlt:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 60
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-${environmentName}-backend-target-2"
+      Port: !Ref port
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  BackendLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "!${applicationName}-${environmentName}-backend-alb-sg"
+      GroupDescription: Access to the internal load balancer
+      VpcId:
+        Fn::ImportValue: !Sub ${vpcStack}-VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          Description: Accept all traffic from the frontend load balancer
+          SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
+
+  BackendLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internal
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '30'
+      Subnets:
+        # This load balancer is put into the private subnet, so that there is no
+        # route for the public to even be able to access the private load balancer.
+        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      SecurityGroups: 
+        - !Ref BackendLoadBalancerSecurityGroup
+
+  BackendLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - BackendLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref BackendTargetGroup
+          Type: 'forward'
+      LoadBalancerArn: !Ref BackendLoadBalancer
+      Port: !Ref port
+      Protocol: HTTP
+
+  BackendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: BackendLogGroup
+    Properties:
+      Family: !Sub "${applicationName}-${environmentName}-backend-task-definition"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 512
+      Memory: 1024
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
+      ContainerDefinitions:
+        - Name: !Sub ${applicationName}-${environmentName}-backend
+          Image: !Sub
+            - "${imageUri}:${whichTag}"
+            - imageUri:  
+                Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
+              whichTag: !Ref tag
+          PortMappings:
+            - ContainerPort: !Ref port
+          EnvironmentFiles:
+            - Type: s3
+              Value: !Sub
+                - "${bucketArn}/app.${env}.env"
+                - bucketArn: 
+                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
+                  env:
+                    Fn::FindInMap:
+                      - BranchMap
+                      - !Ref environmentName
+                      - branch
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref BackendLogGroup
+              awslogs-stream-prefix: ecs
+
+  BackendService:
+    Type: AWS::ECS::Service
+    # This dependency is needed so that the load balancer is setup correctly in time
+    DependsOn:
+      - BackendLoadBalancerListener
+    Properties: 
+      ServiceName: !Sub ${applicationName}-${environmentName}-backend
+      Cluster: 
+        Fn::ImportValue: !Sub ${clusterStack}-Cluster
+      TaskDefinition: !Ref BackendTaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: DISABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+          SecurityGroups:
+            - Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
+          ContainerPort: !Ref port
+          TargetGroupArn: !Ref BackendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
+          Port: !Ref port
+      DeploymentController:
+        Type: CODE_DEPLOY
+
+  BackendDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} backend service"
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+          - TTL: 60
+            Type: SRV
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: !Sub ${applicationName}-${environmentName}-backend
+      NamespaceId:
+        Fn::ImportValue: !Sub ${clusterStack}-Namespace
+
+
+Outputs:
+  BackendLoadBalancerName:
+    Value: !GetAtt BackendLoadBalancer.LoadBalancerName
+    Description: Name of backend load balancer
+    Export: 
+      Name: !Sub ${AWS::StackName}-BackendLoadBalancerName
+  BackendTargetGroup:
+    Value: !GetAtt BackendTargetGroup.TargetGroupName
+    Description: Name of first backend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendTargetGroup
+  BackendTargetGroupAlt:
+    Value: !GetAtt BackendTargetGroupAlt.TargetGroupName
+    Description: Name of second backend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendTargetGroupAlt
+  BackendServiceName:
+    Value: !GetAtt BackendService.Name
+    Description: Name of the backend service
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendServiceName
+  BackendServiceArn:
+    Value: !Ref BackendService
+    Description: ARN of the backend service
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendServiceARN
+  BackendTaskDefinitionArn:
+    Value: !Ref BackendTaskDefinition
+    Description: Arn of the backend task definition
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendTaskARN

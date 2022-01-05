@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  domain:
+    Type: String
+    Default: makpar-innovation.net
+    Description: Domain where the application will be hosted. Must be purchased before the stack is stood up.
+
+Resources: 
+  HostedZone:
+    Description: "Hosted Zone that is provisioned if DNS configuration does not exist."
+    Condition: NotDNSExists
+    Type: 'AWS::Route53::HostedZone'
+    Properties:
+      Name: !Sub "${domain}"
+  Certificate:
+    Description: "Certificate that is provisioned if DNS confiuration does not exist."
+    Condition: NotDNSExists
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: !Sub "*.${domain}"
+      ValidationMethod: DNS
+
+Outputs:
+  CertificateId:
+    Value: !Ref Certificate
+    Export:
+      Name: !Sub ${AWS::StackName}-CertificateID
+  HostedZoneId:
+    Condition: NotDNSExists
+    Value: !Ref HostedZone
+    Export:
+      Name: !Sub ${AWS::StackName}-HostedZoneID

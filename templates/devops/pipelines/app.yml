@@ -20,10 +20,13 @@ Parameters:
     Default: Innolab-RepoStack
   cognitoStack:
     Type: String
-    Default: Innolab-CognitoStack
+    Default: Innolab-CognitoStack-Dev
   dnsStack:
     Type: String
     Default: Innolab-DNSStack
+  ecsStack:
+    Type: String
+    Default: Innolab-ECSStack-Dev
 
 Conditions:
   DevResources: !Equals
@@ -77,11 +80,41 @@ Resources:
           - LOCAL_DOCKER_LAYER_CACHE
           - LOCAL_SOURCE_CACHE
 
-  # FrontendCodeDeploy:
-  #   Type: AWS::CodeDeploy::Application
-  #   Properties:
-  #     ComputePlatform: ECS
-  #     ApplicationName: !Sub "${applicationName}-${environmentName}-frontend-code-deploy"
+  FrontendCodeDeploy:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ComputePlatform: ECS
+      ApplicationName: !Sub "${applicationName}-${environmentName}-frontend-code-deploy"
+
+  FrontendDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref FrontendCodeDeploy
+      ECSServices:
+        - ClusterName: 
+            Fn::ImportValue: !Sub "${ecsStack}-ClusterName"
+          ServiceName:
+            Fn::ImportValue: !Sub "${ecsStack}-FrontendServiceName"
+      LoadBalancerInfo:
+        ElbInfoList:
+          - Name: 
+              Fn::ImportValue: !Sub ${ecsStack}-FrontendLoadBalancerName
+        # TargetGroupInfoList:
+        #   - Name:
+        #       Fn::ImportValue: !Sub ${ecsStack}-FrontendTargetGroup
+        #   - Name:
+        #       Fn::ImportValue: !Sub ${ecsStack}-FrontendTargetGroupAlt
+      DeploymentStyle:
+        DeploymentOption: WITH_TRAFFIC_CONTROL
+        DeploymentType: BLUE_GREEN
+      ServiceRoleArn:
+        Fn::ImportValue: !Sub ${iamStack}-CodeDeployRoleArn
+      BlueGreenDeploymentConfiguration:
+        DeploymentReadyOption: 
+            ActionOnTimeout: CONTINUE_DEPLOYMENT
+        TerminateBlueInstancesOnDeploymentSuccess: 
+          Action: TERMINATE
+          TerminationWaitTimeInMinutes: 2
 
   # BackendCodeDeploy:
   #   Type: AWS::CodeDeploy::Application
@@ -193,6 +226,19 @@ Resources:
                   Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
                 BranchName: !Ref environmentName
                 PollForSourceChanges: false
+            - Name: Image
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: ECR
+              OutputArtifacts: 
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-image"
+              Configuration:
+                RepositoryName:
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
+                ImageTag: !Ref environmentName
         - Name: Build   
           Actions:
             - Name: CodeBuild
@@ -217,6 +263,30 @@ Resources:
                     app: !Ref applicationName
                     covDistro:
                       Fn::ImportValue: !Sub ${dnsStack}-Dev-CoverageDistributionID
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeployToECS
+                Version: '1'
+              RunOrder: 1
+              Configuration:
+                AppSpecTemplateArtifact: !Sub "${applicationName}-${environmentName}-frontend-source" 
+                ApplicationName: !Ref FrontendCodeDeploy
+                DeploymentGroupName: !Ref FrontendDeploymentGroup
+                Image1ArtifactName: !Sub "${applicationName}-${environmentName}-frontend-image"
+                Image1ContainerName: IMAGE1_NAME
+                TaskDefinitionTemplatePath: taskdef.json
+                AppSpecTemplatePath: appspec.yaml
+                TaskDefinitionTemplateArtifact: !Sub "${applicationName}-${environmentName}-frontend-source" 
+              OutputArtifacts: []
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-source"   
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-image"
+              Region: !Sub ${AWS::Region}
+              Namespace: DeployVariables
     DependsOn:
       - CodeBuild
 
@@ -270,6 +340,19 @@ Resources:
                   Fn::ImportValue: !Sub "${repoStack}-BackendRepository"
                 BranchName: !Ref environmentName
                 PollForSourceChanges: false
+            - Name: Image
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: ECR
+              OutputArtifacts: 
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-image"
+              Configuration:
+                RepositoryName:
+                  Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
+                ImageTag: !Ref environmentName
         # - Name: Scan
           # Actions:
             # - Name: Scan

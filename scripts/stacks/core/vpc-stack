@@ -29,7 +29,7 @@ function help(){
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        --action)
+        --action|-action|--a|-a)
             ACTION="$2"
             if [ $ACTION != "create" ] || [ $ACTION != "update" ] || [ $ACTION != "delete" ]
             then
@@ -39,17 +39,17 @@ while [[ $# -gt 0 ]]; do
             shift
             shift 
             ;;
-        --environment)
+        --environment|-environment|--env|-env|--e|-e)
             ENVIRONMENT="$2"
-            # if [ "$ENVIRONMENT" != "Dev" ] || [ "$ENVIRONMENT" != "Staging" ] || [ "$ENVIRONMENT" != "Prod" ]
-            # then
-            #     log "'environment==$ENVIRONMENT' not in allowed values: <Dev | Staging | Prod>"
-            #     exit 1
-            # fi
+            if [ "$ENVIRONMENT" != "Dev" ] || [ "$ENVIRONMENT" != "Staging" ] || [ "$ENVIRONMENT" != "Prod" ]
+            then
+                log "'environment==$ENVIRONMENT' not in allowed values: <Dev | Staging | Prod>"
+                exit 1
+            fi
             shift
             shift
             ;;
-        --bastion-host)
+        --bastion-host|-bastion-host|--bh|-bh)
             BASTION_HOST="$2"
             if [ $BASTION_HOST != "true" ] || [$BASTION_HOST != "false"]
             then 
@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
-        --help)
+        --help|-help|--h|-h)
             help
             exit 0
             ;;

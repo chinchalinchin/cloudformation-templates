@@ -2,14 +2,14 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="pipeline-stack"
-SCRIPT_DES=$''
+SCRIPT_DES=$'Performs the action specified by \e[3m--action\e[0m on the pipeline specified by \e[3m--pipeline\e[0m in the environment specified by \e[3m--environment\e[0m'
 PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/.env
+source $PROJECT_DIR/env/.env
 
 # Example Usage:
 # >$     pipeline-stack --environment <Dev | Prod | Test | Staging> \
-#                   --pipeline <app | lambda | master>
-#                   --action <create | update | delete> 
+#                       --pipeline <app | lambda | master>
+#                       --action <create | update | delete> 
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
 
@@ -88,7 +88,8 @@ then
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                      ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
-                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}"
+                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
+                     ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
@@ -101,7 +102,9 @@ then
                      ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                      ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
                      ParameterKey=dnsStack,ParameterValue="${APPLICATION^}-${DNS_STACK}" \
-                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}"
+                     ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
+                     ParameterKey=ecsStack,ParameterValue="${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
+
 
          
 elif [ "$ACTION" == "delete" ]

@@ -1,0 +1,137 @@
+
+Parameters:
+  ## APPLICATION CONFIGURATION
+  environmentName:
+    Type: String
+    Default: Dev
+  applicationName:
+    Type: String
+    Default: innolab
+  certificateArn:
+    Type: String
+    Description: ARN of the ACM certificate used to sign requests on the domain.
+    Default: ${AWS::NoValue}
+  hostedZoneId:
+    Type: String
+    Description: Physical ID of the hosted zone where the domain is being served.
+    Default: ${AWS::NoValue}   
+
+Resources:
+  BucketLogs:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketName: !Sub "${applicationName}-coverage-logs"
+
+  CoverageBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Sub "${applicationName}-coverage"
+      LoggingConfiguration:
+        DestinationBucketName: !Ref BucketLogs
+        LogFilePrefix: 'cov/'
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+
+  CoverageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CoverageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:DeleteObject"
+            Principal: '*'
+            Resource: !Sub '${CoverageBucket.Arn}/*'
+    DependsOn:
+      - CoverageBucket
+
+  CoverageDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig: 
+        Aliases: 
+          - !Sub "${subdomain}-coverage.${domain}"
+        Origins: 
+        - ConnectionAttempts: 3
+          ConnectionTimeout: 10
+          DomainName: !GetAtt CoverageBucket.DomainName
+          Id: !Ref CoverageBucket
+          CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginKeepaliveTimeout: 5
+              OriginProtocolPolicy: 'https-only'
+              OriginReadTimeout: 30
+              OriginSSLProtocols:
+                - TLSv1
+                - TLSv1.1
+                - TLSv1.2
+        DefaultCacheBehavior: 
+          AllowedMethods: 
+          - "HEAD"
+          - "DELETE"
+          - "POST"
+          - "GET"
+          - "OPTIONS"
+          - "PUT"
+          - "PATCH"
+          CachedMethods: 
+          - "HEAD"
+          - "GET"
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: true
+          Compress: false
+          SmoothStreaming: false
+          TargetOriginId: !Ref CoverageBucket
+          ViewerProtocolPolicy: "redirect-to-https"
+        PriceClass: "PriceClass_All"
+        Enabled: true
+        ViewerCertificate: 
+          AcmCertificateArn: !Ref certificateArn
+          MinimumProtocolVersion: "TLSv1.2_2019"
+          SslSupportMethod: "sni-only"
+        HttpVersion: "http2"
+        DefaultRootObject: 'index.html'
+        IPV6Enabled: true
+        Logging:
+          Bucket: !GetAtt BucketLogs.DomainName
+          IncludeCookies: false
+          Prefix: 'cov/'
+
+  CoverageRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Sub "${subdomain}-coverage.${domain}"
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt CoverageDistribution.DomainName
+            EvaluateTargetHealth: false
+            # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
+            # alias record that routes traffic to a CloudFront distribution.
+            HostedZoneId: Z2FDTNDATAQYW2
+    DependsOn:
+      - CoverageDistribution
+
+Outputs:
+  CoverageDistributionID:
+    Value: !Ref CoverageDistribution
+    Description: Resource ID for CloudFront Distribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CoverageDistributionID
+  CoverageDomain:
+    Value: !GetAtt CoverageDistribution.DomainName
+    Description: Domain name of CloudFront Distribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CoverageDistributionDomain

@@ -7,7 +7,7 @@ PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     function-stack --environment <Dev | Prod | Test | Staging> \
+# >$     lambda-stack --environment <Dev | Prod | Test | Staging> \
 #                     --action <create | update | delete>
 
 #      NOTE: ``--action`` defaults to `create` if not supplied.
@@ -23,17 +23,17 @@ function help(){
 while [[ $# -gt 0 ]]; do
        key="$1"
        case $key in
-              --action)
+              --action|-action|--a|-a)
                      ACTION="$2"
                      shift
                      shift 
                      ;;
-              --environment)
+              --environment|-environment|--env|-env|--e|-e)
                      ENVIRONMENT="$2"
                      shift
                      shift
                      ;;
-              --help)
+              --help|-help|--h|-h)
                      help
                      exit 0
                      ;;
@@ -49,34 +49,37 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/app/lambda.yml ./lambda.yml
+cp $PROJECT_DIR/templates/serverless/lambda.yml ./lambda.yml
 
 if [ "$ACTION" == "create" ]
 then
        aws cloudformation create-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
               --template-body file://lambda.yml \
+              --capabilities CAPABILITY_NAMED_IAM \
               --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                            ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
+                            ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                             ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                             ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                            ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
-              --capabilities CAPABILITY_NAMED_IAM
+                            ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
        aws cloudformation update-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
               --template-body file://lambda.yml \
+              --capabilities CAPABILITY_NAMED_IAM \
               --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                             ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                            ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
+                            ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                             ParameterKey=iamStack,ParameterValue="${APPLICATION^}-$IAM_STACK" \
                             ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                             ParameterKey=repoStack,ParameterValue="${APPLICATION^}-$REPO_STACK" \
-                            ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
-              --capabilities CAPABILITY_NAMED_IAM  
-              
+                            ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"              
 elif [ "$ACTION" == "delete" ]
 then 
        aws cloudformation delete-stack \

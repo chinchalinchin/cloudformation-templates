@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'Provisions resources for an ECS Fargate Cluster. A security group for container ingress for all containers deployed into the cluster is created'
+
+Parameters:
+  ## CROSS STACK REFERENCE CONFIGURATION
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack-Dev
+    Description: Name of the VPC Cross Stack reference
+  ## APPLICATION CONFIGURATION
+  applicationName:
+    Type: String
+    Default: innolab
+    Description: The name of the application being deployed.
+  environmentName:
+    Type: String
+    Default: Dev
+    Description: The environment into which the application is being deployed.
+
+Resources:
+  # NOTE: in the service *ymls*, each template will need to create an AWS::EC2::SecurityGroupIngress
+  #       for the load balancer in front of the service. This allows the load balancer to forward traffic
+  #       to containers in the cluster.
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${applicationName}-${environmentName}-container-sg"
+      GroupDescription: "Security group for ECS containers"
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
+        - IpProtocol: -1
+          SourceSecurityGroupId: !Ref BackendLoadBalancerSecurityGroup
+  
+  ContainerSecurityGroupSelfIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref ContainerSecurityGroup
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${applicationName}-${environmentName}-cluster"
+
+  PrivateNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+        Name: !Sub 
+          - "${app}-${env}-ecs.net"
+          - app: !Ref applicationName
+            env: 
+              Fn::FindInMap:
+                - BranchMap
+                - !Ref environmentName
+                - branch
+        Vpc: 
+          Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+Outputs:
+  ContainerSecurityGroup:
+    Value: !Ref ContainerSecurityGroup
+    Description: Security group for cluster containers
+    Export:
+      Name: !Sub ${AWS::StackName}-SecurityGroup
+  NameSpace:
+    Value: !Ref PrivateNamespace
+    Description: Private DNS namespace for cluster
+    Export:
+      Name: !Sub ${AWS::StackName}-Namespace
+  ClusterName:
+    Value: !Ref Cluster
+    Description: Name of Innovation Lab ECS Cluster
+    Export:
+      Name: !Sub ${AWS::StackName}-Cluster
+  ClusterARN:
+    Value: !GetAtt Cluster.Arn
+    Description: Arn of the Innovation Lab ECS Cluster
+    Export:
+      Name: !Sub ${AWS::StackName}-ClusterARN

@@ -3,12 +3,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: 'Provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline role from the ${applicationName}-IAMStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-RepoStack.'
 
 Parameters:
-  environmentName:
-    Type: String
-    Default: Dev
-  applicationName:
-    Type: String
-    Default: innolab
+  ## CROSS STACK REFERENCES
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -21,11 +16,39 @@ Parameters:
   repoStack:
     Type: String
     Default: Innolab-RepoStack
+  ## APPLICATION CONFIGURATION
+  environmentName:
+    Type: String
+    Default: Dev
+  applicationName:
+    Type: String
+    Default: innolab
+  hostedZoneId:
+    Type: String
+    Description: Physical ID of the hosted zone where the domain is being served.
+  certficiateArn:
+    Type: String
+    Description: ARN of the ACM SSL Certificate used to sign requests to domain.
 
 Conditions:
   DevResources: !Equals
     - !Ref environmentName
     - Dev
+
+Mappings:
+  BranchMap:
+    Dev: 
+      branch:  "dev"
+      subdomain: "-dev"
+    Test: 
+      branch: "test"
+      subdomain: "-test"
+    Staging: 
+      branch: "staging"
+      subdomain: "-staging"
+    Prod: 
+      branch: "prod"
+      subdomain: ""
 
 Resources:
   # API Gateway Path Lambda
@@ -60,7 +83,6 @@ Resources:
           # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
-  # API Gateway Path Param Lambda
   LambdaBeta: 
     Type: AWS::Lambda::Function
     Properties:
@@ -276,15 +298,20 @@ Resources:
       - CloudWatchLogGroup
       - InnoLabImageVersionResourceMethod
 
-  # ApiGatewayAuthorizer:
-  #   Type: "AWS::ApiGateway::Authorizer"
-  #   Properties:
-  #     RestApiId: !Ref RestAPI
-  #     Name: !Sub ${AWS::StackName}-Authorizer
-  #     Type: "COGNITO_USER_POOLS"
-  #     IdentitySource: method.request.header.authorization
-  #     ProviderARNs:
-  #       - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
+  ## NOTE: Add these two lines to the AWS::ApiGateway::Method properties to attach an authorizer
+  ##        to a Gateway endpoint
+  #  Properties:
+  #     AuthorizationType: COGNITO_USER_POOL
+  #     AuthorizerId: !Ref ApiAuthorizer
+  ApiGatewayAuthorizer:
+    Type: "AWS::ApiGateway::Authorizer"
+    Properties:
+      RestApiId: !Ref RestAPI
+      Name: !Sub ${AWS::StackName}-Authorizer
+      Type: "COGNITO_USER_POOLS"
+      IdentitySource: method.request.header.authorization
+      ProviderARNs:
+        - Fn::ImportValue: !Sub "${cognitoStack}-UserPoolArn"
 
   InnoLabRootResource: 
     Type: 'AWS::ApiGateway::Resource'
@@ -363,6 +390,10 @@ Resources:
     DependsOn:
       - InnoLabImageVersionResource
 
+  ## API GATEWAY LAMBDA PERMISSIONS
+  ##  NOTE: the arn is of the form arn:aws:execute-api:region:account-id:api-name/env-name/{METHOD}/{ENDPOINT_PATH}
+  ##        where METHOD is the HTTP method API gateway is using to invoke Lambda and ENDPOINT_PATH is the URI of 
+  ##        the API gateway endpoint invoking. 
   LambdaAlphaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
     Properties:
@@ -542,6 +573,52 @@ Resources:
       SourceArn: !GetAtt LambdaZetaCloudFormationEventRule.Arn
     DependsOn:
       - LambdaZetaCloudFormationEventRule
+
+  ## DNS CONFIGURATION
+  RestAPIDomainName:
+    Type: 'AWS::ApiGateway::DomainName'
+    Properties:
+      CertificateArn: !Ref certificateArn
+      DomainName: !Sub 
+        - "api-${subdomain}${subdomainEnv}.${domainName}"
+        - subdomainEnv: 
+            Fn::FindInMap:
+              - BranchMap
+              - !Ref environmentName
+              - subdomain
+          subdomain: !Ref applicationName
+          domainName: !Ref domain
+      EndpointConfiguration:
+        Types:
+          - EDGE
+
+  RestAPIBasePathMapping:
+    Type: 'AWS::ApiGateway::BasePathMapping'
+    Properties:
+      DomainName: !Ref RestAPIDomainName
+      RestApiId: !Ref RestAPI
+      Stage: !Ref environmentName
+
+  RestAPIRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Sub 
+            - "api-${subdomain}${subdomainEnv}.${domainName}"
+            - subdomainEnv: 
+                Fn::FindInMap:
+                  - BranchMap
+                  - !Ref environmentName
+                  - subdomainEnv
+              subdomain: !Ref applicationName
+              domainName: !Ref domain
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
+    DependsOn:
+      - RestAPIDomainName
 
 Outputs:
   LambdaAlphaArn:

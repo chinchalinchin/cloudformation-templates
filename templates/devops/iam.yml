@@ -784,6 +784,11 @@ Outputs:
     Description: ARN for CodeBuild role
     Export:
       Name: !Sub ${AWS::StackName}-CodeBuildRoleArn
+  CodeDeployRoleArn:
+    Value: !GetAtt CodeDeployRole.Arn
+    Description: ARN for CodeDeploy role
+    Export:
+      Name: !Sub ${AWS::StackName}-CodeDeployRoleArn
   LoggerRoleArn:
     Value: !GetAtt APILoggerRole.Arn
     Description: ARN for API Logger Role
