@@ -66,7 +66,7 @@ Resources:
     Properties:
       MinCapacity: 1
       MaxCapacity: 3
-      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt BackendService.Name]]
+      ResourceId: !Join ['/', [service, Fn::ImportValue: !Sub "${clusterStack}-Cluster", !GetAtt BackendService.Name]]
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
       RoleARN:
