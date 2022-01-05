@@ -36,7 +36,7 @@ Parameters:
     Default: makpar-innovation.net
     Description: Domain for the application cluster
   ## SERVICE CONFIGURATION
-  frontendPort:
+  port:
     Type: Number
     Default: 8080 
     Description: Port mapping for frontend service 
@@ -101,7 +101,7 @@ Resources:
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
       Name: !Sub "${applicationName}-${environmentName}-frontend-target"
-      Port: !Ref frontendPort
+      Port: !Ref port
       Protocol: HTTP
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
@@ -120,7 +120,7 @@ Resources:
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
       Name: !Sub "${applicationName}-${environmentName}-frontend-target-2"
-      Port: !Ref frontendPort
+      Port: !Ref port
       Protocol: HTTP
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
@@ -197,7 +197,7 @@ Resources:
                 Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
               whichTag: !Ref frontendTag
           PortMappings:
-            - ContainerPort: !Ref frontendPort
+            - ContainerPort: !Ref port
           EnvironmentFiles:
             - Type: s3
               Value: !Sub
@@ -244,11 +244,11 @@ Resources:
             - Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
       LoadBalancers:
         - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
-          ContainerPort: !Ref frontendPort
+          ContainerPort: !Ref port
           TargetGroupArn: !Ref FrontendTargetGroup
       ServiceRegistries:
         - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
-          Port: !Ref frontendPort
+          Port: !Ref port
       DeploymentController:
         Type: CODE_DEPLOY
 
