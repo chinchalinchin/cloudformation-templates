@@ -25,31 +25,31 @@ function help(){
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        --action)
+        --action|-action|--a|-a)
             ACTION="$2"
             shift
             shift 
             ;;
-         --table-name)
+         --table-name|-table-name|--tb|-tb)
             TABLE="$2"
             shift
             shift 
             ;;
-         --partition-key)
+         --partition-key|-partion-key|--pk|-pk)
             PARTITION="$2"
             shift
             shift 
             ;;
-        --sort-key)
+        --sort-key|-sort-key|--sk|-sk)
             SORT="$2"
             shift
             shift 
             ;;
-        --help)
+        --help|-help|--h|-h)
             help
             exit 0
             ;;
-        --environment)
+        --environment|-environment|--env|-env|--e|-e)
             ENVIRONMENT="$2"
             shift
             shift
@@ -63,6 +63,7 @@ done
 
 if [ -z "$ACTION" ]
 then
+    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
 fi
 

@@ -1,20 +1,16 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="ecs-stack"
+SCRIPT_NAME="cluster-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/env/.env
 
 # Example Usage:
 # >$     cluster-stack --environment <Dev | Prod | Test | Staging> \
-#                   --action <create | update | delete> \
+#                       --action <create | update | delete> \
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
-#   NOTE: if the hosted zone and certificate have already been configured, 
-#           pass in the ``--dns-exists`` flag. Ensure the *CERTIFICATE_ID*
-#           and *HOSTED_ZONE_ID* have been set in the */env/.env* file if
-#           this is the case.
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -27,17 +23,17 @@ function help(){
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        --action)
+        --action|-action|--a|-a)
             ACTION="$2"
             shift
             shift 
             ;;
-        --environment)
+        --environment|-environment|--env|-env|--e|-e)
             ENVIRONMENT="$2"
             shift
             shift
             ;;
-        --help)
+        --help|-help|--h|-h)
             help
             exit 0
             ;;
@@ -56,6 +52,7 @@ fi
 
 if [ -z "$ACTION" ]
 then
+    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
 fi
 
@@ -63,7 +60,7 @@ cp $PROJECT_DIR/templates/cluster/cluster.yml ./cluster.yml
 
 if [ "$ACTION" == "create" ]
 then
-
+    log "Creating \e[1m${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}" \
         --template-body file://cluster.yml \
@@ -71,10 +68,9 @@ then
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
-
 elif [ "$ACTION" == "update" ]
 then
-
+    log "Updating \e[1m${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}" \
         --template-body file://cluster.yml \
@@ -82,9 +78,9 @@ then
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-$ENVIRONMENT"
-
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}"
 else

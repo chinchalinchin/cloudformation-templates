@@ -72,11 +72,13 @@ done
 
 if [ -z "$ACTION" ]
 then
+    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
 fi
 
 if [ -z "$BASTION_HOST" ]
 then 
+    log "No \e[3m--bastion-host\e[0m specified. Defaulting to \e[1mtrue\e[0m"
     BASTION_HOST="true"
 fi
 

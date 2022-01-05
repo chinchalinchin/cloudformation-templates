@@ -1,18 +1,26 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_NAME="ecs-stack"
-SCRIPT_DES=$''
+SCRIPT_NAME="service-stack"
+SCRIPT_DES=$'Stand up a service in the Fargate cluster'
 PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/.env
 
 # Example Usage:
-# >$     backend-stack --environment <Dev | Prod | Test | Staging> \
+# >$     service-stack --environment <Dev | Prod | Test | Staging> \
 #                       --action <create | update | delete> \
+#                       --service <frontend | backend>
 #                       --tag <tag>
+#                       --port <port>
 
 #   NOTE: `--action` defaults to `create` if not supplied
 #   NOTE: `--tag` defaults to `$ENVIRONMENT-v0.0.0` if not supplied
+
+# EXAMPLES: 
+#   ## BACKEND SERVICE
+#       service-stack --environment Dev --service backend --tag v0.0.0 --port 8000
+#   ## FRONTEND SERVICE
+#       service-stack --environment Dev --service frontend --tag v0.0.1 port 8080
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -35,8 +43,18 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
+        --service|-service|--s|-s)
+            SERVICE="$2"
+            shift
+            shift
+            ;;
         --tag|-tag|--t|-t)
             TAG="$2"
+            shift
+            shift
+            ;;
+        --port|-port|--p|-p)
+            PORT="$2"
             shift
             shift
             ;;
@@ -56,29 +74,54 @@ then
     log "Specifiy environment with \e[3m--environment\e[0m flag."
     exit 1
 fi
+if [ -z "$SERVICE" ]
+then
+    log "Specifiy service with \e[3m--service\e[0m flag."
+    exit 1
+fi
+if [ -z "$PORT" ]
+then
+    log "Specifiy port with \e[3m--port\e[0m flag."
+    exit 1
+fi
 
 if [ -z "$ACTION" ]
 then
+    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
 fi
 
 if [ -z "$TAG" ]
 then
+    log "No \e[3m--tag\e[0m specified. Defaults to \e[1m$ENVIRONMENT-v0.0.0\e[0m"
     TAG="$ENVIRONMENT-v0.0.0"
+else
+    TAG="$ENVIRONMENT-$TAG"
 fi
 
-cp $PROJECT_DIR/templates/cluster/services/backend.yml ./backend.yml
+case $SERVICE in 
+    frontend)
+        cp $PROJECT_DIR/templates/cluster/services/frontend.yml ./service.yml
+        ;;
+    backend)
+        cp $PROJECT_DIR/templates/cluster/services/backend.yml ./service.yml
+        ;;
+    *)
+        log "\e3[m--service\e[0m input not understood; must be <frontend | backend>"
+        exit 1
+        ;;
+esac
 
 if [ "$ACTION" == "create" ]
 then
 
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-${BACKEND_STACK}-${ENVIRONMENT}" \
-        --template-body file://backend.yml \
+        --stack-name "${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}" \
+        --template-body file://service.yml \
         --capabilities CAPABILITY_AUTO_EXPAND \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                        ParameterKey=port,ParameterValue="8000" \
+                        ParameterKey=port,ParameterValue="$PORT" \
                         ParameterKey=tag,ParameterValue="$TAG" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-${REPO_STACK}" \
@@ -88,12 +131,12 @@ elif [ "$ACTION" == "update" ]
 then
 
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}" \
-        --template-body file://backend.yml \
+        --stack-name "${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}" \
+        --template-body file://service.yml \
         --capabilities CAPABILITY_AUTO_EXPAND \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
-                        ParameterKey=port,ParameterValue="8000" \
+                        ParameterKey=port,ParameterValue="$PORT" \
                         ParameterKey=tag,ParameterValue="$TAG" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-${REPO_STACK}" \
@@ -102,7 +145,7 @@ then
 elif [ "$ACTION" == "delete" ]
 then
     aws cloudformation delete-stack \
-        --stack-name "${APPLICATION^}-${ECS_STACK}-${ENVIRONMENT}"
+        --stack-name "${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}"
 else
     log "Action not understood"
 fi

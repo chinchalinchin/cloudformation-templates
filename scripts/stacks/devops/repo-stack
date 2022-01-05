@@ -45,6 +45,7 @@ done
 
 if [ -z "$ACTION" ]
 then
+    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
 fi
 
@@ -52,6 +53,7 @@ cp $PROJECT_DIR/templates/devops/repo.yml ./repo.yml
 
 if [ "$ACTION" == "create" ]
 then
+    log "Creating \e[1m${APPLICATION^}-${REPO_STACK}\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${REPO_STACK}" \
         --template-body file://repo.yml \
@@ -59,6 +61,7 @@ then
 
 elif [ "$ACTION" == "update" ]
 then
+    log "Updating \e[1m${APPLICATION^}-${REPO_STACK}\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${REPO_STACK}" \
         --template-body file://repo.yml \
@@ -66,6 +69,7 @@ then
          
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-${REPO_STACK}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${REPO_STACK}"
 else
