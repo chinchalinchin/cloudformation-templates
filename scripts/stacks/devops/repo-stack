@@ -2,13 +2,12 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="repo-stack"
-SCRIPT_DES=$''
+SCRIPT_DES=$'Provision the \e[2minnolab\e[0m \e[1mCodeCommit\e[0m version control repositories, \e[1mECR\e[0m image repositories, and \e[1mS3\e[0m buckets used for storing source code, artifacts and encrypted data.'
 PROJECT_DIR=$SCRIPT_DIR/../../..
 source $PROJECT_DIR/env/.env
 
 # Example Usage:
-# >$     repo-stack --environment <Dev | Prod | Test | Staging> \
-#                   --action <create | update | delete> 
+# >$     repo-stack --action <create | update | delete> 
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
 

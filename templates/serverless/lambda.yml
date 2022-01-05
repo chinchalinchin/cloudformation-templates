@@ -413,7 +413,7 @@ Resources:
       FunctionName: !GetAtt LambdaAlpha.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/innolab/images/*
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/innolab/lambdas/images/*
     DependsOn:
       - RestAPIDeployment
 

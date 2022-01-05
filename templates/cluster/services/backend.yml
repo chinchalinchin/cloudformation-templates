@@ -131,10 +131,14 @@ Resources:
       GroupDescription: Access to the internal load balancer
       VpcId:
         Fn::ImportValue: !Sub ${vpcStack}-VPC
-      SecurityGroupIngress:
-        - IpProtocol: -1
-          Description: Accept all traffic from the frontend load balancer
-          SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
+
+  BackendLoadBalancerClusterIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId:
+        Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref BackendLoadBalancerSecurityGroup
 
   BackendLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer

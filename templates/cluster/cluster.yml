@@ -18,6 +18,21 @@ Parameters:
     Default: Dev
     Description: The environment into which the application is being deployed.
 
+Mappings:
+  BranchMap:
+    Dev: 
+      branch:  "dev"
+      subdomain: "-dev"
+    Test: 
+      branch: "test"
+      subdomain: "-test"
+    Staging: 
+      branch: "staging"
+      subdomain: "-staging"
+    Prod: 
+      branch: "prod"
+      subdomain: ""
+      
 Resources:
   # NOTE: in the service *ymls*, each template will need to create an AWS::EC2::SecurityGroupIngress
   #       for the load balancer in front of the service. This allows the load balancer to forward traffic
@@ -29,11 +44,6 @@ Resources:
       GroupDescription: "Security group for ECS containers"
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
-      SecurityGroupIngress:
-        - IpProtocol: -1
-          SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
-        - IpProtocol: -1
-          SourceSecurityGroupId: !Ref BackendLoadBalancerSecurityGroup
   
   ContainerSecurityGroupSelfIngress:
     Type: AWS::EC2::SecurityGroupIngress
