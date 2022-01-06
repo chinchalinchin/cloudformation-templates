@@ -342,6 +342,15 @@ Resources:
       PathPart: images
     DependsOn:
       - InnoLabRootResource
+  
+  InnoLabOAuthResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ParentId: !Ref InnoLabLambdaResource
+      PathPart: oauth-hook
+    DependsOn:
+      - InnoLabRootResource
 
   InnoLabImageVersionResource:
     Type: 'AWS::ApiGateway::Resource'
@@ -402,6 +411,54 @@ Resources:
     DependsOn:
       - InnoLabImageVersionResource
 
+  InnoLabOAuthResourceMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref InnoLabOAuthResource
+      HttpMethod: ANY
+      AuthorizationType: None
+      Integration:
+        Type: AWS_PROXY
+        # INTEGRATION HTTP METHOD MUST BE POST
+        #   NOTE: API Gateway transforms all incoming requests into POSTS
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaEpsilon.Arn}/invocations"
+    DependsOn:
+      - InnoLabOAuthResource
+
+  InnoLabOAuthResourceCORS:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref RestAPI
+      ResourceId: !Ref InnoLabOAuthResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            # method.response.header.Access-Control-Allow-Methods: "'*'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+    DependsOn:
+      - InnoLabOAuthResource
+
   ## API GATEWAY LAMBDA PERMISSIONS
   ##  NOTE: the arn is of the form arn:aws:execute-api:region:account-id:api-name/env-name/{METHOD}/{ENDPOINT_PATH}
   ##        where METHOD is the HTTP method API gateway is using to invoke Lambda and ENDPOINT_PATH is the URI of 
@@ -414,6 +471,17 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: 
         !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/innolab/lambdas/images/*
+    DependsOn:
+      - RestAPIDeployment
+
+  LambdaEpsilonApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaEpsilon.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: 
+        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/innolab/lambdas/oauth-hook
     DependsOn:
       - RestAPIDeployment
 

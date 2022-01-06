@@ -59,7 +59,7 @@ then
 fi
 if [ -z "$ENVIRONMENT" ]
 then 
-    log "No \e[3m--environment\e[0m specified."
+    log "No \e[3m--environment\e[0m specified. Defaulting to \e[1mDev\e[0m"
     ENVIRONMENT="Dev"
 fi
 
@@ -72,7 +72,6 @@ fi
 case $PIPELINE in 
     master)
         cp $PROJECT_DIR/templates/devops/pipelines/master.yml ./pipeline.yml
-        ENVIRONMENT="Dev" # Master repository only has one environment/pipeline!
         STACK_NAME="${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}"
         ;;
     lambda)
@@ -93,7 +92,7 @@ if [ "$ACTION" == "create" ]
 then
     log "Creating \e[1m$STACK_NAME\e[0m"
     aws cloudformation create-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}" \
+        --stack-name $STACK_NAME \
         --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION"  \
                      ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
@@ -108,7 +107,7 @@ elif [ "$ACTION" == "update" ]
 then
     log "Updating \e[1m$STACK_NAME\e[0m"
     aws cloudformation update-stack \
-        --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}" \
+        --stack-name $STACK_NAME \
         --template-body file://pipeline.yml \
         --parameters ParameterKey=applicationName,ParameterValue="$APPLICATION" \
                      ParameterKey=environmentName,ParameterValue="$ENVIRONMENT" \
