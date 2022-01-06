@@ -58,6 +58,7 @@ then
         --stack-name "${APPLICATION^}-${REPO_STACK}" \
         --template-body file://repo.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION 
+    exit 0
 
 elif [ "$ACTION" == "update" ]
 then
@@ -66,14 +67,16 @@ then
         --stack-name "${APPLICATION^}-${REPO_STACK}" \
         --template-body file://repo.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION
-         
+    exit 0     
 elif [ "$ACTION" == "delete" ]
 then
     log "Deleting \e[1m${APPLICATION^}-${REPO_STACK}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${REPO_STACK}"
+    exit -
 else
-    log "Action not understood"
+    log "Action not understood."
+    exit 1
 fi
 
 rm ./repo.yml

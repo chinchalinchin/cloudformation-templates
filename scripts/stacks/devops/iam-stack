@@ -20,22 +20,22 @@ function help(){
 }
 
 while [[ $# -gt 0 ]]; do
-       key="$1"
-       case $key in
-            --action)
-                    ACTION="$2"
-                    shift
-                    shift 
-                    ;;
-            --help)
-                    help
-                    exit 0
-                    ;;
-            *)
-                    log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                    exit 1
-                    ;;
-       esac
+    key="$1"
+    case $key in
+        --action|-action|--a|-a)
+            ACTION="$2"
+            shift
+            shift 
+            ;;
+        --help|-help|--h|-h)
+            help
+            exit 0
+            ;;
+        *)
+            log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+            exit 1
+            ;;
+    esac
 done
 
 if [ -z "$ACTION" ]
@@ -48,6 +48,7 @@ cp $PROJECT_DIR/templates/devops/iam.yml ./iam.yml
 
 if [ "$ACTION" == "create" ]
 then
+    log "Creating \e[1m${APPLICATION^}-$IAM_STACK\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-$IAM_STACK" \
         --template-body file://iam.yml \
@@ -55,9 +56,10 @@ then
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=pipelineUser,ParameterValue=$BITBUCKET_PIPELINE_USER \
                      ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
-        
+    exit 0
 elif [ "$ACTION" == "update" ]
 then
+    log "Updating \e[1m${APPLICATION^}-$IAM_STACK\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-$IAM_STACK" \
         --template-body file://iam.yml \
@@ -65,11 +67,13 @@ then
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=pipelineUser,ParameterValue=$BITBUCKET_PIPELINE_USER \
                      ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
-
+    exit 0
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-$IAM_STACK\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-$IAM_STACK"
+    exit 0
 else
     log "Action not understood."
     exit 1
