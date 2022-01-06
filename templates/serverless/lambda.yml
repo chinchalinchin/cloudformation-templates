@@ -487,7 +487,7 @@ Resources:
 
   ## CLOUDWATCH EVENT INTEGRATIONS
   ### MULTIPLE ENVIRONMENT RULES
-  LambdaZetaEnvironmentEventRule:
+  EnvironmentEventRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
@@ -509,10 +509,12 @@ Resources:
             - !Ref environmentName
       Targets:
         - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-cloudwatch-${environmentName}"
+          Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-${environmentName}"
+        - Arn: !GetAtt LambdaGamma.Arn
+          Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-${environmentName}"
 
   ### SINGLE ENVIRONMENT RULES (note Condition!)
-  LambdaGammaCloudFormationEventRule:
+  MasterEventRule:
     Type: AWS::Events::Rule
     Condition: DevResources
     Properties:
@@ -523,52 +525,7 @@ Resources:
           - 'CodeCommit Repository State Change'
         resources:
           - Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - Dev
-      Targets:
-        - Arn: !GetAtt LambdaGamma.Arn
-          Id: !Sub "${applicationName}-cloudwatch-cloudformation-master"
-
-  LambdaGammaMasterEventRule:
-    Type: AWS::Events::Rule
-    Condition: DevResources
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
           - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - Dev
-      Targets:
-        - Arn: !GetAtt LambdaGamma.Arn
-          Id: !Sub "${applicationName}-cloudwatch-master"
-
-  LambdaZetaCloudFormationEventRule:
-    Type: AWS::Events::Rule
-    Condition: DevResources
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepositoryARN"
         detail:
           event:
             - referenceCreated
@@ -578,63 +535,32 @@ Resources:
           referenceName:
             - master
       Targets:
+        - Arn: !GetAtt LambdaGamma.Arn
+          Id: !Sub "${applicationName}-lambda-gamma-cloudwatch-master"
         - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-cloudwatch-cloudformation-master"
+          Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-master"
   
-  LambdaZetaMasterEventRule:
-    Type: AWS::Events::Rule
-    Condition: DevResources
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepositoryARN"
-          - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - master
-      Targets:
-        - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-cloudwatch-cloudformation-master"
 
   ### MULTIPLE ENVIRONMENT INVOCATIONS        
-  LambdaZetaCloudWatchLambdaInvoke: 
+  LambdaZetaCloudWatchEnvironmentInvoke: 
     Type: AWS::Lambda::Permission
     Properties: 
       FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaEnvironmentEventRule.Arn
+      SourceArn: !GetAtt EnvironmentEventRule.Arn
     DependsOn:
-      - LambdaZetaEnvironmentEventRule
-
-  LambdaZetaCloudWatchFrontendInvoke: 
+      - EnvironmentEventRule
+  
+  LambdaGammaCloudWatchEnvironmentInvoke: 
     Type: AWS::Lambda::Permission
     Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-gamma-${environmentName}
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaEnvironmentEventRule.Arn
+      SourceArn: !GetAtt EnvironmentEventRule.Arn
     DependsOn:
-      - LambdaZetaEnvironmentEventRule
-
-  LambdaZetaCloudWatchBackendInvoke: 
-    Type: AWS::Lambda::Permission
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaEnvironmentEventRule.Arn
-    DependsOn:
-      - LambdaZetaEnvironmentEventRule
+      - EnvironmentEventRule
 
   ### SINGLE ENVIROMENT INVOCATIONS (note Condition!)
   LambdaGammaCloudWatchMasterInvoke:
@@ -644,42 +570,20 @@ Resources:
       FunctionName: !Sub ${applicationName}-lambda-gamma-Dev
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaGammaMasterEventRule.Arn
+      SourceArn: !GetAtt MasterEventRule.Arn
     DependsOn:
-      - LambdaGammaMasterEventRule
+      - MasterEventRule
 
-  LambdaGammaCloudWatchCloudFormationInvoke:
-    Type: AWS::Lambda::Permission
-    Condition: DevResources
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-gamma-Dev
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaGammaCloudFormationEventRule.Arn
-    DependsOn:
-      - LambdaGammaCloudFormationEventRule
-
-  LambdaZetaCloudWatchMasterInvoke: 
+  LambdaZetaCloudMasterInvoke: 
     Type: AWS::Lambda::Permission
     Condition: DevResources
     Properties: 
       FunctionName: !Sub ${applicationName}-lambda-zeta-Dev
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaMasterEventRule.Arn
+      SourceArn: !GetAtt MasterEventRule.Arn
     DependsOn:
-      - LambdaZetaMasterEventRule
-  
-  LambdaZetaCloudWatchCloudFormationInvoke: 
-    Type: AWS::Lambda::Permission
-    Condition: DevResources
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta-Dev
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaZetaMasterEventRule.Arn
-    DependsOn:
-      - LambdaZetaMasterEventRule
+      - MasterEventRule
 
   ## DNS CONFIGURATION
   RestAPIDomainName:
