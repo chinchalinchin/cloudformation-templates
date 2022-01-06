@@ -511,7 +511,7 @@ Resources:
         - Arn: !GetAtt LambdaZeta.Arn
           Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-${environmentName}"
         - Arn: !GetAtt LambdaGamma.Arn
-          Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-${environmentName}"
+          Id: !Sub "${applicationName}-lambda-gamma-cloudwatch-${environmentName}"
 
   ### SINGLE ENVIRONMENT RULES (note Condition!)
   MasterEventRule:
