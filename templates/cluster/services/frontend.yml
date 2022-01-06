@@ -28,6 +28,9 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
+  hostedZoneId:
+    Type: String
+    Description: Hosted zone of the domain.
   certificateArn:
     Type: String
     Description: AWS Arn of the domain certificate.
@@ -40,7 +43,7 @@ Parameters:
     Type: Number
     Default: 8080 
     Description: Port mapping for frontend service 
-  frontendTag:
+  tag:
     Type: String
     Default: Dev-v0.0.0
     Description: Image tag for the front service ECR
@@ -71,7 +74,7 @@ Resources:
     Properties:
       MinCapacity: 1
       MaxCapacity: 3
-      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt FrontendService.Name]]
+      ResourceId: !Join ['/', [service, Fn::ImportValue: !Sub "${clusterStack}-Cluster", !GetAtt FrontendService.Name]]
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
       RoleARN: 
@@ -195,7 +198,7 @@ Resources:
             - "${imageUri}:${whichTag}"
             - imageUri:  
                 Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
-              whichTag: !Ref frontendTag
+              whichTag: !Ref tag
           PortMappings:
             - ContainerPort: !Ref port
           EnvironmentFiles:
@@ -267,15 +270,15 @@ Resources:
         FailureThreshold: 1
       Name: !Sub ${applicationName}-${environmentName}-frontend-discvoery
       NamespaceId: 
-        Fn::ImportValue: !Sub ${cluserStack}-Namespace
+        Fn::ImportValue: !Sub ${clusterStack}-Namespace
 
   FrontendRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneId: !Ref hostedZoneID
+      HostedZoneId: !Ref hostedZoneId
       Name: !Sub
         - "${subdomain}${subdomainEnv}.${domainName}"
-        - subdomainName: !Ref applicationName
+        - subdomain: !Ref applicationName
           domainName: !Ref domain
           subdomainEnv: 
             Fn::FindInMap:

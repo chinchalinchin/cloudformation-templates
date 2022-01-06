@@ -29,6 +29,16 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
+  hostedZoneId:
+    Type: String
+    Description: Physical ID of the hosted zone where the domain is being served.
+  certificateArn:
+    Type: String
+    Description: ARN of the ACM SSL Certificate used to sign requests to domain.
+  domain:
+    Type: String
+    Default: makpar-innovation.net
+    Description: Domain for the application cluster
   ## SERVICE CONFIGURATION
   port:
     Type: Number

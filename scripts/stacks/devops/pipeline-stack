@@ -73,12 +73,15 @@ case $PIPELINE in
     master)
         cp $PROJECT_DIR/templates/devops/pipelines/master.yml ./pipeline.yml
         ENVIRONMENT="Dev" # Master repository only has one environment/pipeline!
+        STACK_NAME="${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}"
         ;;
     lambda)
         cp $PROJECT_DIR/templates/devops/pipelines/lambda.yml ./pipeline.yml
+        STACK_NAME="${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}"
         ;;
     app)
         cp $PROJECT_DIR/templates/devops/pipelines/app.yml ./pipeline.yml
+        STACK_NAME="${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}"
         ;;
     *)
         log "\e3[m--pipeline\e[0m input not understood; must be <app | lambda | master>"
@@ -88,7 +91,7 @@ esac
 
 if [ "$ACTION" == "create" ]
 then
-    log "Creating \e[1m${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}\e[0m"
+    log "Creating \e[1m$STACK_NAME\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}" \
         --template-body file://pipeline.yml \
@@ -103,7 +106,7 @@ then
 
 elif [ "$ACTION" == "update" ]
 then
-    log "Updating \e[1m${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}\e[0m"
+    log "Updating \e[1m$STACK_NAME\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}" \
         --template-body file://pipeline.yml \

@@ -34,7 +34,7 @@ Conditions:
     - Dev
 
 Mappings:
-  BranchToLowerCaseMap:
+  BranchMap:
     Dev: 
       branch:  "dev"
     Test: 
@@ -54,7 +54,7 @@ Resources:
         - app: !Ref applicationName
           env: 
             Fn::FindInMap:
-              - BranchToLowerCaseMap
+              - BranchMap
               - !Ref environmentName
               - branch
       
@@ -86,35 +86,35 @@ Resources:
       ComputePlatform: ECS
       ApplicationName: !Sub "${applicationName}-${environmentName}-frontend-code-deploy"
 
-  FrontendDeploymentGroup:
-    Type: AWS::CodeDeploy::DeploymentGroup
-    Properties:
-      ApplicationName: !Ref FrontendCodeDeploy
-      ECSServices:
-        - ClusterName: 
-            Fn::ImportValue: !Sub "${ecsStack}-ClusterName"
-          ServiceName:
-            Fn::ImportValue: !Sub "${ecsStack}-FrontendServiceName"
-      LoadBalancerInfo:
-        ElbInfoList:
-          - Name: 
-              Fn::ImportValue: !Sub ${ecsStack}-FrontendLoadBalancerName
-        # TargetGroupInfoList:
-        #   - Name:
-        #       Fn::ImportValue: !Sub ${ecsStack}-FrontendTargetGroup
-        #   - Name:
-        #       Fn::ImportValue: !Sub ${ecsStack}-FrontendTargetGroupAlt
-      DeploymentStyle:
-        DeploymentOption: WITH_TRAFFIC_CONTROL
-        DeploymentType: BLUE_GREEN
-      ServiceRoleArn:
-        Fn::ImportValue: !Sub ${iamStack}-CodeDeployRoleArn
-      BlueGreenDeploymentConfiguration:
-        DeploymentReadyOption: 
-            ActionOnTimeout: CONTINUE_DEPLOYMENT
-        TerminateBlueInstancesOnDeploymentSuccess: 
-          Action: TERMINATE
-          TerminationWaitTimeInMinutes: 2
+  # FrontendDeploymentGroup:
+  #   Type: AWS::CodeDeploy::DeploymentGroup
+  #   Properties:
+  #     ApplicationName: !Ref FrontendCodeDeploy
+  #     ECSServices:
+  #       - ClusterName: 
+  #           Fn::ImportValue: !Sub "${ecsStack}-ClusterName"
+  #         ServiceName:
+  #           Fn::ImportValue: !Sub "${ecsStack}-FrontendServiceName"
+  #     LoadBalancerInfo:
+  #       ElbInfoList:
+  #         - Name: 
+  #             Fn::ImportValue: !Sub ${ecsStack}-FrontendLoadBalancerName
+  #       TargetGroupInfoList:
+  #         - Name:
+  #             Fn::ImportValue: !Sub ${ecsStack}-FrontendTargetGroup
+  #         - Name:
+  #             Fn::ImportValue: !Sub ${ecsStack}-FrontendTargetGroupAlt
+  #     DeploymentStyle:
+  #       DeploymentOption: WITH_TRAFFIC_CONTROL
+  #       DeploymentType: BLUE_GREEN
+  #     ServiceRoleArn:
+  #       Fn::ImportValue: !Sub ${iamStack}-CodeDeployRoleArn
+  #     BlueGreenDeploymentConfiguration:
+  #       DeploymentReadyOption: 
+  #           ActionOnTimeout: CONTINUE_DEPLOYMENT
+  #       TerminateBlueInstancesOnDeploymentSuccess: 
+  #         Action: TERMINATE
+  #         TerminationWaitTimeInMinutes: 2
 
   # BackendCodeDeploy:
   #   Type: AWS::CodeDeploy::Application
@@ -257,7 +257,7 @@ Resources:
                   - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
                   - env: 
                       Fn::FindInMap:
-                        - BranchToLowerCaseMap
+                        - BranchMap
                         - !Ref environmentName
                         - branch
                     app: !Ref applicationName
@@ -390,7 +390,7 @@ Resources:
                   - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
                   - env: 
                       Fn::FindInMap:
-                        - BranchToLowerCaseMap
+                        - BranchMap
                         - !Ref environmentName
                         - branch
                     app: !Ref applicationName

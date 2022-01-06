@@ -18,9 +18,9 @@ source $PROJECT_DIR/env/.env
 
 # EXAMPLES: 
 #   ## BACKEND SERVICE
-#       service-stack --environment Dev --service backend --tag v0.0.0 --port 8000
+#       service-stack --environment Dev --service backend --port 8000
 #   ## FRONTEND SERVICE
-#       service-stack --environment Dev --service frontend --tag v0.0.1 port 8080
+#       service-stack --environment Dev --service frontend port 8080
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -71,32 +71,30 @@ done
 
 if [ -z "$ENVIRONMENT" ]
 then
-    log "Specifiy environment with \e[3m--environment\e[0m flag."
+    log "No \e[1menvironment\e[0m inputted. Specifiy environment with \e[3m--environment\e[0m flag."
     exit 1
 fi
 if [ -z "$SERVICE" ]
 then
-    log "Specifiy service with \e[3m--service\e[0m flag."
+    log "No \e[1mservice\e[0m inputted. Specifiy service with \e[3m--service\e[0m flag."
     exit 1
 fi
 if [ -z "$PORT" ]
 then
-    log "Specifiy port with \e[3m--port\e[0m flag."
+    log "No \e[1mport\e[0m inputted. Specifiy port with \e[3m--port\e[0m flag."
     exit 1
 fi
 
 if [ -z "$ACTION" ]
 then
-    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
+    log "No \e[3m--action\e[0m inputted. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
 fi
 
 if [ -z "$TAG" ]
 then
-    log "No \e[3m--tag\e[0m specified. Defaults to \e[1m$ENVIRONMENT-v0.0.0\e[0m"
-    TAG="$ENVIRONMENT-v0.0.0"
-else
-    TAG="$ENVIRONMENT-$TAG"
+    log "No \e[3m--tag\e[0m inputted. Defaulting to \e[1m$ENVIRONMENT\e[0m"
+    TAG="$ENVIRONMENT"
 fi
 
 case $SERVICE in 
@@ -114,7 +112,7 @@ esac
 
 if [ "$ACTION" == "create" ]
 then
-
+    log "Creating \e[1m${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}" \
         --template-body file://service.yml \
@@ -123,13 +121,16 @@ then
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
                         ParameterKey=port,ParameterValue="$PORT" \
                         ParameterKey=tag,ParameterValue="$TAG" \
+                        ParameterKey=domain,ParameterValue=$DOMAIN \
+                        ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
+                        ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-${REPO_STACK}" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "update" ]
 then
-
+    log "Updating \e[1m${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}" \
         --template-body file://service.yml \
@@ -138,12 +139,16 @@ then
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
                         ParameterKey=port,ParameterValue="$PORT" \
                         ParameterKey=tag,ParameterValue="$TAG" \
+                        ParameterKey=domain,ParameterValue=$DOMAIN \
+                        ParameterKey=hostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
+                        ParameterKey=certificateArn,ParameterValue="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-${REPO_STACK}" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
 
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}"
 else
