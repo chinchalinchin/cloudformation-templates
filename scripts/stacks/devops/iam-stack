@@ -9,7 +9,10 @@ source $PROJECT_DIR/env/.env
 # Example Usage:
 # >$     iam-stack --action <create | update | delete>
 #
-#   NOTE: ``--action`` defaults to `create` if not supplied.
+#      NOTE: `--action` defaults to `create` if not supplied.
+#      NOTE: All argument flags have a short form and a long form, with single dashes and doubled dashes, e.g.
+#           all of the following arguments are equivalent,
+#               `--action`, `-action`, `--a`, `-a`
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -44,11 +47,10 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/devops/iam.yml ./iam.yml
-
 if [ "$ACTION" == "create" ]
 then
     log "Creating \e[1m${APPLICATION^}-$IAM_STACK\e[0m"
+    cp $PROJECT_DIR/templates/devops/iam.yml ./iam.yml
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-$IAM_STACK" \
         --template-body file://iam.yml \
@@ -56,10 +58,12 @@ then
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=pipelineUser,ParameterValue=$BITBUCKET_PIPELINE_USER \
                      ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
+    rm ./iam.yml
     exit 0
 elif [ "$ACTION" == "update" ]
 then
     log "Updating \e[1m${APPLICATION^}-$IAM_STACK\e[0m"
+    cp $PROJECT_DIR/templates/devops/iam.yml ./iam.yml
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-$IAM_STACK" \
         --template-body file://iam.yml \
@@ -67,6 +71,7 @@ then
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION \
                      ParameterKey=pipelineUser,ParameterValue=$BITBUCKET_PIPELINE_USER \
                      ParameterKey=masterPassword,ParameterValue=$MASTER_PASSWORD
+    rm ./iam.yml
     exit 0
 elif [ "$ACTION" == "delete" ]
 then
@@ -78,5 +83,3 @@ else
     log "Action not understood."
     exit 1
 fi
-    
-rm ./iam.yml

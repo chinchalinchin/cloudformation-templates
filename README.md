@@ -1,234 +1,187 @@
-# InnoLab Backend
+# AWS CloudFormation Environment Setup
 
-This repository is a template for a [django](https://docs.djangoproject.com/en/3.2/)-[django-rest-framework](https://www.django-rest-framework.org/) project. It has been containerized with [Docker](https://docs.docker.com/) through the *Dockerfile* in the project root directory and orchestrated with a [Postgres](https://www.postgresql.org/docs/) instance via the *docker-compose.yml* in the project root directory. The application comes pre-configured to connect to this instance when running as a container. It can also be run locally, in which case, it will switch to a **SQLite** model backend.
-
-## Quickstart
-
-1. Configure Enviroment
-
-Copy the */env/.sample.build.env* and */env/.sample.runtime.env* into new */env/build.env* and */env/runtime.env* files respectively. Adjust the environment variables in these files to your specific situation. The *build.env* get injected into the */scripts/docker/build-image* shell script to configure the `docker build`. The *runtime.env* gets into injected into the */scripts/run-server*, */scripts/docker/entrypoint.sh* and the */scripts/docker/run-container* shell scripts. These define the different starting points of the application and *runtime.env* configures the environment from which these entrypoints bootstrap.
-
-The main environment variable of interest is **APP_ENV**. This variables is parsed in the */app/core/settings.py* and determines how **Django** will configure its application settings. If set to `local`, **Django** will use a **SQLite** database and set the **CORS** and **ALLOWED_HOSTS** to their most permissive settings. The **DEBUG** setting will be set to **True** in `local` mode.
-
-If set to `container`, **Django** will configure a **Postgres** connection through the **POSTGRES_** environment variables and restrict the allowed origins to the comma separated list defined by the **ALLOWED_ORIGINS** environment variable. The **DEBUG** setting be set to **False** in `container` mode.
-
-2. Install Dependencies
-
-If running locally, activate your virtual environment (if using one) and install the **python** dependencies from the project root directory,
+A sweet collection of **CloudFormation** templates.
 
 ```
-pip install -r requirements.txt
+aws cloudformation create-stack
+    --stack-name <name>
+    --template-body <body>
+    --parameters ParameterKey=<key>,ParameterValue=<value> ParameterKey=<key>,ParameterValue=<value>
 ```
 
-This step is captured in the **Dockerfile** and is not required if running the application as a container.
+## Architecture
 
-3. Launch Application Server
+The setup procedures in this section will provision the following architecture,
 
-**Local Server**
+![InnoLab Archiecture](/assets/innolab_architecture.svg)
 
-All of the necessary steps to start a local server have been included in the */scripts/run-server* shell script, but if you want to do it manually, initialize the environment file, migrate your models (if you have any) and collect your static files. 
+## Cross Stack Dependencies
 
-First, source the */env/runtime.env* environment file to load these variables into your shell session,
+There are three separate stack groups, the **DevOps** group, the **Core** group, the **Serverless** group and the **Cluster** group. The stacks should be stood up, more or less, in the order listed below, due to cross-stack dependencies, i.e. the *VPCStack* must be stood up before the *RDSStack*, the *RepoStack* should be stood up before the *ClusterStack*, etc. 
+
+**NOTE**: The *DNSStack* only needs stood up if a HostedZone and an ACM Certificate need provisioned; if these already exist, ignore this stack.
+
+### DevOps Stacks
+| Stack | Dependency |
+| ----- | ---------- |
+| IAMStack | None |
+| RepoStack | None |
+| DNSStack | None |
+| CoverageStack | None |
+| PipelineStack-@env | RepoStack, IAMStack, CoverageStack, CognitoStack-@env, ClusterStack-@env |
+
+### Core Stacks
+| Stack | Dependency |
+| ----- | ---------- |
+| CognitoStack-@env | None |
+| VPCStack-@env | None |  
+| RDSStack-@env | VPCStack-@env, IAMStack | 
+
+### Serverless Stacks
+| Stack | Dependency | 
+| ----- | ---------- |
+| DynamoStack-@env | None | 
+| LambdaStack-@env | VPCStack-@env, RepoStack, CognitoStack-@env, IAMStack |
+
+### Cluster Stacks
+| Stack | Dependency | 
+| ----- | ---------- |
+| ClusterStack-@env | VPCStack-@env |
+
+**Service Stack**
+| Stack | Dependency | 
+| ----- | ---------- |
+| Frontend-ServiceStack-@env | IAMStack, RepoStack, VPCStack-@env, ClusterStack-@env |
+| Backend-ServiceStack-@env | IAMStack, RepoStack, VPCStack-@env, ClusterStack-@env |
+| Sonar-ServiceStack | IAMStack, RepoStack, VPCStack-Dev, ClusterStack-Dev |
+
+**NOTE:** The *Sonar-ServiceStack* is only deployed into the **Dev** environment. 
+
+## Configuration
+
+Before any of the stack sets can be stood up, the *.env* environment file needs setup and configured. Copy the sample into a new file and adjust the variables. See *.sample.env* comments for more information on each variable.
+
+```
+cp ./env/.sample.env ./env/.env
+```
+
+## Core Setup
+
+**NOTE**: All scripts in the following section have an optional argument `--action` with allowable values of `create`, `delete` or `update`. The `action` defaults to `create` if not provided. If `update` is passed through the ``--action`` flag, the script will update. NOTE: Some **CloudFormation** configurations *cannot* be updated while the stack is up.
+
+The first series of stacks is made up of the *IAMStack*, *RepoStack*, *CoverageStack*, *VPCStack* and *CognitoStack*. None of these stacks have any cross stack dependencies, thus they can be stood up in parallel.
 
 ```shell
-source ./env/runtime.env
+./scripts/stacks/devops/iam-stack
+./scripts/stacks/devops/repo-stack
+./scripts/stacks/devops/coverage-stack
+./scripts/stacks/core/vpc-stack --environment <Dev | Prod | Test | Staging>
+./scripts/stacks/core/cognito-stack --environment <Dev | Prod | Test | Staging>
 ```
 
-Next, from the */app/* directory, perform the necessary pre-startup tasks for a **Django** application,
+After creating the user accounts and source code repositories, [SSH keys](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-ssh-unixes.html) will need set up on the developer's local machines and uploaded to the **AWS IAM** console. The local versions of the repositories will need pushed up to **CodeCommit** and images for the *innolab-lambdas* functions, *innolab-backend* and the *innolab-frontend* applications need built for the first time and pushed to **ECR**. See their respective sections on the sidebar menu. 
+
+In addition, there are **ECR** repositories to hold images for the Innovation Lab versions of **nginx**, **node**, **postgres** and **python**. These images need tagged and pushed to the repositories as well; They are used in the pipeline to avoid pull nrate limits.
+
+Emails will be sent to all users hardcoded into the *CognitoStack*. The *HostedUI* web link in the **Cognito** console under *App Client Settings* can be used to the reset user passwords. It is recommended to updated the message template so future registration email messages include the password reset link. (TODO: configure cloudformation template to edit message template; need **SES** for this.)
+
+During the provisioning of the *VPCStack*, an SSH key for tunneling into the VPC was generated in your user's */.ssh/* folder. This key will need distributed to anyone who needs access to any of the deployed instances. The IP of the user who is tunneling into the VPC will need added to the Bastion Host security group.
+
+### RDS 
+
+Afer the *VPCStack* goes up, the process to stand up the RDS can be started. First, secrets will need provisioned for the RDS credentials. These secrets are used within the */templates/core/rds/* to populate the administrator user account for the RDS. The **RDS_USERNAME** and **RDS_PASSWORD** get passed to **AWS SecretManager** through the following script,
 
 ```shell
-python manage.py makemigrations
-python manage.py migrate
+./scripts/secrets/secret-rds-creds --environment <Dev | Prod | Test | Staging>
 ```
 
-After these preliminary steps have been taken care of, you can either start the server in development mode,
+The secrets must exist in the **SecretManager** before the *RDSStack* goes up. Once they have been successfully created or updated, invoke the following script,
 
 ```shell
-python manage.py runserver
+./scripts/stacks/core/rds-stack --environment <Dev | Prod | Test | Staging >
 ```
 
-Or deploy the application onto a WSGI application server like **gunicorn**,
+After the *RDSStack* goes up, the RDS will get assigned a host URL and this value will be outputted through **CloudFormation** (it can be seen in the `aws cloudformation describe-stack` command). Following best practices, this sensitive piece of information also needs added to the **SecretManager**,
 
 ```shell
-gunicorn core:wsgi.appplcation --bind localhost:8000 --workers 3 --access-logfile '-'
+./scripts/secrets/secret-rds-host --environment <Dev | Prod | Test | Staging>
 ```
 
-**Containerized Server**
+## Serverless Components
 
-All of the necessary steps to start a server inside of a container have been included in the */scripts/docker/build-image* and */scripts/docker/run-container*. These steps have been separated because sometime it is desirable to build an image without running a container and visa versa. If you wish to build and run the application manually,
-
-```shell
-docker build -t innolab-django:latest .
-```
-
-To start up the container, make sure you pass in the */env/runtime.env* file,
-
-```shell
-docker run --env-file ./env/runtime.env --publish 8000:8000 innolab-django:latest
-```
-
-If you want to start the application in a cluster with a **Postgres** service, use the configuration from the *docker-compose.yml* instead of `docker run`, i.e. execute,
-
-```shell
-docker-compose up
-```
-
-to bring up a container of the application and a container of **Postgres**. You may need to adjust the image names in the YAML if you named your image differently.
-
-## Development
-
-### Model Migrations
-
-If you modify a model locally, be sure to generate and check in the new migration,
-
-```shell
-python manage.py makemigrations
-git add .
-git commit -m 'new migrations!'
-```
-
-Migrations **must** be commited to version control!
-
-## Application Structure
-
-### Django
-
-The *core* app contains all the Django configuration. The *defaults* app creates suitable defaults for various **Django** features using data migrations; It will create default groups, users, etc. 
-
-The groups are configured by the **GROUPS** environment variable. This variable is a comma-separated list of all the default groups you want to create.
-
-### Authentication
-
-Middleware from the *app/defaults/cognito.py* module is hooked into the request/response lifecycle. This middleware will validate the token in the `Authorization` header, expecting a value of `Bearer <token>`. Once the token is validated through **AWS Cognito**, a `user` attribute is added to the `request`, i.e. `request.user`. If the token was not validated, this value will be set to `None`. If the token was validated, this will be set to `django.contrib.auth.models.User`.
-
-In other words, the **Django** `django.contrib.auth.models.User` model is only used to store metadata about a user (email, address, business name, etc.), whereas **Cognito** handles authentication and all that goes with that (password storage, encryption, identity management, etc.). The **Django** `django.contrib.auth.models.User`s are initialized with a dummy password from the **MASTER_PASSWORD** environment variable, since `password` is a required property of `django.contrib.auth.models.User`, but this password is not actually used for any sort of user access within the application.
-
-However, the application does manage user groups and permissions, i.e. authorization. Once **Cognito** authenticates the incoming request, all authorization access is governed through the **Django** `django.contrib.auth.models.Group` schema and programmatically enforced in the request handlers within the **Django** app. See next section for more information.
-
-### Authorization
-
-Pass a `request` into the `app.util.authorizer.belongs_to_groups(request, [group_name_1, group_name_2, ..])` to determine if an incoming request belongs to a particular group. In the following example, the statement `hello world` only prints if the user associated with the incoming request belongs to the `developer` group.
-
-```python
-if app.util.authorizer.belongs_to_groups(request, ['developer']):
-    print('hello world')
-```
-
-### Docker
-
-The */app/* and */scripts/* folder are copied in the */home/* directory of the **Docker** file system. A user with the name *makpar* is assigned to the group *admin* during the **Docker** build. This user is granted ownership of the application files. The permissions on the application files are set to **read** and **write** for everyone and **execute** for this user only. 
-
-The **Dockerfile** exposes port 8000, but the environment variable **APP_PORT** is what determines the port on which the application server listens. This variable is used to start up the **gunicorn** server in the *entrypoint.sh* script. 
-
-The **Dockerfile** installs dependences for **Postgres** clients. These are the system dependencies required by the **python** library, **psycopg2**, which **django** uses under the hood to manage the model migrations when the model backend has been set to **postgres**.  
-
-## Container Orchestration
-
-The *docker-compose* in the project root directory will bring up an application container and orchestrate it with a **postgres** container. Both containers use the *runtime.env* environment file to configure their environments. The **POSTGRES_** variables injected at runtime are used by the **postgres** container to configure the root user, the default database name and the port the database container listens on internally. 
-
-## Deploying to AWS App Runner With Copilot
-
-Note: these steps are only needed to provision the resources and initialize the application. Once they have been completed, they do not need run again.
-
-1. In project root, run the following command to initialize application,
+A stack of Lambda functions with various integrations in **CloudWatch** and **APIGateway** can be stood up with,
 
 ```
-copilot app init
+./scripts/stacks/serverless/lambda-stack --environment <Dev | Prod | Test | Staging>
 ```
 
-Follow the prompts: 1. enter the application namespace. 2. Select the Dockerfile used to build the service.
+There are examples of **Lambda** integrations in the comments at the end of the the */templates/serverless/lambda.yml* file.
 
-2. Create a deployment environment. Note, we have reached the soft limit for our VPCs on AWS, so you will need to deploy your environment into an existing VPC using the `--import-vpd-id` option. This will require importing subnets with `--import-private-subnets` and `--import-public-subnets`,
-
-```
-copilot env init --name dev --import-vpc-id <vpc-id>
-```
-
-3. Import secrets into environment. First, copy the */ecs/copilot/django-app/.sample.secrets.yml* into a new file, say */ecs/copilot/django-app/secrets.yml* (this file is on the gitignore; if you name it something else, make sure to add the file name to the gitignore so secrets are committed to the version control),
+A stack for a **DynamoDB** table with a partition key can be stood up with the following script,
 
 ```
-cp ./ecs/copilot/django-app/.sample.secrets.yml ./ecs/copilot/django-app/secrets.yml
+./scripts/stacks/serverless/dynamo-stack --environment <Dev | Prod | Test | Staging> \
+                                            --table-name <table_name>
+                                            --partition-key <partition_key>
 ```
 
-Then import the secrets into your application
+**Note**: a sort key can optionally be specified through the `--sort-key` flag.
+
+## Fargate Cluster 
+
+TODO
+
+### Services
+
+TODO
+
+## Secrets
+
+There are other scripts for creating various secrets the application cluster may need. The scripts are used to enforce a naming convention, so the applications will be able to construct the secret name based on their deployment and environment.
 
 ```
-copilot secret init --cli-input-yaml path/to/secrets.yml
+./scripts/secrets/secret-sonar-creds
+./scripts/secrets/secret-atlassian-token
+./scripts/secrets/secret-api-creds --environment <Dev | Prod | Test | Staging>
+./scripts/secrets/secret-api-key --environment <Dev | Prod | Test | Staging>
 ```
 
-Configure the application.
+## Pipeline
 
-4. Initalize an App Runner service,
-
-```
-copilot svc init 
-```
-
-Follow the prompts: Enter a name for the service. (For what follows, assume the name of the service is `django-app`)
-
-5. Deploy the service,
+After all the preceding stacks have been set up and initialized, the final stack, the *PipelineStack*, can be stood up to kick off the CI/CD process. The pipeline has been split into three components, `master`, `app` and `lambdas`. `master` is a pipeline for generating documentation for the coverage **S3** bucket and **CloudFront** distribution provisioned in the **DNSStack**, `app` is a pipeline for building and deploying the services in *ECSStack* into the **Fargate ECS** cluster also provisioned within the stack and `lambdas` is a pipeline for building and deploying the **Lambda** functions in the *LambdaStack*,
 
 ```
-copilot deploy svc --name django-app
+./scripts/stacks/devops/pipeline-stack --environment <Dev | Prod | Test | Staging> \
+                                        --pipeline <master | app | lambdas>
 ```
 
-## Shell Scripts
+## Notes
 
-Included in this repository are a collection of shell scripts (written for **BASH**) that perform common, repetitious tasks.
+1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
 
-1. **/scripts/run-server**
-
-**Arguments**: Accepts a `--prod` flag to signal the server should be started in production mode. If no argument is provided, the argument defaults to a development server. Optionally, a `--install` argument can be passed in to install the project dependencies through the script.
-
-**Description**: Performs start up tasks, like collecting static files and migrating **django** models, and then starts up an application server. If `--prod` is passed in, the application will be deployed onto a **gunicorn** *WSGI* server. If `--prod` is not passed in, a local **Django** server will be started with `python manage.py runserver`. 
-
-2. **/scripts/docker/build-image**
-
-**Description**: Initializes the *build.env* variables and uses them in calling `docker build`. Creates a **Docker** image of the application.
-
-3. **/scripts/docker/run-container**
-
-**Description**: Initializes the *runtime.env* variables and feeds them into the container runtime. Starts up a container with the image name and tag created by the *build-image* script.
-
-4. **/scripts/docker/entrypoint**
-
-**Description**: Tne entrypoint script that gets copied into the **Docker** image. Analogous to the *run-server* script in a containerized environment. Starts up the **Docker** container from inside of the container. 
-
-5. **/scripts/util/env-vars**
-
-**Arguments**: The name of the enviroment file in the */env/* directory you wanted loaded into the current shell session.
-
-**Description**: Used to load in environment variables from a particular *.env* file.
-
-6. **/scripts/util/sys-util**
-
-**Description**: Useful functions. Source this script, `source ./scripts/util/sys-util.sh`, to load these functions into your current shell session. *clean_docker* is a particularly useful function for cleaning up dangling **Docker** images, cleaning the cache and pruning orphaned volumes and networks. 
-
-## Useful Commands
-
-### Run Postgres Container
-
-```shell
-docker run --publish 5431:5432 --env POSTGRES_USER=admin --env POSTGRES_PASSWORD=root --env POSTGRES_DB=innloab postgres:latest
+```
+aws cloudformation create-stack
+    --stack-name UserStack
+    --template-body file://path/to/template.yml
+    --capabilities CAPABILITY_NAMED_IAM
 ```
 
-### Bash Into Container
+2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfully deploy.
 
-List the containers currently running on your local and grab the name of the one you want to exec into,
+3. **ECR** repositories and **S3** buckets must be emptied before their containing stacks can be deleted.
 
-```shell
-docker container ps
-```
+4. **EC2** keypairs 
+ 
+## Documentation
+### CloudFormation
+**CLI**
+- [create-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/create-stack.html)
+- [delete-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/delete-stack.html)
+- [describe-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stacks.html)
+- [list-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-stacks.html)
 
-Then run the following command,
-
-```shell
-winpty docker exec --it <container name> bash
-```
-**Note**: you may not need the `winpty` if your terminal is interactive. 
-
-### PSQL session
-
-```shell
-psql -U <username> -p <port> -d <dbname> -W
-```
+**Template References**
+- [API Gateway](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ApiGateway.html)
+- [ECR](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ECR.html)
+- [IAM](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_IAM.html)
+- [Lambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_Lambda.html)

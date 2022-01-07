@@ -11,9 +11,11 @@ source $PROJECT_DIR/env/.env
 #                       --pipeline <app | lambda | master>
 #                       --action <create | update | delete> 
 
-#   NOTE: `--action` defaults to `create` if not supplied
-#   NOTE: `--environment` defaults to `Dev` if not supplied
-#   NOTE: `--pipeline` defaults to `app` if not supplied
+#      NOTE: `--action` defaults to `create` if not supplied.
+#      NOTE: `--environment` defaults to `Dev` if not supplied.
+#      NOTE: All argument flags have a short form and a long form, with single dashes and doubled dashes, e.g.
+#           all of the following arguments are equivalent,
+#               `--environment`, `-environment`, `--e`, `-e`
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -102,7 +104,8 @@ then
                      ParameterKey=coverageStack,ParameterValue="${APPLICATION^}-${COVERAGE_STACK}" \
                      ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                      ParameterKey=clusterStack,ParameterValue="${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}"
-
+    rm ./pipeline.yml
+    exit 0
 elif [ "$ACTION" == "update" ]
 then
     log "Updating \e[1m$STACK_NAME\e[0m"
@@ -117,14 +120,17 @@ then
                      ParameterKey=coverageStack,ParameterValue="${APPLICATION^}-${COVERAGE_STACK}" \
                      ParameterKey=cognitoStack,ParameterValue="${APPLICATION^}-${COGNITO_STACK}-${ENVIRONMENT}" \
                      ParameterKey=clusterStack,ParameterValue="${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}"
-
+    rm ./pipeline.yml
+    exit 0
 elif [ "$ACTION" == "delete" ]
 then
     log "Deleting \e[1m${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}"
+    rm ./pipeline.yml
+    exit 0
 else
     log "Action not understood"
+    rm ./pipeline.yml
+    exit 1
 fi
-
-rm ./pipeline.yml

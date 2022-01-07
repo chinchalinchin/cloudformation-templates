@@ -62,55 +62,54 @@ Mappings:
 
 ## this doesn't work: https://github.com/aws-cloudformation/cloudformation-coverage-roadmap/issues/821
 
-# Transform:
-#   - AWS::CodeDeployBlueGreen
+Transform:
+  - AWS::CodeDeployBlueGreen
 
-# Hooks:
-#   CodeDeployBlueGreenHook:
-#     Properties: 
-#       TrafficRoutingConfig:
-#         Type: TimeBasedCanary
-#         TimeBasedCanary:
-#           StepPercentage: 15
-#           BakeTimeMins: 5
-#       Applications:
-#         - Target:
-#             Type: AWS::ECS::Service
-#             LogicalID: BackendService
-#           ECSAttributes:
-#             TaskDefinitions:
-#               - BackendTaskDefinition
-#               - BackendTaskDefinitionAlt
-#             TaskSets:
-#               - BackendTaskSet
-#               - BackendTaskSetAlt
-#             TrafficRouting:
-#               ProdTrafficRoute:
-#                 Type: 'AWS::ElasticLoadBalancingV2::Listener'
-#                 LogicalID: BackendLoadBalancer
-#               TargetGroups: 
-#                 - BackendTargetGroup
-#                 - BackendTargetGroupAlt
-#         - Target:
-#             Type: AWS::ECS::Service
-#             LogicalID: FrontendService
-#           ECSAttributes:
-#             TaskDefinitions:
-#               - FrontendTaskDefinition
-#               - FrontendTaskDefinitionAlt
-#             TaskSets:
-#               - FrontendTaskSet
-#               - FrontendTaskSetAlt
-#             TrafficRouting:
-#               ProdTrafficRoute:
-#                 Type: 'AWS::ElasticLoadBalancingV2::Listener'
-#                 LogicalID: FrontendLoadBalancer
-#               TargetGroups:
-#                 - FrontendTargetGroup
-#                 - FrontendTargetGroupAlt
-#     Type: 'AWS::CodeDeploy::BlueGreen'
+Hooks:
+  CodeDeployBlueGreenHook:
+    Properties: 
+      TrafficRoutingConfig:
+        Type: TimeBasedCanary
+        TimeBasedCanary:
+          StepPercentage: 15
+          BakeTimeMins: 5
+      Applications:
+        - Target:
+            Type: AWS::ECS::Service
+            LogicalID: BackendService
+          ECSAttributes:
+            TaskDefinitions:
+              - BackendTaskDefinition
+              - BackendTaskDefinitionAlt
+            TaskSets:
+              - BackendTaskSet
+              - BackendTaskSetAlt
+            TrafficRouting:
+              ProdTrafficRoute:
+                Type: 'AWS::ElasticLoadBalancingV2::Listener'
+                LogicalID: BackendLoadBalancer
+              TargetGroups: 
+                - BackendTargetGroup
+                - BackendTargetGroupAlt
+        - Target:
+            Type: AWS::ECS::Service
+            LogicalID: FrontendService
+          ECSAttributes:
+            TaskDefinitions:
+              - FrontendTaskDefinition
+              - FrontendTaskDefinitionAlt
+            TaskSets:
+              - FrontendTaskSet
+              - FrontendTaskSetAlt
+            TrafficRouting:
+              ProdTrafficRoute:
+                Type: 'AWS::ElasticLoadBalancingV2::Listener'
+                LogicalID: FrontendLoadBalancer
+              TargetGroups:
+                - FrontendTargetGroup
+                - FrontendTargetGroupAlt
+    Type: 'AWS::CodeDeploy::BlueGreen'
 
-# TODOS: move security groups into VPCstack and use crossstack reference once this stack is working.
 Resources:
   ## CLUSTER RESOURCES
   ContainerSecurityGroup:

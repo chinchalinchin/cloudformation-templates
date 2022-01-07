@@ -12,7 +12,11 @@ source $PROJECT_DIR/.env
 #                       --sort-key <optional: key name> \
 #                       --action <create | update | delete>
 
-#   NOTE: ``--action`` defaults to `create` if not supplied
+#      NOTE: `--action` defaults to `create` if not supplied.
+#      NOTE: `--environment` defaults to `Dev` if not supplied.
+#      NOTE: All argument flags have a short form and a long form, with single dashes and doubled dashes, e.g.
+#           all of the following arguments are equivalent,
+#               --environment, -environment, --e, -e
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -40,6 +44,11 @@ while [[ $# -gt 0 ]]; do
             shift
             shift 
             ;;
+        --environment|-environment|--env|-env|--e|-e)
+            ENVIRONMENT="$2"
+            shift
+            shift
+            ;;
         --sort-key|-sort-key|--sk|-sk)
             SORT="$2"
             shift
@@ -48,11 +57,6 @@ while [[ $# -gt 0 ]]; do
         --help|-help|--h|-h)
             help
             exit 0
-            ;;
-        --environment|-environment|--env|-env|--e|-e)
-            ENVIRONMENT="$2"
-            shift
-            shift
             ;;
         *)
             log "Input not understood. See \e[3m--help\e[0m for information on using this command."
@@ -65,6 +69,12 @@ if [ -z "$ACTION" ]
 then
     log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
+fi
+
+if [ -z "$ENVIRONMENT" ]
+then
+    log "No \e[3m--environment\e[0m specified. Defaulting to \e[1mDev\e[0m"
+    ENVIRONMENT="Dev"
 fi
 
 cp $PROJECT_DIR/templates/serverless/dynamo.yml ./dynamo.yml

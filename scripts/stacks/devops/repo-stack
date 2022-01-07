@@ -8,8 +8,11 @@ source $PROJECT_DIR/env/.env
 
 # Example Usage:
 # >$     repo-stack --action <create | update | delete> 
-
-#   NOTE: ``--action`` defaults to `create` if not supplied
+#
+#      NOTE: `--action` defaults to `create` if not supplied.
+#      NOTE: All argument flags have a short form and a long form, with single dashes and doubled dashes, e.g.
+#           all of the following arguments are equivalent,
+#               `--action`, `-action`, `--a`, `-a`
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -49,34 +52,34 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/devops/repo.yml ./repo.yml
-
 if [ "$ACTION" == "create" ]
 then
     log "Creating \e[1m${APPLICATION^}-${REPO_STACK}\e[0m"
+    cp $PROJECT_DIR/templates/devops/repo.yml ./repo.yml
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${REPO_STACK}" \
         --template-body file://repo.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION 
+    rm ./repo.yml
     exit 0
 
 elif [ "$ACTION" == "update" ]
 then
     log "Updating \e[1m${APPLICATION^}-${REPO_STACK}\e[0m"
+    cp $PROJECT_DIR/templates/devops/repo.yml ./repo.yml
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${REPO_STACK}" \
         --template-body file://repo.yml \
         --parameters ParameterKey=applicationName,ParameterValue=$APPLICATION
+    rm ./repo.yml
     exit 0     
 elif [ "$ACTION" == "delete" ]
 then
     log "Deleting \e[1m${APPLICATION^}-${REPO_STACK}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${REPO_STACK}"
-    exit -
+    exit 0
 else
     log "Action not understood."
     exit 1
 fi
-
-rm ./repo.yml
