@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
-        --service|-service|--s|-s)
+        --service|-service|--svc|-svc|--s|-s)
             SERVICE="$2"
             shift
             shift
@@ -89,7 +89,7 @@ then
 fi
 if [ -z "$ENVIRONMENT" ]
 then
-    log "No \e[1menvironment\e[0m inputted. Defaulting to \e[1mDev\e[0m"
+    log "No \e[3m--environment\e[0m inputted. Defaulting to \e[1mDev\e[0m"
     ENVIRONMENT="Dev"
 fi
 if [ -z "$TAG" ]

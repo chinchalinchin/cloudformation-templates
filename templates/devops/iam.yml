@@ -326,8 +326,9 @@ Resources:
                 - Sid: CodeDeployPermissions
                   Action:
                     - codedeploy:GetApplication
-                  Resources:
+                  Resource:
                     - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
+                  Effect: Allow
                 - Sid: ECRAuthPermissions
                   Action:
                     - ecr:GetAuthorizationToken

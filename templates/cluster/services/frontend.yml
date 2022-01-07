@@ -212,6 +212,8 @@ Resources:
                       - BranchMap
                       - !Ref environmentName
                       - branch
+          # TODO: replace environmentfile with Environment: and Secrets: 
+          #       script for creating frontend secrets
           LogConfiguration:
             LogDriver: awslogs
             Options:

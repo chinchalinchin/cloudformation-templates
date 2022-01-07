@@ -44,16 +44,22 @@ while [[ $# -gt 0 ]]; do
        esac
 done
 
+if [ -z "$ENVIRONMENT" ]
+then
+       log "No \e[3m--environment\e[0m specified. Defaulting to \e[1mDev\e[0m"
+       ENVIRONMENT="Dev"
+fi
 if [ -z "$ACTION" ]
 then
-    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
-    ACTION="create"
+       log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
+       ACTION="create"
 fi
 
 cp $PROJECT_DIR/templates/serverless/lambda.yml ./lambda.yml
 
 if [ "$ACTION" == "create" ]
 then
+       log "Creating \e[1m${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}\e[0m"
        aws cloudformation create-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
               --template-body file://lambda.yml \
@@ -70,6 +76,7 @@ then
 
 elif [ "$ACTION" == "update" ]
 then
+       log "Updating \e[1m${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}\e[0m"
        aws cloudformation update-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}" \
               --template-body file://lambda.yml \
@@ -85,6 +92,7 @@ then
                             ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"              
 elif [ "$ACTION" == "delete" ]
 then 
+       log "Deleting \e[1m${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}\e[0m"
        aws cloudformation delete-stack \
               --stack-name "${APPLICATION^}-${LAMBDA_STACK}-${ENVIRONMENT}"
 fi

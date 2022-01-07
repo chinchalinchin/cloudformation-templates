@@ -71,6 +71,7 @@ cp $PROJECT_DIR/templates/serverless/dynamo.yml ./dynamo.yml
 
 if [ "$ACTION" == "create" ]
 then
+    log "Creating \e[1m${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}\e[0m"
     if [ ! -z $SORT ]
     then
         aws cloudformation create-stack \
@@ -92,6 +93,7 @@ then
     fi
 elif [ "$ACTION" == "update" ]
 then
+    log "Updating \e[1m${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}\e[0m"
     if [ ! -z $SORT ]
     then
         aws cloudformation update-stack \
@@ -113,6 +115,7 @@ then
     fi
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${DYNAMO_STACK}-${ENVIRONMENT}"
 else

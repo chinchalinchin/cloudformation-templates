@@ -99,7 +99,7 @@ Resources:
     Properties:
       HealthCheckIntervalSeconds: 60
       # will look for a 200 status code by default unless specified otherwise
-      HealthCheckPath: /
+      HealthCheckPath: /api/system/status
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
@@ -178,17 +178,17 @@ Resources:
           Image: sonarqube:latest
           PortMappings:
             - ContainerPort: !Ref port
-          # EnvironmentFiles:
-          #   - Type: s3
-          #     Value: !Sub
-          #       - "${bucketArn}/web.${env}.env"
-          #       - bucketArn: 
-          #           Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
-          #         env:
-          #           Fn::FindInMap:
-          #             - BranchMap
-          #             - !Ref environmentName
-          #             - branch
+          Command: 
+            - -Dsonar.ce.javaOpts=-Xmx1192m -Dsonar.web.javaOpts=-Xmx1192m
+          Environment:
+            - Name: SONAR_LOG_LEVEL_WEB
+              Value: DEBUG
+            - Name: SONAR_LOG_LEVEL_APP
+              Value: DEBUG
+            - Name:  SONAR_LOG_LEVEL_CE
+              Value: DEBUG
+            - Name:  SONAR_LOG_LEVEL_ES
+              Value: DEBUG
           LogConfiguration:
             LogDriver: awslogs
             Options:
