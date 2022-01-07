@@ -409,7 +409,7 @@ Outputs:
     Description: Bucket arn for Task bucket
     Export:
       Name: !Sub ${AWS::StackName}-TaskBucketARN
-  TaskBucketArn:
+  TaskBucket:
     Value: !Ref TaskBucket
     Description: Bucket name of Task bucket
     Export:

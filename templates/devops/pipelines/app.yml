@@ -268,22 +268,20 @@ Resources:
         - Name: Source
           Actions:
             - Name: TaskSource
-              RunOrder: 1
               OutputArtifacts:
-                - Name: "${applicationName}-${environmentName}-frontend-taskdef"
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-taskdef"
               ActionTypeId:
                 Provider: S3
                 Owner: AWS
                 Version: '1'
                 Category: Source
               Region: !Sub ${AWS::Region}
-              Name: Source
               Configuration:
                 S3Bucket: 
-                  Fn::ImportValue: ${repoStack}-TaskBucket
+                  Fn::ImportValue: !Sub ${repoStack}-TaskBucket
                 S3ObjectKey: !Sub 
                   - 'frontend/taskdef.${env}.json'
-                    env: 
+                  - env: 
                       Fn::FindInMap:
                         - BranchMap
                         - !Ref environmentName
@@ -291,22 +289,20 @@ Resources:
                 PollForSourceChanges: 'false'
               InputArtifacts: []
             - Name: SpecSource
-              RunOrder: 1
               OutputArtifacts:
-                - Name: "${applicationName}-${environmentName}-frontend-appspec"
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-appspec"
               ActionTypeId:
                 Provider: S3
                 Owner: AWS
                 Version: '1'
                 Category: Source
               Region: !Sub ${AWS::Region}
-              Name: Source
               Configuration:
                 S3Bucket: 
-                  Fn::ImportValue: ${repoStack}-TaskBucket
+                  Fn::ImportValue: !Sub ${repoStack}-TaskBucket
                 S3ObjectKey: !Sub
                   - 'frontend/appspec.${env}.yml'
-                    env: 
+                  - env: 
                       Fn::FindInMap:
                         - BranchMap
                         - !Ref environmentName
@@ -326,31 +322,40 @@ Resources:
                 RepositoryName:
                   Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepositoryName"
                 ImageTag: !Ref environmentName
-        # DOESN'T WORK!
-        # - Name: Deploy
-        #   Actions:
-        #     - Name: Deploy
-        #       ActionTypeId:
-        #         Category: Deploy
-        #         Owner: AWS
-        #         Provider: CodeDeployToECS
-        #         Version: '1'
-        #       RunOrder: 1
-        #       Configuration:
-        #         AppSpecTemplateArtifact: !Sub "${applicationName}-${environmentName}-frontend-source" 
-        #         ApplicationName: !Ref FrontendCodeDeploy
-        #         DeploymentGroupName: !Ref FrontendDeploymentGroup
-        #         Image1ArtifactName: !Sub "${applicationName}-${environmentName}-frontend-image"
-        #         Image1ContainerName: IMAGE1_NAME
-        #         TaskDefinitionTemplatePath: taskdef.json
-        #         AppSpecTemplatePath: appspec.yaml
-        #         TaskDefinitionTemplateArtifact: !Sub "${applicationName}-${environmentName}-frontend-source" 
-        #       OutputArtifacts: []
-        #       InputArtifacts:
-        #         - Name: !Sub "${applicationName}-${environmentName}-frontend-source"   
-        #         - Name: !Sub "${applicationName}-${environmentName}-frontend-image"
-        #       Region: !Sub ${AWS::Region}
-        #       Namespace: DeployVariables
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeployToECS
+                Version: '1'
+              Configuration:
+                AppSpecTemplateArtifact: !Sub "${applicationName}-${environmentName}-frontend-appspec" 
+                ApplicationName: !Ref FrontendCodeDeploy
+                Image1ArtifactName: !Sub "${applicationName}-${environmentName}-frontend-image"
+                Image1ContainerName: IMAGE1_NAME
+                TaskDefinitionTemplatePath: !Sub 
+                  - 'frontend/taskdef.${env}.json'
+                  - env: 
+                      Fn::FindInMap:
+                        - BranchMap
+                        - !Ref environmentName
+                        - branch
+                AppSpecTemplatePath: !Sub 
+                  - 'frontend/appspec.${env}.yml'
+                  - env: 
+                      Fn::FindInMap:
+                        - BranchMap
+                        - !Ref environmentName
+                        - branch
+                TaskDefinitionTemplateArtifact: !Sub "${applicationName}-${environmentName}-frontend-taskdef" 
+              OutputArtifacts: []
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-source"   
+                - Name: !Sub "${applicationName}-${environmentName}-frontend-image"
+              Region: !Sub ${AWS::Region}
+              Namespace: DeployVariables
 
   BackendEventRule:
     Type: AWS::Events::Rule
@@ -467,22 +472,20 @@ Resources:
         - Name: Source
           Actions:
             - Name: TaskSource
-              RunOrder: 1
               OutputArtifacts:
-                - Name: "${applicationName}-${environmentName}-backend-taskdef"
+                - Name: !Sub "${applicationName}-${environmentName}-backend-taskdef"
               ActionTypeId:
                 Provider: S3
                 Owner: AWS
                 Version: '1'
                 Category: Source
-              Region: us-west-2
-              Name: Source
+              Region: !Sub ${AWS::Region}
               Configuration:
                 S3Bucket: 
-                  Fn::ImportValue: ${repoStack}-TaskBucket
+                  Fn::ImportValue: !Sub ${repoStack}-TaskBucket
                 S3ObjectKey: !Sub
                   - 'backend/taskdef.${env}.json'
-                    env: 
+                  - env: 
                       Fn::FindInMap:
                         - BranchMap
                         - !Ref environmentName
@@ -490,22 +493,20 @@ Resources:
                 PollForSourceChanges: 'false'
               InputArtifacts: []
             - Name: Source
-              RunOrder: 1
               OutputArtifacts:
-                - Name: "${applicationName}-${environmentName}-backend-appspec"
+                - Name: !Sub "${applicationName}-${environmentName}-backend-appspec"
               ActionTypeId:
                 Provider: S3
                 Owner: AWS
                 Version: '1'
                 Category: Source
-              Region: us-west-2
-              Name: Source
+              Region: !Sub ${AWS::Region}
               Configuration:
                 S3Bucket: 
-                  Fn::ImportValue: ${repoStack}-TaskBucket
+                  Fn::ImportValue: !Sub ${repoStack}-TaskBucket
                 S3ObjectKey: !Sub
                   - 'backend/appspec.${env}.yml'
-                    env: 
+                  - env: 
                       Fn::FindInMap:
                         - BranchMap
                         - !Ref environmentName
@@ -525,3 +526,37 @@ Resources:
                 RepositoryName:
                   Fn::ImportValue: !Sub "${repoStack}-BackendImageRepositoryName"
                 ImageTag: !Ref environmentName
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeployToECS
+                Version: '1'
+              Configuration:
+                AppSpecTemplateArtifact: !Sub "${applicationName}-${environmentName}-backend-appspec" 
+                ApplicationName: !Ref BackendCodeDeploy
+                Image1ArtifactName: !Sub "${applicationName}-${environmentName}-backend-image"
+                Image1ContainerName: IMAGE1_NAME
+                TaskDefinitionTemplatePath: !Sub 
+                  - 'backend/taskdef.${env}.json'
+                  - env: 
+                      Fn::FindInMap:
+                        - BranchMap
+                        - !Ref environmentName
+                        - branch
+                AppSpecTemplatePath: !Sub 
+                  - 'backend/appspec.${env}.yml'
+                  - env: 
+                      Fn::FindInMap:
+                        - BranchMap
+                        - !Ref environmentName
+                        - branch
+                TaskDefinitionTemplateArtifact: !Sub "${applicationName}-${environmentName}-backend-taskdef" 
+              OutputArtifacts: []
+              InputArtifacts:
+                - Name: !Sub "${applicationName}-${environmentName}-backend-source"   
+                - Name: !Sub "${applicationName}-${environmentName}-backend-image"
+              Region: !Sub ${AWS::Region}
+              Namespace: DeployVariables
