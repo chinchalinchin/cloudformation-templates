@@ -287,6 +287,11 @@ Resources:
             PolicyDocument:
               Version: "2012-10-17"
               Statement:
+                - Sid: IAMPermissions
+                  Action: 
+                    - iam:PassRole
+                  Effect: Allow
+                  Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${applicationName}-*"
                 - Sid: CodeCommitPermissions
                   Action:
                     - codecommit:CancelUploadArchive
@@ -326,6 +331,7 @@ Resources:
                 - Sid: CodeDeployPermissions
                   Action:
                     - codedeploy:GetApplication
+                    - codedeploy:GetApplicationRevision
                   Resource:
                     - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
                   Effect: Allow
@@ -345,6 +351,11 @@ Resources:
                   Effect: Allow
                   Resource: 
                     - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+                - Sid: ECSPermissions
+                  Action:
+                    - ecs:RegisterTaskDefinition
+                  Effect: Allow
+                  Resource: '*'
         RoleName: !Sub ${applicationName}-codepipeline-exector
         
   # CODEBUILD SERVICE ROLE
