@@ -330,10 +330,13 @@ Resources:
                   Effect: Allow
                 - Sid: CodeDeployPermissions
                   Action:
-                    - codedeploy:GetApplication
-                    - codedeploy:GetApplicationRevision
-                  Resource:
+                    - codedeploy:GetDeployment
+                    - codedeploy:CreateDeployment
+                    - codedeploy:GetDeploymentConfig
+                  Resource: 
                     - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
+                    - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${applicationName}-*/${applicationName}-*"               
+                    - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:*"
                   Effect: Allow
                 - Sid: ECRAuthPermissions
                   Action:
@@ -355,7 +358,7 @@ Resources:
                   Action:
                     - ecs:RegisterTaskDefinition
                   Effect: Allow
-                  Resource: '*'
+                  Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
         RoleName: !Sub ${applicationName}-codepipeline-exector
         
   # CODEBUILD SERVICE ROLE
@@ -644,6 +647,7 @@ Resources:
                     codecommit:References:
                       - "refs/heads/Prod"
                       - "refs/heads/Staging"
+                      - "refs/heads/Dev"
 
   IAMTariq:
     Type: AWS::IAM::User
