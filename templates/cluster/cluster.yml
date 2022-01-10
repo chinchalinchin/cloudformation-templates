@@ -24,6 +24,10 @@ Parameters:
   certificateArn:
     Type: String
     Description: AWS Arn of the domain certificate.
+  domain:
+    Type: String
+    Description: Domain the cluster services are hosted on
+    Default: makpar-innovation.net
 
 Mappings:
   BranchMap:
@@ -39,7 +43,12 @@ Mappings:
     Prod: 
       branch: "prod"
       subdomain: ""
-      
+
+Conditions:
+  DevResources: !Equals
+    - !Ref environmentName
+    - Dev
+
 Resources:
   Cluster:
     Type: AWS::ECS::Cluster
@@ -86,8 +95,7 @@ Resources:
   PrivateLoadBalancerClusterIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
-      GroupId:
-        Fn::ImportValue: !Ref ContainerSecurityGroup
+      GroupId: !Ref ContainerSecurityGroup
       IpProtocol: -1
       SourceSecurityGroupId: !Ref PrivateLoadBalancerSecurityGroup
 
@@ -95,7 +103,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internal
-      Name: !Sub "${applicationName}-${environmentName}-private-load-balancer"
+      Name: !Sub "${applicationName}-${environmentName}-private-alb"
       LoadBalancerAttributes:
       - Key: idle_timeout.timeout_seconds
         Value: '30'
@@ -132,7 +140,7 @@ Resources:
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: 60
-      Name: !Sub "${applicationName}-${environmentName}-public-load-balancer"
+      Name: !Sub "${applicationName}-${environmentName}-public-alb"
       Scheme: internet-facing
       SecurityGroups:
         - !Ref PublicLoadBalancerSecurityGroup
@@ -149,7 +157,7 @@ Resources:
             ContentType: text/plain
             MessageBody: ahoy there, matey
             StatusCode: 200
-      LoadBalancerArn: !Ref PublicLoadBalancerARN
+      LoadBalancerArn: !Ref PublicLoadBalancer
       Port: 443
       Protocol: HTTPS
       Certificates:
@@ -170,6 +178,17 @@ Resources:
               - BranchMap
               - !Ref environmentName
               - subdomain
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt PublicLoadBalancer.DNSName
+        HostedZoneId: !GetAtt PublicLoadBalancer.CanonicalHostedZoneID
+
+  SonarRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: DevResources
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      Name: !Sub "${applicationName}-sonar.${domain}"
       Type: A
       AliasTarget:
         DNSName: !GetAtt PublicLoadBalancer.DNSName

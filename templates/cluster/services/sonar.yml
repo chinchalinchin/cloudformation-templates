@@ -28,24 +28,18 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
-  hostedZoneId:
-    Type: String
-    Description: Hosted zone of the domain.
-  certificateArn:
-    Type: String
-    Description: AWS Arn of the domain certificate.
+  ## SERVICE CONFIGURATION
   domain:
     Type: String
     Default: makpar-innovation.net
     Description: Domain for the application cluster
-  ## SERVICE CONFIGURATION
   port:
     Type: Number
     Default: 8080 
     Description: Port mapping for sonar service 
   tag:
     Type: String
-    Default: Dev-v0.0.0
+    Default: Dev
     Description: Image tag for the front service ECR
 
 Mappings:
@@ -211,16 +205,6 @@ Resources:
       Name: !Sub ${applicationName}-${environmentName}-sonar-discovery
       NamespaceId: 
         Fn::ImportValue: !Sub ${clusterStack}-Namespace
-
-  SonarRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref hostedZoneId
-      Name: !Sub "${applicationName}-sonar.${domain}"
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt SonarLoadBalancer.DNSName
-        HostedZoneId: !GetAtt SonarLoadBalancer.CanonicalHostedZoneID
 
 Outputs:
   SonarTargetGroup:
