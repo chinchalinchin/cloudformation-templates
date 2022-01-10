@@ -132,8 +132,6 @@ then
                         ParameterKey=port,ParameterValue="$PORT" \
                         ParameterKey=tag,ParameterValue="$TAG" \
                         ParameterKey=domain,ParameterValue="$DOMAIN" \
-                        ParameterKey=hostedZoneId,ParameterValue="$HOSTED_ZONE_ID" \
-                        ParameterKey=certificateArn,ParameterValue="$CERTIFICATE_ARN" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-${REPO_STACK}" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
@@ -150,8 +148,6 @@ then
                         ParameterKey=port,ParameterValue="$PORT" \
                         ParameterKey=tag,ParameterValue="$TAG" \
                         ParameterKey=domain,ParameterValue="$DOMAIN" \
-                        ParameterKey=hostedZoneId,ParameterValue="$HOSTED_ZONE_ID" \
-                        ParameterKey=certificateArn,ParameterValue="$CERTIFICATE_ARN" \
                         ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}" \
                         ParameterKey=repoStack,ParameterValue="${APPLICATION^}-${REPO_STACK}" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"

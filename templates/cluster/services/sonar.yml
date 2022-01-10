@@ -112,55 +112,20 @@ Resources:
       TargetType: ip
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
-
-  SonarLoadBalancerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Sub "${applicationName}-${environmentName}-load-balancer-security-group"
-      VpcId: 
-        Fn::ImportValue: !Sub "${vpcStack}-VPC"
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
   
-  SonarLoadBalancerClusterIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
-      GroupId:
-        Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
-      IpProtocol: -1
-      SourceSecurityGroupId: !Ref SonarLoadBalancerSecurityGroup
-
-  SonarLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  SonarLoadBalancerListenerCondition:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      LoadBalancerAttributes:
-        - Key: idle_timeout.timeout_seconds
-          Value: 60
-      Name: !Sub "${applicationName}-${environmentName}-sonar-load-balancer"
-      Scheme: internet-facing
-      SecurityGroups:
-        - !Ref SonarLoadBalancerSecurityGroup
-      Subnets:
-        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
-        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+      ListenerArn: 
+        Fn::ImportValue: !Sub ${clusterStack}-PublicLoadBalancerListenerARN
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values: !Sub "${applicationName}-sonar.${domain}"
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref SonarTargetGroup
 
-  SonarLoadBalancerListenerHTTPS:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref SonarTargetGroup
-          Type: forward
-      LoadBalancerArn: !Ref SonarLoadBalancer
-      Port: 443
-      Protocol: HTTPS
-      Certificates:
-        - CertificateArn: !Ref certificateArn
-    DependsOn:
-      - SonarLoadBalancer
-  
   SonarTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     DependsOn: SonarLogGroup

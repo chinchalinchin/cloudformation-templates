@@ -1,50 +1,43 @@
-# Configuration
-- [x] Get Hosted Zone ID
-- [x] Get Certificate Arn
+# Prerequisite Configuration
+- [] Get Hosted Zone ID
+- [] Get Certificate Arn
 - [] Configure Gateway Endpoints
-- [x] Configure image name in lambda repo
 
 # Stacks
 
 - [] IAMStack
 - [] RepoStack
+- [] CoverageStack
+- [] CognitoStack
 - [] VPCStack
 - [] RDSStack
-- [] CognitoStack
 - [] LambdaStack
-- [] SonarStack
-- [] DNSStack
+- [] DynamoStack
 - [] PipelineStack
+
+## Cluster Stacks
+- [] ClusterStack
+- [] ServiceStack-@svc
 
 # Non-Stack Operations
 
 - [] generate credentials && configure AWS cli
-- [] build ECR images
 - [] upload ssh key to profile
-- [] upload database ssh keys to bucket
-- [] upload container .env to bucket
+- [] push up local repositories to remote
+- [] login into ECR && build and push ECR images
+    - [] lambda images
+    - [] backend image
+    - [] frontend image
+    - [] build and service images: postgres, node, nginx, pythong
+- [] upload database ssh keys to bucket/key manager
+- [] upload container .env to environment bucket
+- [] upload taskdef/appspec to cluster bucket
 - [] add IPs to Bastion host security group rule for SSH tunnels
-- [] script to initialize coverage bucket
-- [] script for cloning repositories
-- [] script for branch rules
-- [] script for RDS host secret 
-- [] login into Sonar and change admin password
-- [] generate Sonar token
-- [] script for Sonar host secret
-- [] script for Sonar token secret
-- [] add Null condition to Developer group (see below)
-- [] get Cognito auth domain, change password and add to secrets
-- [] tag local *postgres* image with ECR and push for pipeline to use
-
-### Conditionally Required
-- [] script to add API key secret
-
-# Presentation
-
-- [] Screenshot Sonar project tab
-- [] Screenshot Sonar analysis tab
-- [] Screenshot API Gateway Integration tab
-- [] Screenshot Pipeline
+- [] script to apply branch approval rule to repositores
+- [] login into Sonar, change admin password & generate Sonar token
+- [] get Cognito auth domain, change verification email password
+- [] script for creating/updating secrets
+- [] add Null condition to Developer group (see below; TODO: figure out how to get this in the *IAMStack* template)
 
 ## Resources
 

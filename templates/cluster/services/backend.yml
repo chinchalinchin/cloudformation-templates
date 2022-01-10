@@ -134,46 +134,14 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
-  BackendLoadBalancerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "!${applicationName}-${environmentName}-backend-alb-sg"
-      GroupDescription: Access to the internal load balancer
-      VpcId:
-        Fn::ImportValue: !Sub ${vpcStack}-VPC
-
-  BackendLoadBalancerClusterIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
-      GroupId:
-        Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
-      IpProtocol: -1
-      SourceSecurityGroupId: !Ref BackendLoadBalancerSecurityGroup
-
-  BackendLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      Scheme: internal
-      LoadBalancerAttributes:
-      - Key: idle_timeout.timeout_seconds
-        Value: '30'
-      Subnets:
-        # This load balancer is put into the private subnet, so that there is no
-        # route for the public to even be able to access the private load balancer.
-        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
-        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-      SecurityGroups: 
-        - !Ref BackendLoadBalancerSecurityGroup
-
   BackendLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-      - BackendLoadBalancer
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref BackendTargetGroup
           Type: 'forward'
-      LoadBalancerArn: !Ref BackendLoadBalancer
+      LoadBalancerArn:
+        Fn::ImportValue: !Sub ${clusterStack}-PrivateLoadBalancerARN
       Port: !Ref port
       Protocol: HTTP
 
@@ -271,13 +239,7 @@ Resources:
       NamespaceId:
         Fn::ImportValue: !Sub ${clusterStack}-Namespace
 
-
 Outputs:
-  BackendLoadBalancerName:
-    Value: !GetAtt BackendLoadBalancer.LoadBalancerName
-    Description: Name of backend load balancer
-    Export: 
-      Name: !Sub ${AWS::StackName}-BackendLoadBalancerName
   BackendTargetGroup:
     Value: !GetAtt BackendTargetGroup.TargetGroupName
     Description: Name of first backend target group

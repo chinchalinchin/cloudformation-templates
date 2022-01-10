@@ -28,17 +28,11 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
-  hostedZoneId:
-    Type: String
-    Description: Hosted zone of the domain.
-  certificateArn:
-    Type: String
-    Description: AWS Arn of the domain certificate.
+  ## SERVICE CONFIGURATION
   domain:
     Type: String
     Default: makpar-innovation.net
     Description: Domain for the application cluster
-  ## SERVICE CONFIGURATION
   port:
     Type: Number
     Default: 8080 
@@ -132,54 +126,28 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
-  FrontendLoadBalancerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+  FrontendLoadBalancerListenerCondition:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      GroupDescription: !Sub "${applicationName}-${environmentName}-load-balancer-security-group"
-      VpcId: 
-        Fn::ImportValue: !Sub "${vpcStack}-VPC"
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-  
-  FrontendLoadBalancerClusterIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
-      GroupId:
-        Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
-      IpProtocol: -1
-      SourceSecurityGroupId: !Ref FrontendLoadBalancerSecurityGroup
+      ListenerArn: 
+        Fn::ImportValue: !Sub ${clusterStack}-PublicLoadBalancerListenerARN
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Sub
+                - "${subdomain}${subdomainEnv}.${domainName}"
+                - subdomain: !Ref applicationName
+                  domainName: !Ref domain
+                  subdomainEnv: 
+                    Fn::FindInMap:
+                      - BranchMap
+                      - !Ref environmentName
+                      - subdomain
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref FrontendTargetGroup
 
-  FrontendLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      LoadBalancerAttributes:
-        - Key: idle_timeout.timeout_seconds
-          Value: 60
-      Name: !Sub "${applicationName}-${environmentName}-frontend-load-balancer"
-      Scheme: internet-facing
-      SecurityGroups:
-        - !Ref FrontendLoadBalancerSecurityGroup
-      Subnets:
-        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
-        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
-
-  FrontendLoadBalancerListenerHTTPS:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref FrontendTargetGroup
-          Type: forward
-      LoadBalancerArn: !Ref FrontendLoadBalancer
-      Port: 443
-      Protocol: HTTPS
-      Certificates:
-        - CertificateArn: !Ref certificateArn
-    DependsOn:
-      - FrontendLoadBalancer
-  
   FrontendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     DependsOn: FrontendLogGroup
@@ -274,24 +242,6 @@ Resources:
       NamespaceId: 
         Fn::ImportValue: !Sub ${clusterStack}-Namespace
 
-  FrontendRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref hostedZoneId
-      Name: !Sub
-        - "${subdomain}${subdomainEnv}.${domainName}"
-        - subdomain: !Ref applicationName
-          domainName: !Ref domain
-          subdomainEnv: 
-            Fn::FindInMap:
-              - BranchMap
-              - !Ref environmentName
-              - subdomain
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt FrontendLoadBalancer.DNSName
-        HostedZoneId: !GetAtt FrontendLoadBalancer.CanonicalHostedZoneID
-
 Outputs:
   FrontendTargetGroup:
     Value: !GetAtt FrontendTargetGroup.TargetGroupName
@@ -303,21 +253,6 @@ Outputs:
     Description: Name of second frontend target group
     Export:
       Name: !Sub ${AWS::StackName}-FrontendTargetGroupAlt
-  FrontendLoadBalancerName:
-    Value: !GetAtt FrontendLoadBalancer.LoadBalancerName
-    Description: Name of frontend load balancer
-    Export: 
-      Name: !Sub ${AWS::StackName}-FrontendLoadBalancerName
-  FrontendLoadBalancerDNS:
-    Value: !GetAtt FrontendLoadBalancer.DNSName
-    Description: DNS name of frontend load balancer
-    Export:
-      Name: !Sub ${AWS::StackName}-FrontendLoadBalancerDNSName
-  FrontendLoadBalancerHostedZone:
-    Value: !GetAtt FrontendLoadBalancer.CanonicalHostedZoneID
-    Description: Load Balancer Hosted Zone Id
-    Export:
-      Name: !Sub ${AWS::StackName}-FrontendLoadBalancerHostedZoneID
   FrontendServiceName:
     Value: !GetAtt FrontendService.Name
     Description: Name of the frontend service

@@ -17,6 +17,13 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
+  ## DNS CONFIGURATION
+  hostedZoneId:
+    Type: String
+    Description: Hosted zone of the domain.
+  certificateArn:
+    Type: String
+    Description: AWS Arn of the domain certificate.
 
 Mappings:
   BranchMap:
@@ -34,24 +41,6 @@ Mappings:
       subdomain: ""
       
 Resources:
-  # NOTE: in the service *ymls*, each template will need to create an AWS::EC2::SecurityGroupIngress
-  #       for the load balancer in front of the service. This allows the load balancer to forward traffic
-  #       to containers in the cluster.
-  ContainerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "${applicationName}-${environmentName}-container-sg"
-      GroupDescription: "Security group for ECS containers"
-      VpcId: 
-        Fn::ImportValue: !Sub "${vpcStack}-VPC"
-  
-  ContainerSecurityGroupSelfIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
-      GroupId: !Ref ContainerSecurityGroup
-      IpProtocol: -1
-      SourceSecurityGroupId: !Ref ContainerSecurityGroup
-
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
@@ -70,6 +59,121 @@ Resources:
                 - branch
         Vpc: 
           Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${applicationName}-${environmentName}-container-sg"
+      GroupDescription: "Security group for ECS containers"
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+  
+  ContainerSecurityGroupSelfIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref ContainerSecurityGroup
+
+  PrivateLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "!${applicationName}-${environmentName}-private-alb-sg"
+      GroupDescription: Access to the internal load balancer
+      VpcId:
+        Fn::ImportValue: !Sub ${vpcStack}-VPC
+
+  PrivateLoadBalancerClusterIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId:
+        Fn::ImportValue: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref PrivateLoadBalancerSecurityGroup
+
+  PrivateLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internal
+      Name: !Sub "${applicationName}-${environmentName}-private-load-balancer"
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '30'
+      Subnets:
+        # This load balancer is put into the private subnet, so that there is no
+        # route for the public to even be able to access the private load balancer.
+        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
+        - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+      SecurityGroups: 
+        - !Ref PrivateLoadBalancerSecurityGroup
+
+  PublicLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "${applicationName}-${environmentName}-public-alb-group"
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+  
+  PublicLoadBalancerClusterIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref PublicLoadBalancerSecurityGroup
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: 60
+      Name: !Sub "${applicationName}-${environmentName}-public-load-balancer"
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref PublicLoadBalancerSecurityGroup
+      Subnets:
+        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+
+  PublicLoadBalancerListenerHTTPS:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: fixed-response
+          FixedResponseConfig:
+            ContentType: text/plain
+            MessageBody: ahoy there, matey
+            StatusCode: 200
+      LoadBalancerArn: !Ref PublicLoadBalancerARN
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref certificateArn
+    DependsOn:
+      - PublicLoadBalancer
+
+  FrontendRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      Name: !Sub
+        - "${subdomain}${subdomainEnv}.${domainName}"
+        - subdomain: !Ref applicationName
+          domainName: !Ref domain
+          subdomainEnv: 
+            Fn::FindInMap:
+              - BranchMap
+              - !Ref environmentName
+              - subdomain
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt PublicLoadBalancer.DNSName
+        HostedZoneId: !GetAtt PublicLoadBalancer.CanonicalHostedZoneID
 
 Outputs:
   ContainerSecurityGroup:
@@ -92,3 +196,38 @@ Outputs:
     Description: Arn of the Innovation Lab ECS Cluster
     Export:
       Name: !Sub ${AWS::StackName}-ClusterARN
+  PrivateLoadBalancerName:
+    Value: !GetAtt PrivateLoadBalancer.LoadBalancerName
+    Description: Name of private load balancer
+    Export: 
+      Name: !Sub ${AWS::StackName}-PrivateLoadBalancerName
+  PrivateLoadBalancerArn:
+    Value: !Ref PrivateLoadBalancer
+    Description: ARN of private load balancer
+    Export: 
+      Name: !Sub ${AWS::StackName}-PrivateLoadBalancerARN
+  PublicLoadBalancerName:
+    Value: !GetAtt PublicLoadBalancer.LoadBalancerName
+    Description: Name of public load balancer
+    Export: 
+      Name: !Sub ${AWS::StackName}-PublicLoadBalancerName
+  PublicLoadBalancerArn:
+    Value: !Ref PublicLoadBalancer
+    Description: Name of public load balancer
+    Export: 
+      Name: !Sub ${AWS::StackName}-PublicLoadBalancerARN
+  PublicLoadBalancerDNS:
+    Value: !GetAtt PublicLoadBalancer.DNSName
+    Description: DNS name of public load balancer
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicLoadBalancerDNSName
+  PublicLoadBalancerHostedZone:
+    Value: !GetAtt PublicLoadBalancer.CanonicalHostedZoneID
+    Description: Load Balancer Hosted Zone Id
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicLoadBalancerHostedZoneID
+  PublicLoadBalancerListenerArn:
+    Value: !Ref PublicLoadBalancerListenerHTTPS
+    Description: ARN of the public load balancer listener
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicLoadBalancerListenerARN
