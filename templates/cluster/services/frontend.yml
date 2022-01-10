@@ -129,6 +129,7 @@ Resources:
   FrontendLoadBalancerListenerCondition:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
+      Priority: 1
       ListenerArn: 
         Fn::ImportValue: !Sub ${clusterStack}-PublicLoadBalancerListenerARN
       Conditions:
@@ -191,9 +192,6 @@ Resources:
 
   FrontendService:
     Type: AWS::ECS::Service
-    # This dependency is needed so that the load balancer is setup correctly in time
-    DependsOn:
-      - FrontendLoadBalancerListenerHTTPS
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-frontend
       Cluster: 

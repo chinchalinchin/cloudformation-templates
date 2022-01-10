@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for the sonar service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack sonar ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created and a record is added to Route53 pointing to its load balancer.'
+Description: 'Provisions resources for the Sonar service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with the official SonarQube iamge. The task definition is used to spin up a service instance of SonarQube.'
 
 Parameters:
   ## CROSS STACK REFERENCES
@@ -35,7 +35,7 @@ Parameters:
     Description: Domain for the application cluster
   port:
     Type: Number
-    Default: 8080 
+    Default: 9000
     Description: Port mapping for sonar service 
   tag:
     Type: String
@@ -110,12 +110,14 @@ Resources:
   SonarLoadBalancerListenerCondition:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
+      Priority: 2
       ListenerArn: 
         Fn::ImportValue: !Sub ${clusterStack}-PublicLoadBalancerListenerARN
       Conditions:
         - Field: host-header
           HostHeaderConfig:
-            Values: !Sub "${applicationName}-sonar.${domain}"
+            Values: 
+              - !Sub "${applicationName}-sonar.${domain}"
       Actions:
         - Type: forward
           TargetGroupArn: !Ref SonarTargetGroup
@@ -129,7 +131,7 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
       Cpu: 1024
-      Memory: 3072
+      Memory: 4096
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
       ContainerDefinitions:
@@ -137,17 +139,8 @@ Resources:
           Image: sonarqube:latest
           PortMappings:
             - ContainerPort: !Ref port
-          Command: 
-            - -Dsonar.ce.javaOpts=-Xmx1192m -Dsonar.web.javaOpts=-Xmx1192m
-          Environment:
-            - Name: SONAR_LOG_LEVEL_WEB
-              Value: DEBUG
-            - Name: SONAR_LOG_LEVEL_APP
-              Value: DEBUG
-            - Name:  SONAR_LOG_LEVEL_CE
-              Value: DEBUG
-            - Name:  SONAR_LOG_LEVEL_ES
-              Value: DEBUG
+          # Command: 
+          #   - -Dsonar.ce.javaOpts=-Xmx1192m -Dsonar.web.javaOpts=-Xmx1192m
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -157,9 +150,6 @@ Resources:
 
   SonarService:
     Type: AWS::ECS::Service
-    # This dependency is needed so that the load balancer is setup correctly in time
-    DependsOn:
-      - SonarLoadBalancerListenerHTTPS
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-sonar
       Cluster: 
@@ -170,7 +160,7 @@ Resources:
         MaximumPercent: 200
       DesiredCount: 1
       # This may need to be adjusted if the container takes a while to start up
-      HealthCheckGracePeriodSeconds: 30
+      HealthCheckGracePeriodSeconds: 60
       LaunchType: FARGATE
       NetworkConfiguration: 
         AwsvpcConfiguration:
@@ -212,21 +202,6 @@ Outputs:
     Description: Name of first sonar target group
     Export:
       Name: !Sub ${AWS::StackName}-SonarTargetGroup
-  SonarLoadBalancerName:
-    Value: !GetAtt SonarLoadBalancer.LoadBalancerName
-    Description: Name of sonar load balancer
-    Export: 
-      Name: !Sub ${AWS::StackName}-SonarLoadBalancerName
-  SonarLoadBalancerDNS:
-    Value: !GetAtt SonarLoadBalancer.DNSName
-    Description: DNS name of sonar load balancer
-    Export:
-      Name: !Sub ${AWS::StackName}-SonarLoadBalancerDNSName
-  SonarLoadBalancerHostedZone:
-    Value: !GetAtt SonarLoadBalancer.CanonicalHostedZoneID
-    Description: Load Balancer Hosted Zone Id
-    Export:
-      Name: !Sub ${AWS::StackName}-SonarLoadBalancerHostedZoneID
   SonarServiceName:
     Value: !GetAtt SonarService.Name
     Description: Name of the sonar service

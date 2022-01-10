@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for an ECS Fargate Cluster. A security group for container ingress for all containers deployed into the cluster is created'
+Description: 'Provisions resources for an ECS Fargate Cluster. A security group for container ingress for all containers deployed into the cluster is created, two load balancer for the private and public facing subnets of the cluster is provisioned, records are added to Route53 for the public facing services.'
 
 Parameters:
   ## CROSS STACK REFERENCE CONFIGURATION
