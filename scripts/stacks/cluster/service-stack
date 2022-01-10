@@ -119,7 +119,6 @@ case $SERVICE in
         ;;
 esac
 
-CERTIFICATE_ARN="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID"
 if [ "$ACTION" == "create" ]
 then
     log "Creating \e[1m${SERVICE_NAME}\e[0m"
