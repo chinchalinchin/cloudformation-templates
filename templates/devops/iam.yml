@@ -333,6 +333,8 @@ Resources:
                     - codedeploy:GetDeployment
                     - codedeploy:CreateDeployment
                     - codedeploy:GetDeploymentConfig
+                    - codedeploy:GetApplication
+                    - codedeploy:GetApplicationRevision
                   Resource: 
                     - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
                     - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${applicationName}-*/${applicationName}-*"               
@@ -491,6 +493,12 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
+              - Sid: SecretManagerPermissions
+                Effect: Allow
+                Action:
+                  - "secretsmanager:GetSecretValue"
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}*"
               - Sid: CognitoPermissions
                 Effect: Allow
                 Action:
@@ -638,8 +646,6 @@ Resources:
                 Effect: Deny
                 Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
                 Condition:
-                  Null:
-                    codecommit:References: Null
                   StringEqualsIfExists:
                     codecommit:References:
                       - "refs/heads/Prod"
@@ -765,20 +771,20 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
-  IAMSelah:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: skonur
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
+  # IAMSelah:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #       - developer-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: skonur
+  #   DependsOn:
+  #     - BasicAccessGroup
+  #     - DeveloperGroup
 
 Outputs:
   BitbucketPipelineUserArn:
