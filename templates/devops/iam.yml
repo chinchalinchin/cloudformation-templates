@@ -621,15 +621,10 @@ Resources:
     Properties:
       GroupName: developer-group
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
         - arn:aws:iam::aws:policy/AWSLambda_FullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
-        - arn:aws:iam::aws:policy/CloudFrontFullAccess
         - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Policies:
         - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
@@ -643,6 +638,8 @@ Resources:
                 Effect: Deny
                 Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
                 Condition:
+                  Null:
+                    codecommit:References: Null
                   StringEqualsIfExists:
                     codecommit:References:
                       - "refs/heads/Prod"

@@ -150,6 +150,28 @@ Resources:
         - Key: Application
           Value: !Ref applicationName
 
+  OWASPECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold OWASP ZAP image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-owasp"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+
   PythonECR:
     Type: AWS::ECR::Repository
     Description: ECR to hold Python image
