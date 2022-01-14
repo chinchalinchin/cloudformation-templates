@@ -16,6 +16,7 @@ Parameters:
     Description: Username for the Bitbucket pipeline account
   bitbucketFlag:
     Type: String
+    Description: Flag to signal the creation of an account for the Bitbucket pipeline
     Default: false
     AllowedValues: 
       - true
@@ -655,20 +656,20 @@ Resources:
                       - "refs/heads/Staging"
                       - "refs/heads/Dev"
 
-  IAMTariq:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: tislam
-    DependsOn:
-      - BasicAccessGroup
+  # IAMTariq:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/AdministratorAccess
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: tislam
+  #   DependsOn:
+  #     - BasicAccessGroup
 
   # IAMGrant:
   #   Type: AWS::IAM::User
