@@ -335,6 +335,7 @@ Resources:
                     - codedeploy:GetDeploymentConfig
                     - codedeploy:GetApplication
                     - codedeploy:GetApplicationRevision
+                    - codedeploy:RegisterApplicationRevision
                   Resource: 
                     - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
                     - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${applicationName}-*/${applicationName}-*"               
@@ -496,7 +497,8 @@ Resources:
               - Sid: SecretManagerPermissions
                 Effect: Allow
                 Action:
-                  - "secretsmanager:GetSecretValue"
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:UpdateSecret
                 Resource:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}*"
               - Sid: CognitoPermissions
