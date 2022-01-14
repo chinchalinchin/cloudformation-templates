@@ -525,6 +525,7 @@ Resources:
                   - codecommit:BatchGetCommit
                   - codecommit:GetDifferences
                   - codecommit:GetTree
+                  - codecommit:GetFile
                   - codecommit:ListRepositories
                 Resource:
                   - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
