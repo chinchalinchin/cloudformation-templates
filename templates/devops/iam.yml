@@ -739,6 +739,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
         - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
         - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: tklock
     DependsOn:
