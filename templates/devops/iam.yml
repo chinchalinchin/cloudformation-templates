@@ -271,99 +271,99 @@ Resources:
 
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
-      Type: AWS::IAM::Role
-      Description: Role to allow Innolab Pipeline access to other AWS Services
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - "codepipeline.amazonaws.com"
-              Action: 
-                - "sts:AssumeRole"
-        Policies:
-          - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Sid: IAMPermissions
-                  Action: 
-                    - iam:PassRole
-                  Effect: Allow
-                  Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${applicationName}-*"
-                - Sid: CodeCommitPermissions
-                  Action:
-                    - codecommit:CancelUploadArchive
-                    - codecommit:GetBranch
-                    - codecommit:GetCommit
-                    - codecommit:GetRepository
-                    - codecommit:GetUploadArchiveStatus
-                    - codecommit:UploadArchive
-                  Effect: Allow
-                  Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
-                - Sid: CloudWatchPermissions
-                  Action:
-                    - cloudwatch:*
-                  Resource: "*" # TODO: restrict scope
-                  Effect: Allow
-                - Sid: S3Permissions
-                  Action:
-                    - s3:*
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:s3:::${applicationName}-*"
-                - Sid: LambdaPermissions
-                  Action:
-                    - lambda:UpdateFunctionCode
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
-                - Sid: CodeBuildPermissions
-                  Action:
-                    - codebuild:BatchGetBuilds
-                    - codebuild:StartBuild
-                    - codebuild:BatchGetBuildBatches
-                    - codebuild:StartBuildBatch
-                  Resource: 
-                    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:*/${applicationName}*"
-                  Effect: Allow
-                - Sid: CodeDeployPermissions
-                  Action:
-                    - codedeploy:GetDeployment
-                    - codedeploy:CreateDeployment
-                    - codedeploy:GetDeploymentConfig
-                    - codedeploy:GetApplication
-                    - codedeploy:GetApplicationRevision
-                    - codedeploy:RegisterApplicationRevision
-                  Resource: 
-                    - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
-                    - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${applicationName}-*/${applicationName}-*"               
-                    - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:*"
-                  Effect: Allow
-                - Sid: ECRAuthPermissions
-                  Action:
-                    - ecr:GetAuthorizationToken
-                  Effect: Allow
-                  Resource: '*'
-                - Sid: ECRPermissions
-                  Action:
-                    - ecr:GetDownloadUrlForLayer
-                    - ecr:GetRepositoryPolicy
-                    - ecr:DescribeRepositories
-                    - ecr:ListImages
-                    - ecr:DescribeImages
-                    - ecr:BatchGetImage
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-                - Sid: ECSPermissions
-                  Action:
-                    - ecs:RegisterTaskDefinition
-                  Effect: Allow
-                  Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
-        RoleName: !Sub ${applicationName}-codepipeline-exector
+    Type: AWS::IAM::Role
+    Description: Role to allow Innolab Pipeline access to other AWS Services
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: IAMPermissions
+                Action: 
+                  - iam:PassRole
+                Effect: Allow
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${applicationName}-*"
+              - Sid: CodeCommitPermissions
+                Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetRepository
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                Effect: Allow
+                Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+              - Sid: CloudWatchPermissions
+                Action:
+                  - cloudwatch:*
+                Resource: "*" # TODO: restrict scope
+                Effect: Allow
+              - Sid: S3Permissions
+                Action:
+                  - s3:*
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:s3:::${applicationName}-*"
+              - Sid: LambdaPermissions
+                Action:
+                  - lambda:UpdateFunctionCode
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+              - Sid: CodeBuildPermissions
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuildBatches
+                  - codebuild:StartBuildBatch
+                Resource: 
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:*/${applicationName}*"
+                Effect: Allow
+              - Sid: CodeDeployPermissions
+                Action:
+                  - codedeploy:GetDeployment
+                  - codedeploy:CreateDeployment
+                  - codedeploy:GetDeploymentConfig
+                  - codedeploy:GetApplication
+                  - codedeploy:GetApplicationRevision
+                  - codedeploy:RegisterApplicationRevision
+                Resource: 
+                  - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
+                  - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${applicationName}-*/${applicationName}-*"               
+                  - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:*"
+                Effect: Allow
+              - Sid: ECRAuthPermissions
+                Action:
+                  - ecr:GetAuthorizationToken
+                Effect: Allow
+                Resource: '*'
+              - Sid: ECRPermissions
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
+                  - ecr:DescribeRepositories
+                  - ecr:ListImages
+                  - ecr:DescribeImages
+                  - ecr:BatchGetImage
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+              - Sid: ECSPermissions
+                Action:
+                  - ecs:RegisterTaskDefinition
+                Effect: Allow
+                Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
+      RoleName: !Sub ${applicationName}-codepipeline-exector
         
   # CODEBUILD SERVICE ROLE
   CodeBuildRole:
@@ -616,45 +616,45 @@ Resources:
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
 
-  DatabaseAdminGroup:
-    Type: AWS::IAM::Group
-    Properties:
-      GroupName: database-admin-group
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
-        - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
-        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+  # DatabaseAdminGroup:
+  #   Type: AWS::IAM::Group
+  #   Properties:
+  #     GroupName: database-admin-group
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+  #       - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+  #       - arn:aws:iam::aws:policy/AmazonS3FullAccess
+  #       - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+  #       - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
+  #       - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
   
-  DeveloperGroup:
-    Type: AWS::IAM::Group
-    Properties:
-      GroupName: developer-group
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
-        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
-      Policies:
-        - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action: 
-                  - "codecommit:GitPush"
-                  - "codecommit:DeleteBranch"
-                  - "codecommit:PutFile"
-                Effect: Deny
-                Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
-                Condition:
-                  StringEqualsIfExists:
-                    codecommit:References:
-                      - "refs/heads/Prod"
-                      - "refs/heads/Staging"
-                      - "refs/heads/Dev"
+  # DeveloperGroup:
+  #   Type: AWS::IAM::Group
+  #   Properties:
+  #     GroupName: developer-group
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+  #       - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+  #       - arn:aws:iam::aws:policy/AmazonS3FullAccess
+  #       - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+  #       - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+  #     Policies:
+  #       - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             - Action: 
+  #                 - "codecommit:GitPush"
+  #                 - "codecommit:DeleteBranch"
+  #                 - "codecommit:PutFile"
+  #               Effect: Deny
+  #               Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
+  #               Condition:
+  #                 StringEqualsIfExists:
+  #                   codecommit:References:
+  #                     - "refs/heads/Prod"
+  #                     - "refs/heads/Staging"
+  #                     - "refs/heads/Dev"
 
   # IAMTariq:
   #   Type: AWS::IAM::User
@@ -686,95 +686,95 @@ Resources:
   #   DependsOn:
   #     - BasicAccessGroup
 
-  IAMPeter:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: pcofrancesco
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
+  # IAMPeter:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #       - developer-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+  #       - arn:aws:iam::aws:policy/IAMFullAccess
+  #       - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+  #       - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: pcofrancesco
+  #   DependsOn:
+  #     - BasicAccessGroup
+  #     - DeveloperGroup
 
-  IAMJustin:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: jstauffer
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
+  # IAMJustin:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #       - developer-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+  #       - arn:aws:iam::aws:policy/IAMFullAccess
+  #       - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+  #       - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: jstauffer
+  #   DependsOn:
+  #     - BasicAccessGroup
+  #     - DeveloperGroup
       
-  IAMThomas:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: tklock
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
+  # IAMThomas:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #       - developer-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+  #       - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+  #       - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+  #       - arn:aws:iam::aws:policy/IAMFullAccess
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: tklock
+  #   DependsOn:
+  #     - BasicAccessGroup
+  #     - DeveloperGroup
   
-  IAMPhung:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: pngo
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
+  # IAMPhung:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #       - developer-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: pngo
+  #   DependsOn:
+  #     - BasicAccessGroup
+  #     - DeveloperGroup
 
-  IAMAurora:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: apariseau
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
+  # IAMAurora:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #       - developer-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: apariseau
+  #   DependsOn:
+  #     - BasicAccessGroup
+  #     - DeveloperGroup
 
   # IAMSelah:
   #   Type: AWS::IAM::User
