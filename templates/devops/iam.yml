@@ -439,6 +439,16 @@ Resources:
                   - codedeploy:CreateCloudFormationDeployment
                 Effect: Allow
                 Resource: '*' # TODO: figure out which resources to scope this to... 
+              - Sid: CodeStarPermissions
+                Action: 
+                  - codestar-connections:CreateConnection
+                  - codestar-connections:DeleteConnection
+                  - codestar-connections:UseConnection
+                  - codestar-connections:GetConnection
+                  - codestar-connections:ListConnections
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:codestar-connections:${AWS::Region}:${AWS::AccountId}:connection/*"
               - Sid: SecretManagerPermissions
                 Action:
                   - secretsmanager:GetSecretValue
