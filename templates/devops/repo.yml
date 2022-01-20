@@ -289,159 +289,159 @@ Resources:
         - Key: Application
           Value: !Ref applicationName
 
-  # LambdaAlphaECR:
-  #   Type: AWS::ECR::Repository
-  #   Description: ECR to hold image of Lambda function
-  #   Properties:
-  #     ImageScanningConfiguration: 
-  #       ScanOnPush: true
-  #     RepositoryName: !Sub "${applicationName}-lambda-alpha"
-  #     RepositoryPolicyText:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: ECRLambdaPolicy
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - "ecr:BatchGetImage"
-  #             - "ecr:GetDownloadUrlForLayer"
-  #     Tags:
-  #       - Key: Application
-  #         Value: !Ref applicationName
+  LambdaAlphaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda function
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-alpha"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
 
-  # LambdaBetaECR:
-  #   Type: AWS::ECR::Repository
-  #   Description: ECR to hold image of Lambda beta function
-  #   Properties:
-  #     ImageScanningConfiguration: 
-  #       ScanOnPush: true
-  #     RepositoryName: !Sub "${applicationName}-lambda-beta"
-  #     RepositoryPolicyText:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: ECRLambdaBetaPolicy
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - "ecr:BatchGetImage"
-  #             - "ecr:GetDownloadUrlForLayer"
-  #     Tags:
-  #       - Key: Application
-  #         Value: !Ref applicationName
+  LambdaBetaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda beta function
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-beta"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaBetaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
   
-  # LambdaGammaECR:
-  #   Type: AWS::ECR::Repository
-  #   Description: ECR to hold image of Lambda gamma function
-  #   Properties:
-  #     ImageScanningConfiguration: 
-  #       ScanOnPush: true
-  #     RepositoryName: !Sub "${applicationName}-lambda-gamma"
-  #     RepositoryPolicyText:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: ECRLambdaGammaPolicy
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - "ecr:BatchGetImage"
-  #             - "ecr:GetDownloadUrlForLayer"
-  #     Tags:
-  #       - Key: Application
-  #         Value: !Ref applicationName
+  LambdaGammaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda gamma function
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-gamma"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaGammaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
 
-  # LambdaDeltaECR:
-  #   Type: AWS::ECR::Repository
-  #   Description: ECR to hold image of Lambda Delta function
-  #   Properties:
-  #     ImageScanningConfiguration: 
-  #       ScanOnPush: true
-  #     RepositoryName: !Sub "${applicationName}-lambda-delta"
-  #     RepositoryPolicyText:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: ECRLambdaDeltaPolicy
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - "ecr:BatchGetImage"
-  #             - "ecr:GetDownloadUrlForLayer"
-  #     Tags:
-  #       - Key: Application
-  #         Value: !Ref applicationName
+  LambdaDeltaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda Delta function
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-delta"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaDeltaPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
 
-  # LambdaEpsilonECR:
-  #   Type: AWS::ECR::Repository
-  #   Description: ECR to hold image of Lambda Epsilon function
-  #   Properties:
-  #     ImageScanningConfiguration:
-  #       ScanOnPush: true
-  #     RepositoryName: !Sub "${applicationName}-lambda-epsilon"
-  #     RepositoryPolicyText:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: ECRLambdaEpsilonPolicy
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - "ecr:BatchGetImage"
-  #             - "ecr:GetDownloadUrlForLayer"
-  #     Tags:
-  #       - Key: Application
-  #         Value: !Ref applicationName
+  LambdaEpsilonECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda Epsilon function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-epsilon"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaEpsilonPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
 
-  # LambdaEtaECR:
-  #   Type: AWS::ECR::Repository
-  #   Description: ECR to hold image of Lambda Epsilon function
-  #   Properties:
-  #     ImageScanningConfiguration:
-  #       ScanOnPush: true
-  #     RepositoryName: !Sub "${applicationName}-lambda-eta"
-  #     RepositoryPolicyText:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: ECRLambdaEpsilonPolicy
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - "ecr:BatchGetImage"
-  #             - "ecr:GetDownloadUrlForLayer"
-  #     Tags:
-  #       - Key: Application
-  #         Value: !Ref applicationName
+  LambdaEtaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda Epsilon function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-eta"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaEpsilonPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
   
-  # LambdaZetaECR:
-  #   Type: AWS::ECR::Repository
-  #   Description: ECR to hold image of Lambda Epsilon function
-  #   Properties:
-  #     ImageScanningConfiguration:
-  #       ScanOnPush: true
-  #     RepositoryName: !Sub "${applicationName}-lambda-zeta"
-  #     RepositoryPolicyText:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: ECRLambdaEpsilonPolicy
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - "ecr:BatchGetImage"
-  #             - "ecr:GetDownloadUrlForLayer"
-  #     Tags:
-  #       - Key: Application
-  #         Value: !Ref applicationName
+  LambdaZetaECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold image of Lambda Epsilon function
+    Properties:
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-lambda-zeta"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ECRLambdaEpsilonPolicy
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
 
 Outputs:
   EnvironmentBucketArn:

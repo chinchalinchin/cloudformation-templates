@@ -3,6 +3,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: "The top of the DevOps stackset. This stack creates the CI/CD pipelines for the frontend and backend, hooks them into a CodeBuild project configured to use the Amazon Linux Standard 5.0 as a build environment. CloudWatch event rules are used to trigger the pipeline anytime a commit is made to the frontend and backend repositories on the environment branches: Dev, Staging, Prod. "
 
 Parameters:
+  github:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
   applicationName:
     Type: String
     Default: innolab
@@ -32,6 +38,13 @@ Conditions:
   DevResources: !Equals
     - !Ref environmentName
     - Dev
+  GitHubSource: !Equals
+    - !Ref github
+    - true
+  CodeCommitSource: !Equals
+    - !Ref github
+    - false
+
 
 Mappings:
   BranchMap:
