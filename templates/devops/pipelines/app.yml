@@ -229,6 +229,24 @@ Resources:
       Stages:
         - Name: Source
           Actions:
+            # GITHUB CONNECTION SOURCE
+            # - Name: Source
+            #   InputArtifacts: []
+            #   ActionTypeId:
+            #     Category: Source
+            #     Owner: AWS
+            #     Version: 1
+            #     Provider: CodeStarSourceConnection
+            #   OutputArtifacts:
+            #     - Name: !Sub "${applicationName}-${environmentName}-frontend-source"    
+            #   Configuration:
+            #     ConnectionArn:
+            #       Fn::ImportValue: !Sub ${staticStack}-GitHubConnectionARN
+            #     # THIS NEEDS UPDATED TO POINT TO THE CORRECT REPO
+            #     FullRepositoryId: makpar-innovation-lab/react-template
+            #     BranchName: !Ref environmentName
+            #     OutputArtifactFormat: CODEBUILD_CLONE_REF
+            #     DetectChanges: true
             - Name: Source
               InputArtifacts: []
               ActionTypeId:
@@ -406,6 +424,26 @@ Resources:
         Type: S3 
         Location: !Ref PipelineArtifacts
       Stages:
+        # GITHUB CONNECTION SOURCE
+        # - Name: Source
+        #   Actions:
+        #     - Name: Source
+        #       InputArtifacts: []
+        #       ActionTypeId:
+        #         Category: Source
+        #         Owner: AWS
+        #         Version: 1
+        #         Provider: CodeStarSourceConnection
+        #       OutputArtifacts:
+        #         - Name: !Sub "${applicationName}-${environmentName}-backend-source"    
+        #       Configuration:
+        #         ConnectionArn:
+        #           Fn::ImportValue: !Sub ${staticStack}-GitHubConnectionARN
+        #         # THIS NEEDS UPDATED TO POINT TO THE CORRECT REPO
+        #         FullRepositoryId: makpar-innovation-lab/spring-template
+        #         BranchName: !Ref environmentName
+        #         OutputArtifactFormat: CODEBUILD_CLONE_REF
+        #         DetectChanges: true
         - Name: Source
           Actions:
             - Name: Source
