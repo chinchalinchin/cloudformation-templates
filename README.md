@@ -1,6 +1,6 @@
-# AWS CloudFormation Environment Setup
+# Infrastructure
 
-A sweet collection of **CloudFormation** templates.
+The infrastructure supporting the Innovation Lab is provisioned using Infrastructure-as-Code through **CloudFormation**.
 
 ```shell
 aws cloudformation create-stack
@@ -15,11 +15,11 @@ aws cloudformation create-stack
 
 The setup procedures in this section will provision the following architecture,
 
-![InnoLab Archiecture](/assets/innolab_architecture.svg)
+![InnoLab Architecture](/docs/innolab_architecture.png)
 
 ## Cross Stack Dependencies
 
-There are three separate stack groups, the **DevOps** group, the **Core** group, the **Serverless** group and the **Cluster** group. The stacks should be stood up, more or less, in the order listed below, due to cross-stack dependencies, i.e. the *VPCStack* must be stood up before the *RDSStack*, the *RepoStack* should be stood up before the *ClusterStack*, etc. 
+There are four separate stack groups, the **DevOps** group, the **Core** group, the **Serverless** group and the **Cluster** group. Due to cross-stack dependencies, the stacks must be stood up so that independent stacks go up before dependent stacks, i.e. the *VPCStack* must be stood up before the *RDSStack*, the *RepoStack* should be stood up before the *ClusterStack*, etc. 
 
 **NOTE**: The *DNSStack* only needs stood up if a HostedZone and an ACM Certificate need provisioned; if these already exist, ignore this stack.
 
@@ -176,7 +176,7 @@ After all the preceding stacks have been set up and initialized, the final stack
                                         --pipeline <master | app | lambdas>
 ```
 
-Unforunately, this process cannot be completely automated as of yet. The build stage can be stood up entirely through a **CloudFormation** template, but the deploy stage has several steps that need to be complete before the pipeline will perform *blue-green* deployments  It requires setting up deployment groups and deployment stages through the console. See [AWS CodePipeline](./AWS_PIPELINE.html) for more information on setting up the deployment stage of the pipeline.
+Unforunately, this process cannot be completely automated as of yet. The build stage can be stood up entirely through a **CloudFormation** template, but the deploy stage has several steps that need to be complete before the pipeline will perform *blue-green* deployments  It requires setting up deployment groups and deployment stages through the console. See [AWS CodePipeline](./AWS_PIPELINE.md) for more information on setting up the deployment stage of the pipeline.
 
 ## Notes
 
@@ -190,16 +190,3 @@ Unforunately, this process cannot be completely automated as of yet. The build s
 aws ec2 describe-key-pairs
 aws ec2 delete-key-pair --key-name $KEY_NAME
 ```
-## Documentation
-### CloudFormation
-**CLI**
-- [create-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/create-stack.html)
-- [delete-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/delete-stack.html)
-- [describe-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stacks.html)
-- [list-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-stacks.html)
-
-**Template References**
-- [API Gateway](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ApiGateway.html)
-- [ECR](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ECR.html)
-- [IAM](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_IAM.html)
-- [Lambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_Lambda.html)

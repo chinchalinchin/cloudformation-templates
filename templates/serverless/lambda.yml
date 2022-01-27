@@ -258,6 +258,7 @@ Resources:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       Environment:
         Variables:
+          NEW_VARIABLE: hard-code
           ATLASSIAN_TOKEN: !Sub '{{resolve:secretsmanager:${applicationName}-atlassianToken:SecretString}}'
       Timeout: 180
 
