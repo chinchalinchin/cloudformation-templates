@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "A stack for provisioning the CodeCommit repositories where the application source code will be housed and S3 buckets that will hold application artifacts."
+Description: "A stack for provisioning the CodeCommit repositories where the application source code will be housed and S3 buckets that will hold application artifacts. Alternatively, if GitHub is being used as the version control, this stack can be configured to create a CodeStar connection instead of CodeCommit repositories; Note: if using this configuration, the stack will stall until a user logs into the CodeStar console and manually completes the Github OAuth authorization."
 
 Parameters:
   applicationName:
