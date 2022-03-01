@@ -267,6 +267,15 @@ Resources:
       FromPort: 5432
       ToPort: 5432
 
+  OracleSecurityGroupIngress:
+    Type: AWS:ECS::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt NATSecurityGroup.GroupId
+      FromPort: 1521
+      ToPort: 1521
+
   ElasticIPAddress:
    Type: AWS::EC2::EIP
    Condition: NotBastionHost
@@ -322,7 +331,7 @@ Resources:
       - DeviceIndex: '0'
         SubnetId: !Ref PublicSubnetA                                  # Any public subnet is fine
         AssociatePublicIpAddress: true                                # We will definitely need a public IP address
-        GroupSet: [!Ref NATSecurityGroup, !Ref DatabaseSecurityGroup]                             # Plug in the security group
+        GroupSet: [!Ref NATSecurityGroup]                             # Plug in the security group
       SourceDestCheck: false                                          # NATs don't work if EC2 tries the match source addresses with destinations.
       KeyName: !Ref dbKeyName
       Tags:
