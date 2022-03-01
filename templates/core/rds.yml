@@ -30,6 +30,7 @@ Parameters:
     # Default: InnoLab-IAMStack
 
 Mappings:
+  # Engine specific configuration because Oracle is dumb
   ConfigMap:
     postgres: 
       engine:  postgres
@@ -43,7 +44,7 @@ Mappings:
       iamAuthentication: false
 
 Resources:
-  PostgresRDS:
+  RDS:
     Type: AWS::RDS::DBInstance
     Properties:
       AllocatedStorage: 100
