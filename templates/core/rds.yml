@@ -35,12 +35,12 @@ Mappings:
       engine:  postgres
       engineVersion: 14.1
       licenseModel: postgresql-license
-      iamAuth: true
+      iamAuthentication: true
     oracle: 
       engine: oracle-se2
       engineVersion: 12.1.0.2.v26
       licenseModel: license-included
-      iamAuth: false
+      iamAuthentication: false
 
 Resources:
   PostgresRDS:
@@ -56,7 +56,7 @@ Resources:
         Fn::FindInMap:
           - ConfigMap
           - !Ref type
-          - iamAuth
+          - iamAuthentication
       EnablePerformanceInsights: true
       Engine: 
         Fn::FindInMap:
@@ -68,6 +68,11 @@ Resources:
           - ConfigMap
           - !Ref type
           - engineVersion
+      LicenseModel:
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - licenseModel
       MasterUsername: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
       MasterUserPassword: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}"
       MonitoringInterval: 60
