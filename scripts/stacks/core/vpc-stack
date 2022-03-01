@@ -4,7 +4,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="vpc-stack"
 SCRIPT_DES=$''
 PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     vpc-stack --action <create | update | delete>
@@ -82,7 +82,7 @@ then
     BASTION_HOST="true"
 fi
 
-cp $PROJECT_DIR/templates/app/vpc.yml ./vpc.yml
+cp "$PROJECT_DIR/templates/app/vpc.yml" ./vpc.yml
 
 if [ "$ACTION" == "create" ]
 then
