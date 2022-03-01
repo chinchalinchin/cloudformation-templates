@@ -4,10 +4,15 @@ Description: "Provisions a DB instances with credentials resolved from the Secre
 Parameters:
   applicationName:
     Type: String
-    Default: InnoLab
+    Default: innoLab
   environmentName:
     Type: String
     Default: Dev
+  type:
+    Type: String
+    AllowedValues:
+      - postgres
+      - oracle
   port:
     Type: Number
     Default: 5432
@@ -23,6 +28,17 @@ Parameters:
   # iamStack:
     # Type: String
     # Default: InnoLab-IAMStack
+
+Mappings:
+  RDSMap:
+    postgres: 
+      engine:  postgres
+      engineVersion: 14.1
+      licenseModel: postgresql-license
+    oracle: 
+      engine: oracle-se2
+      engineVersion: 12.1.0.2.v26
+      licenseModel: license-included
 
 Resources:
   PostgresRDS:
@@ -57,6 +73,8 @@ Resources:
       Tags: 
         - Key: Environment
           Value: !Ref environmentName
+        - Key: Application
+          Value: !Ref applicationName
   
   ## NOTE: The following policy should theoretically allow IAM users to which it is attached to access
   #        the RDS through IAM authentication. However, since the RDS is in a private subnet, I am not 

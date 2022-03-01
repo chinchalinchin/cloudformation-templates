@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
             help
             exit 0
             ;;
-        --type|-type|--t|o-t)
+        --type|-type|--t|-t)
             TYPE="$2"
             shift
             shift
@@ -60,15 +60,7 @@ then
     ACTION="create"
 fi
 
-if [ "$TYPE" == 'postgres ']
-then
-    cp "$PROJECT_DIR/templates/core/rds/postgres.yml" ./rds.yml
-elif [ "$TYPE" == "mysql" ]
-    echo "TODO"
-else
-    # default to postgres
-    cp "$PROJECT_DIR/templates/core/rds/postgres.yml" ./rds.yml
-fi
+cp "$PROJECT_DIR/templates/core/rds.yml" ./rds.yml
 
 if [ "$ACTION" == "create" ]
 then
@@ -97,7 +89,7 @@ then
       #                               --secret-string $RDS_PASSWORD
 
 
-    aws cloudformation create-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}" \
+    aws cloudformation create-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
                                     --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
@@ -107,7 +99,7 @@ then
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "update" ]
 then
-    aws cloudformation update-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}" \
+    aws cloudformation update-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
                                     --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
@@ -117,7 +109,7 @@ then
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "delete" ]
 then
-    aws cloudformation delete-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}"
+    aws cloudformation delete-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}"
 fi
 
 rm ./rds.yml

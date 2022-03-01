@@ -82,7 +82,7 @@ then
     BASTION_HOST="true"
 fi
 
-cp "$PROJECT_DIR/templates/app/vpc.yml" ./vpc.yml
+cp "$PROJECT_DIR/templates/core/vpc.yml" ./vpc.yml
 
 if [ "$ACTION" == "create" ]
 then
