@@ -297,7 +297,7 @@ Resources:
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: '0'
-        ToPort: '1024'
+        ToPort: '65535'
         CidrIp: !GetAtt VPC.CidrBlock
       SecurityGroupEgress:
       - IpProtocol: tcp
