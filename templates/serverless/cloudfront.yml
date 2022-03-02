@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "Resources for hosting a website statically through an S3 bucket CloudFront distribution."
+
+Parameters:
+  applicationName:
+    Type: String
+    Description: Name of the web application
+    Default: innolab
+  certificateArn:
+    Type: String
+    Description: ARN of the ACM certificate used to sign requests on the domain.
+  hostedZoneId:
+    Type: String
+    Description: Physical ID of the hosted zone where the domain is being served.
+  domainName:
+    Type: String
+    Description: Domain name that is hosting the application
+
+Resources:
+  WebsiteBucketLogs:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketName: !Sub "${applicationName}-logs"
+
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "${applicationName}-web"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref WebsiteBucketLogs
+        LogFilePrefix: 'log/'
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 
+              - "s3:GetObject"
+            Principal:
+              CanonicalUser: !GetAtt WebsiteOriginAccessIdentity.S3CanonicalUserId
+            Resource: !Sub '${WebsiteBucket.Arn}/*'
+    DependsOn:
+      - WebsiteBucket
+
+  WebsiteDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig: 
+        Aliases: 
+          - !Ref domainName
+        Origins: 
+        - DomainName: !GetAtt WebsiteBucket.DomainName
+          Id: !Ref WebsiteBucket
+          S3OriginConfig:
+            OriginAccessIdentity:
+              !Join ['', ['origin-access-identity/cloudfront/', !Ref WebsiteOriginAccessIdentity ]]
+        DefaultCacheBehavior: 
+          AllowedMethods: 
+          - "HEAD"
+          - "GET"
+          - "OPTIONS"
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: true
+          Compress: false
+          SmoothStreaming: false
+          TargetOriginId: !Ref WebsiteBucket
+          ViewerProtocolPolicy: "redirect-to-https"
+        PriceClass: "PriceClass_All"
+        Enabled: true
+        ViewerCertificate: 
+          AcmCertificateArn: !Ref certificateArn
+          MinimumProtocolVersion: "TLSv1.2_2019"
+          SslSupportMethod: "sni-only"
+        HttpVersion: "http2"
+        DefaultRootObject: 'index.html'
+        IPV6Enabled: true
+        Logging:
+          Bucket: !GetAtt WebsiteBucketLogs.DomainName
+          IncludeCookies: false
+          Prefix: 'log/'
+
+  WebsiteOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub 'CloudFront Origin Access Identity for ${applicationName}.${domainName}'
+
+  WebsiteRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Ref domainName
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt WebsiteDistribution.DomainName
+            EvaluateTargetHealth: false
+            # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
+            # alias record that routes traffic to a CloudFront distribution.
+            HostedZoneId: Z2FDTNDATAQYW2
+    DependsOn:
+      - WebsiteDistribution
+
+Outputs:
+  WebsiteBucketDistributionID:
+    Value: !Ref WebsiteDistribution
+    Description: Resource ID for CloudFront Distribution
+    Export:
+      Name: !Sub ${AWS::StackName}-WebsiteBucketDistributionID
+  WebsiteBucketDomain:
+    Value: !GetAtt WebsiteDistribution.DomainName
+    Description: Domain name of CloudFront Distribution
+    Export:
+      Name: !Sub ${AWS::StackName}-WebsiteBucketDistributionDomain

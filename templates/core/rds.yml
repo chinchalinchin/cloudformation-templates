@@ -4,10 +4,15 @@ Description: "Provisions a DB instances with credentials resolved from the Secre
 Parameters:
   applicationName:
     Type: String
-    Default: InnoLab
+    Default: innoLab
   environmentName:
     Type: String
     Default: Dev
+  type:
+    Type: String
+    AllowedValues:
+      - postgres
+      - oracle
   port:
     Type: Number
     Default: 5432
@@ -24,28 +29,75 @@ Parameters:
     # Type: String
     # Default: InnoLab-IAMStack
 
+Mappings:
+  # Engine specific configuration because Oracle is dumb
+  ConfigMap:
+    postgres: 
+      engine:  postgres
+      engineVersion: 14.1
+      licenseModel: postgresql-license
+      iamAuthentication: true
+    oracle: 
+      engine: oracle-se2
+      engineVersion: 12.1.0.2.v26
+      licenseModel: license-included
+      iamAuthentication: false
+
 Resources:
-  PostgresRDS:
+  RDS:
     Type: AWS::RDS::DBInstance
     Properties:
+<<<<<<< HEAD:templates/core/rds/postgres.yml
       DBInstanceIdentifier: !Sub ${applicationName}-oracle-database-${environmentName}
+=======
+>>>>>>> c08569357c8c5713087c84325b53a60261d54f91:templates/core/rds.yml
       AllocatedStorage: 100
+      AutoMinorVersionUpgrade: true
+      BackupRetentionPeriod: 7
+      CopyTagsToSnapshot: false
       DBInstanceClass: db.t3.micro
+<<<<<<< HEAD:templates/core/rds/postgres.yml
       Engine: "oracle-se2"
       LicenseModel: license-included
       EngineVersion: 12.1.0.2.v26
+=======
+      DBInstanceIdentifier: !Sub ${applicationName}-${environmentName}-database
+      EnableIAMDatabaseAuthentication: 
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - iamAuthentication
+      EnablePerformanceInsights: true
+      Engine: 
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - engine
+      EngineVersion:
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - engineVersion
+      LicenseModel:
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - licenseModel
+>>>>>>> c08569357c8c5713087c84325b53a60261d54f91:templates/core/rds.yml
       MasterUsername: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
       MasterUserPassword: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}"
-      BackupRetentionPeriod: 7
+      MonitoringInterval: 60
       MultiAZ: false
-      AutoMinorVersionUpgrade: true
-      StorageType: gp2
       PubliclyAccessible: false
       StorageEncrypted: true
+<<<<<<< HEAD:templates/core/rds/postgres.yml
       CopyTagsToSnapshot: false
       MonitoringInterval: 60
       # EnableIAMDatabaseAuthentication: true
       EnablePerformanceInsights: true
+=======
+      StorageType: gp2
+>>>>>>> c08569357c8c5713087c84325b53a60261d54f91:templates/core/rds.yml
       PerformanceInsightsRetentionPeriod: 7
       DeletionProtection: false
       Port: !Ref port
@@ -59,6 +111,8 @@ Resources:
       Tags: 
         - Key: Environment
           Value: !Ref environmentName
+        - Key: Application
+          Value: !Ref applicationName
   
   ## NOTE: The following policy should theoretically allow IAM users to which it is attached to access
   #        the RDS through IAM authentication. However, since the RDS is in a private subnet, I am not 
