@@ -47,21 +47,12 @@ Resources:
   RDS:
     Type: AWS::RDS::DBInstance
     Properties:
-<<<<<<< HEAD:templates/core/rds/postgres.yml
-      DBInstanceIdentifier: !Sub ${applicationName}-oracle-database-${environmentName}
-=======
->>>>>>> c08569357c8c5713087c84325b53a60261d54f91:templates/core/rds.yml
       AllocatedStorage: 100
       AutoMinorVersionUpgrade: true
       BackupRetentionPeriod: 7
       CopyTagsToSnapshot: false
       DBInstanceClass: db.t3.micro
-<<<<<<< HEAD:templates/core/rds/postgres.yml
-      Engine: "oracle-se2"
-      LicenseModel: license-included
-      EngineVersion: 12.1.0.2.v26
-=======
-      DBInstanceIdentifier: !Sub ${applicationName}-${environmentName}-database
+      DBInstanceIdentifier: !Sub ${applicationName}-${environmentName}-${type}-database
       EnableIAMDatabaseAuthentication: 
         Fn::FindInMap:
           - ConfigMap
@@ -83,21 +74,13 @@ Resources:
           - ConfigMap
           - !Ref type
           - licenseModel
->>>>>>> c08569357c8c5713087c84325b53a60261d54f91:templates/core/rds.yml
       MasterUsername: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
       MasterUserPassword: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}"
       MonitoringInterval: 60
       MultiAZ: false
       PubliclyAccessible: false
       StorageEncrypted: true
-<<<<<<< HEAD:templates/core/rds/postgres.yml
-      CopyTagsToSnapshot: false
-      MonitoringInterval: 60
-      # EnableIAMDatabaseAuthentication: true
-      EnablePerformanceInsights: true
-=======
       StorageType: gp2
->>>>>>> c08569357c8c5713087c84325b53a60261d54f91:templates/core/rds.yml
       PerformanceInsightsRetentionPeriod: 7
       DeletionProtection: false
       Port: !Ref port
@@ -106,7 +89,7 @@ Resources:
       VPCSecurityGroups: 
         - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
       MaxAllocatedStorage: 1000
-      MonitoringRoleArn: 
+      MonitoringRoleArn:
         Fn::ImportValue: !Sub ${iamStack}-RDSMonitorRoleARN
       Tags: 
         - Key: Environment
@@ -143,6 +126,6 @@ Resources:
 
 Outputs:
   RDSEndpoint:
-    Value: !GetAtt PostgresRDS.Endpoint.Address
+    Value: !GetAtt RDS.Endpoint.Address
     Export:
       Name: !Sub ${AWS::StackName}-RDSEndpoint

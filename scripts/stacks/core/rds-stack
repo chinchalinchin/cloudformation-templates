@@ -3,13 +3,13 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="rds-stack"
 SCRIPT_DES=$''
-PROJECT_DIR="$SCRIPT_DIR/../.."
+PROJECT_DIR="$SCRIPT_DIR/../../.."
 source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     rds-stack --environment <Dev | Prod | Test> \
 #                   --action <action | update>
-#                   --type <postgres | mysql>
+#                   --type <postgres | oracle>
 #                   --port <port>
 
 function log(){
@@ -60,20 +60,7 @@ then
     ACTION="create"
 fi
 
-<<<<<<< HEAD
-if [ "$TYPE" == 'postgres' ]
-then
-    cp "$PROJECT_DIR/templates/core/rds/postgres.yml" ./rds.yml
-elif [ "$TYPE" == "mysql" ]
-then
-    echo "TODO"
-else
-    # default to postgres
-    cp "$PROJECT_DIR/templates/core/rds/postgres.yml" ./rds.yml
-fi
-=======
 cp "$PROJECT_DIR/templates/core/rds.yml" ./rds.yml
->>>>>>> c08569357c8c5713087c84325b53a60261d54f91
 
 if [ "$ACTION" == "create" ]
 then
@@ -102,17 +89,13 @@ then
       #                               --secret-string $RDS_PASSWORD
 
 
-<<<<<<< HEAD
-    aws cloudformation create-stack --stack-name "${APPLICATION^}-Oracle${RDS_STACK}-${ENVIRONMENT}" \
-=======
     aws cloudformation create-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}" \
->>>>>>> c08569357c8c5713087c84325b53a60261d54f91
                                     --template-body file://rds.yml \
                                     --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                                                  ParameterKey=applicationName,ParameterValue=$APPLICATION \
                                                  ParameterKey=port,ParameterValue=$PORT \
-                                                 ParamterKey=type,ParameterValue=$TYPE \
+                                                 ParameterKey=type,ParameterValue=$TYPE \
                                                  ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "update" ]
@@ -123,7 +106,7 @@ then
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                                                  ParameterKey=applicationName,ParameterValue=$APPLICATION \
                                                  ParameterKey=port,ParameterValue=$PORT \
-                                                 ParamterKey=type,ParameterValue=$TYPE \
+                                                 ParameterKey=type,ParameterValue=$TYPE \
                                                  ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "delete" ]
