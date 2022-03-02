@@ -609,6 +609,7 @@ Resources:
       DomainName: !Ref RestAPIDomainName
       RestApiId: !Ref RestAPI
       Stage: !Ref environmentName
+    DependsOn: RestAPIDeployment
 
   RestAPIRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup

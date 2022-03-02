@@ -268,7 +268,7 @@ Resources:
       ToPort: 5432
 
   OracleSecurityGroupIngress:
-    Type: AWS:ECS::SecurityGroupIngress
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref DatabaseSecurityGroup
       IpProtocol: tcp

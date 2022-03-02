@@ -28,10 +28,12 @@ Resources:
   PostgresRDS:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub ${applicationName}-database-${environmentName}
+      DBInstanceIdentifier: !Sub ${applicationName}-oracle-database-${environmentName}
       AllocatedStorage: 100
       DBInstanceClass: db.t3.micro
-      Engine: "postgres"
+      Engine: "oracle-se2"
+      LicenseModel: license-included
+      EngineVersion: 12.1.0.2.v26
       MasterUsername: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
       MasterUserPassword: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}"
       BackupRetentionPeriod: 7
@@ -42,7 +44,7 @@ Resources:
       StorageEncrypted: true
       CopyTagsToSnapshot: false
       MonitoringInterval: 60
-      EnableIAMDatabaseAuthentication: true
+      # EnableIAMDatabaseAuthentication: true
       EnablePerformanceInsights: true
       PerformanceInsightsRetentionPeriod: 7
       DeletionProtection: false

@@ -92,6 +92,13 @@ Resources:
       RepositoryName: !Sub "${applicationName}-master"
       RepositoryDescription: "A repository for documentation and master files"
 
+  MigrationRepo:
+    Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
+    Properties:
+      RepositoryName: !Sub "${applicationName}-migration"
+      RepositoryDescription: "A repository for data migration files"
+
   DockerRepo:
     Type: AWS::CodeCommit::Repository
     Condition: CodeCommitSource
