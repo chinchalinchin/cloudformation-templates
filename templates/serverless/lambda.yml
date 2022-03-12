@@ -527,6 +527,7 @@ Resources:
         resources:
           - Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepositoryARN"
           - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
+          - Fn::ImportValue: !Sub "${repoStack}-MigrationRepositoryARN"
         detail:
           event:
             - referenceCreated
