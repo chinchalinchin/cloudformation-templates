@@ -537,8 +537,6 @@ Resources:
           referenceName:
             - master
       Targets:
-        - Arn: !GetAtt LambdaGamma.Arn
-          Id: !Sub "${applicationName}-lambda-gamma-cloudwatch-master"
         - Arn: !GetAtt LambdaZeta.Arn
           Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-master"
   
