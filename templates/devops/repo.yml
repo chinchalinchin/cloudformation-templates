@@ -92,6 +92,13 @@ Resources:
       RepositoryName: !Sub "${applicationName}-master"
       RepositoryDescription: "A repository for documentation and master files"
 
+  MigrationRepo:
+    Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
+    Properties:
+      RepositoryName: !Sub "${applicationName}-migration"
+      RepositoryDescription: "A repository for data migration files"
+
   DockerRepo:
     Type: AWS::CodeCommit::Repository
     Condition: CodeCommitSource
@@ -504,6 +511,22 @@ Outputs:
     Description: SSH clone URL for Dockerfile repository
     Export:
       Name: !Sub ${AWS::StackName}-DockerCloneSSH
+
+  MigrationRepository:
+    Value: !GetAtt MigrationRepo.Name
+    Description: Repository name for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRepository
+  MigrationRepositoryARN:
+    Value: !GetAtt MigrationRepo.Arn
+    Description: Repository ARN for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRepositoryARN
+  MigrationRepositorySSHClone:
+    Value: !GetAtt DockerRepo.CloneUrlSsh
+    Description: SSH clone URL for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationCloneSSH
 
   CloudFormationRepository:
     Value: !GetAtt CloudFormationRepo.Name

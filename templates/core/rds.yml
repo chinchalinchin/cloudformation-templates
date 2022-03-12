@@ -30,7 +30,7 @@ Parameters:
     # Default: InnoLab-IAMStack
 
 Mappings:
-  # Engine specific configuration because Oracle is dumb
+  # Engine specific configuration goes here
   ConfigMap:
     postgres: 
       engine:  postgres
