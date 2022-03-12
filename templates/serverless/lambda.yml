@@ -562,6 +562,7 @@ Resources:
     DependsOn:
       - EnvironmentEventRule
 
+
   ### SINGLE ENVIROMENT INVOCATIONS (note Condition!)
   LambdaGammaCloudWatchMasterInvoke:
     Type: AWS::Lambda::Permission
