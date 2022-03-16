@@ -83,8 +83,8 @@ Resources:
   AlationRole:
     Type: "AWS::IAM::Role"
     Properties:
-      Path: "/"
-      RoleName: "AlationEC2Role"
+      Path: !Sub "${applicationName}"
+      RoleName: !Sub "${applicationName}-alation-executor"
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement:
