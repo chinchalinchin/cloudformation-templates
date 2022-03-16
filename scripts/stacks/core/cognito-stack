@@ -49,6 +49,7 @@ cp "$PROJECT_DIR/templates/core/cognito.yml" ./cognito.yml
 
 if [ "$ACTION" == "create" ]
 then
+    log "Creating \e[1m${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}" \
         --template-body file://cognito.yml \
@@ -60,6 +61,7 @@ then
         
 elif [ "$ACTION" == "update" ]
 then
+    log "Updating \e[1m${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}" \
         --template-body file://cognito.yml \
@@ -71,6 +73,7 @@ then
 
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-$COGNITO_STACK-${ENVIRONMENT}"
 else

@@ -87,6 +87,7 @@ then
     #     --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"  \
     #     --public-key-material fileb://~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
 
+    log "Creating \e[1m${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
@@ -97,6 +98,7 @@ then
 
 elif [ "$ACTION" == "update" ]
 then
+    log "Updating \e[1m${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
         --template-body file://vpc.yml \
@@ -107,6 +109,7 @@ then
 
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
     

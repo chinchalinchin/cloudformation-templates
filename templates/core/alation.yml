@@ -11,7 +11,7 @@ Parameters:
     Type: String
     Default: innolab
 
-Description: ""
+Description: "Configuration and resources for deploying Alation service into ${applicationName}-VPCStack-Dev"
 
 
 Resources:
@@ -99,7 +99,7 @@ Resources:
         - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
       Policies:
-        - PolicyName: !Sub ${applicationName}-ecs-task-execution-role-policy
+        - PolicyName: !Sub ${applicationName}-alation-secret-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -119,7 +119,7 @@ Resources:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
       Path: "/"
-      InstanceProfileName: !Ref AlationRole
+      InstanceProfileName: "${applicationName}-alation-instance-profile"
       Roles: 
         - !Ref AlationRole
 

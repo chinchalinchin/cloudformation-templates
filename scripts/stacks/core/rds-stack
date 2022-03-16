@@ -77,6 +77,7 @@ cp "$PROJECT_DIR/templates/core/rds.yml" ./rds.yml
 
 if [ "$ACTION" == "create" ]
 then
+    log "Creating \e[1m${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}\e[0m"
     # NOTE: use `create-secret` command if secrets do not exist in the SecretManager.
     #       use `update-secret` if updating
 
@@ -113,6 +114,7 @@ then
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "update" ]
 then
+    log "Updating \e[1m${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation update-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
                                     --capabilities CAPABILITY_NAMED_IAM \
@@ -124,6 +126,7 @@ then
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation delete-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}"
 fi
 

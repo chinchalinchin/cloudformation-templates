@@ -63,6 +63,7 @@ then
     #     --key-name "${APPLICATION}_alation_key"  \
     #     --public-key-material fileb://~/.ssh/"${APPLICATION}_alation_key.pub"
 
+    log "Creating \e[1m${APPLICATION^}-AlationStack\e[0m"
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-AlationStack" \
         --template-body file://alation.yml \
@@ -73,6 +74,7 @@ then
 
 elif [ "$ACTION" == "update" ]
 then
+    log "Updating \e[1m${APPLICATION^}-AlationStack\e[0m"
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-AlationStack" \
         --template-body file://alation.yml \
@@ -82,6 +84,7 @@ then
 
 elif [ "$ACTION" == "delete" ]
 then
+    log "Deleting \e[1m${APPLICATION^}-AlationStack\e[0m"
     aws cloudformation delete-stack \
         --stack-name "${APPLICATION^}-AlationStack"
     
