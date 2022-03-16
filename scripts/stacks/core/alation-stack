@@ -1,0 +1,91 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_NAME="vpc-stack"
+SCRIPT_DES=$''
+PROJECT_DIR=$SCRIPT_DIR/../../..
+source $PROJECT_DIR/env/.env
+
+# Example Usage:
+# >$     vpc-stack --action <create | update | delete>
+#                   --environment <Dev | Staging | Prod>
+#                   --bastion-host <true | false>
+
+#   NOTE: ``--action`` defaults to `create` if not supplied
+#   NOTE: This script will generate an SSH key with the name given by the environment
+#           variable $SSH_KEY_NAME in your user's *~/.ssh/* directory. The private key
+#           in this directory can be used to initiate an SSH tunnel with the RDS instance
+#           through the NAT Instance bastion host.
+#   NOTE: '`-bastion-host` will default to true if not provided.
+
+function log(){
+    echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
+}
+
+function help(){
+    echo -e "\n\e[4m$SCRIPT_NAME\e[0m\n\n\t$SCRIPT_DES" 
+}
+
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        --action|-action|--a|-a)
+            ACTION="$2"
+            shift
+            shift 
+            ;;
+        --help|-help|--h|-h)
+            help
+            exit 0
+            ;;
+        *)
+            log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$ACTION" ]
+then
+    log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
+    ACTION="create"
+fi
+
+cp $PROJECT_DIR/templates/core/vpc.yml ./vpc.yml
+
+if [ "$ACTION" == "create" ]
+then
+    ssh-keygen \
+        -t rsa \
+        -C "${APPLICATION}_alation_key" \
+        -f ~/.ssh/"${APPLICATION}_alation_key"
+
+    aws ec2 import-key-pair \
+        --key-name "${APPLICATION}_alation_key"  \
+        --public-key-material fileb://~/.ssh/"${APPLICATION}_alation_key.pub"
+
+    aws cloudformation create-stack \
+        --stack-name "${APPLICATION^}-AlationStack" \
+        --template-body file://vpc.yml \
+        --parameters ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_alation_key" \
+                     ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+
+elif [ "$ACTION" == "update" ]
+then
+    aws cloudformation update-stack \
+        --stack-name "${APPLICATION^}-AlationStack" \
+        --template-body file://vpc.yml \
+        --parameters ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_alation_key" \
+                     ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+
+elif [ "$ACTION" == "delete" ]
+then
+    aws cloudformation delete-stack \
+        --stack-name "${APPLICATION^}-AlationStack"
+    
+    aws ec2 delete-key-pair \
+        --key-name "${APPLICATION}_alation_key"
+
+fi
+
+rm ./vpc.yml

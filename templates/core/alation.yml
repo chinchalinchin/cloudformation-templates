@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack-Dev
+  alationKeyName: 
+    Type: String
+    Default: alation_key
+
+Description: ""
+
+
+Resources:
+  EC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: "ami-0b0af3577fe5e3532"
+      InstanceType: "t3.2xlarge"
+      KeyName: !Ref alationKeyName
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      Tenancy: "default"
+      SubnetId: 
+        Fn::ImportValue:
+          !Sub: "${vpcStack}-PrivateSubnetA"
+      EbsOptimized: true
+      SecurityGroupIds: 
+        - Fn::ImportValue:
+            !Sub "${vpcStack}-DatabaseSecurityGroupId"
+      SourceDestCheck: true
+      BlockDeviceMappings: 
+        - 
+          DeviceName: "/dev/sda1"
+          Ebs: 
+            Encrypted: false
+            VolumeSize: 1000
+            VolumeType: "gp2"
+            DeleteOnTermination: true
+      IamInstanceProfile: !Ref AlationRole
+      Tags: 
+        - Key: "Environment"
+          Value: "Dev"
+        - Key: "Application"
+          Value: "innolab"
+      HibernationOptions: 
+        Configured: false
+      CpuOptions: 
+        CoreCount: 4
+        ThreadsPerCore: 2
+      EnclaveOptions: 
+        Enabled: false
+      UserData: 
+        Fn::Base64: !Sub |
+          dnf install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+          dnf install -y https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+          systemctl enable amazon-ssm-agent
+          systemctl start amazon-ssm-agent
+
+  AlationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: "AlationEC2Role"
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: 
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      Description: "Role for Alation EC2 to access other services"
+      Tags: 
+        - Key: "Application"
+          Value: "innolab"
+        - Key: "Environment"
+          Value: "Dev"
+
+  IAMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      InstanceProfileName: !Ref AlationRole
+      Roles: 
+        - !Ref AlationRole
+
