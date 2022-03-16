@@ -123,12 +123,17 @@ Resources:
       UserData: 
         Fn::Base64: !Sub |
           #!/bin/bash
+          yum install unzip -y
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
           TOKEN=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id innolab-alationToken --query SecretString --output text)
           dnf install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
           dnf install -y https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
           systemctl enable amazon-ssm-agent
           systemctl start amazon-ssm-agent
           cd /home/
+          echo "Token $TOKEN"
           curl -kLH "Authorization: Token $TOKEN" https://customerportal.alationdata.com/api/build_artifact/13195/download/ > alation-2022.1-11.2.2.159547.rpm
           rpm -i alation-2022.1-11.2.2.159547.rpm
           mkdir /home/main
