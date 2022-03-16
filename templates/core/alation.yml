@@ -15,6 +15,62 @@ Description: "Configuration and resources for deploying Alation service into ${a
 
 
 Resources:
+  AlationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: !Sub "/${applicationName}/"
+      RoleName: !Sub "${applicationName}-alation-executor"
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: 
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-alation-secret-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SecretManagerPermissions
+                Action: 
+                  - secretsmanager:GetSecretValue
+                Effect: Allow
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+      Description: "Role for Alation EC2 to access other services"
+      Tags:
+        - Key: "Application"
+          Value: "innolab"
+        - Key: "Environment"
+          Value: "Dev"
+
+  AlationInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      InstanceProfileName: !Ref AlationRole
+      Roles: 
+        - !Ref AlationRole
+
+  AlationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${applicationName}-alation-security-group
+      GroupDescription: Allow internet ingress into Alation
+      VpcId: 
+        Fn::ImportValue: !Sub ${vpcStack}-VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
   Alation:
     Type: "AWS::EC2::Instance"
     Properties:
@@ -79,60 +135,4 @@ Resources:
           mkdir /home/backup
           /etc/init.d/alation init /home/main/ /home/backup/
           /etc/init.d/alation start
-
-  AlationRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      Path: !Sub "${applicationName}"
-      RoleName: !Sub "${applicationName}-alation-executor"
-      AssumeRolePolicyDocument: 
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal: 
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
-      MaxSessionDuration: 3600
-      ManagedPolicyArns: 
-        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-      Policies:
-        - PolicyName: !Sub ${applicationName}-alation-secret-policy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Sid: SecretManagerPermissions
-                Action: 
-                  - secretsmanager:GetSecretValue
-                Effect: Allow
-                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-      Description: "Role for Alation EC2 to access other services"
-      Tags:
-        - Key: "Application"
-          Value: "innolab"
-        - Key: "Environment"
-          Value: "Dev"
-
-  AlationInstanceProfile:
-    Type: "AWS::IAM::InstanceProfile"
-    Properties:
-      Path: "/"
-      InstanceProfileName: !Sub "${applicationName}-alation-instance-profile"
-      Roles: 
-        - !Ref AlationRole
-
-  AlationSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub ${applicationName}-alation-security-group
-      GroupDescription: Allow internet ingress into Alation
-      VpcId: 
-        Fn::ImportValue: !Sub ${vpcStack}-VPC
-      SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 80
-        ToPort: 80
-        CidrIp: 0.0.0.0/0
 
