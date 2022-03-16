@@ -55,18 +55,27 @@ then
     ACTION="create"
 fi
 
-cp "$PROJECT_DIR/templates/core/alation.yml" ./alation.yml
+if [ -z "$KEYGEN" ]
+then
+    log "No \e[3m--keygen\e[0m specified. Defaulting to \e[1mfalse\e[0m"
+    KEYGEN="false"
+fi
+
+cp "$PROJECT_DIR/templates/applications/alation.yml" ./alation.yml
 
 if [ "$ACTION" == "create" ]
 then
-    # ssh-keygen \
-    #     -t rsa \
-    #     -C "${APPLICATION}_alation_key" \
-    #     -f ~/.ssh/"${APPLICATION}_alation_key"
+    if [ "$KEYGEN" == "true" ]
+    then
+      ssh-keygen \
+          -t rsa \
+          -C "${APPLICATION}_alation_key" \
+          -f ~/.ssh/"${APPLICATION}_alation_key"
 
-    # aws ec2 import-key-pair \
-    #     --key-name "${APPLICATION}_alation_key"  \
-    #     --public-key-material fileb://~/.ssh/"${APPLICATION}_alation_key.pub"
+      aws ec2 import-key-pair \
+          --key-name "${APPLICATION}_alation_key"  \
+          --public-key-material fileb://~/.ssh/"${APPLICATION}_alation_key.pub"
+    fi
 
     log "Creating \e[1m${APPLICATION^}-AlationStack\e[0m"
     aws cloudformation create-stack \
