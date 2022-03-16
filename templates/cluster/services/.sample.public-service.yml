@@ -1,0 +1,269 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'Provisions resources for the frontend service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack frontend ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created and a record is added to Route53 pointing to its load balancer. Note: the backend service needs stood up before the frontend service.'
+
+Parameters:
+  ## CROSS STACK REFERENCES
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+    Description: Name of the IAM Cross Stack reference
+  repoStack:
+    Type: String
+    Default: Innolab-RepoStack
+    Description: Name of the Repo Cross Stack reference
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack-Dev
+    Description: Name of the VPC Cross Stack reference
+  clusterStack:
+    Type: String
+    Default: Innolab-ClusterStack-Dev
+  ## APPLICATION CONFIGURATION
+  applicationName:
+    Type: String
+    Default: innolab
+    Description: The name of the application being deployed.
+  environmentName:
+    Type: String
+    Default: Dev
+    Description: The environment into which the application is being deployed.
+  ## SERVICE CONFIGURATION
+  domain:
+    Type: String
+    Default: makpar-innovation.net
+    Description: Domain for the application cluster
+  port:
+    Type: Number
+    Default: 8080 
+    Description: Port mapping for frontend service 
+  tag:
+    Type: String
+    Default: Dev-v0.0.0
+    Description: Image tag for the front service ECR
+
+Mappings:
+  BranchMap:
+    Dev: 
+      branch:  "dev"
+      subdomain: "-dev"
+    Test: 
+      branch: "test"
+      subdomain: "-test"
+    Staging: 
+      branch: "staging"
+      subdomain: "-staging"
+    Prod: 
+      branch: "prod"
+      subdomain: ""
+
+Resources:
+  FrontendLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${applicationName}/${environmentName}/frontend/"
+
+  AutoScalingFrontendTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 3
+      ResourceId: !Join ['/', [service, Fn::ImportValue: !Sub "${clusterStack}-Cluster", !GetAtt FrontendService.Name]]
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN: 
+        Fn::ImportValue: !Sub "${iamStack}-ECSScalingRoleArn"
+
+  AutoScalingFrontendPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-frontend"
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AutoScalingFrontendTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 10
+        ScaleOutCooldown: 10
+        # Keep things at or lower than 50% CPU utilization, for example
+        TargetValue: 50
+
+  FrontendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 60
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target"
+      Port: !Ref port
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  FrontendTargetGroupAlt:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 60
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${applicationName}-${environmentName}-frontend-target-2"
+      Port: !Ref port
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId: 
+        Fn::ImportValue: !Sub "${vpcStack}-VPC"
+
+  FrontendLoadBalancerListenerCondition:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Priority: 1
+      ListenerArn: 
+        Fn::ImportValue: !Sub ${clusterStack}-PublicLoadBalancerListenerARN
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Sub
+                - "${subdomain}${subdomainEnv}.${domainName}"
+                - subdomain: !Ref applicationName
+                  domainName: !Ref domain
+                  subdomainEnv: 
+                    Fn::FindInMap:
+                      - BranchMap
+                      - !Ref environmentName
+                      - subdomain
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref FrontendTargetGroup
+
+  FrontendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: FrontendLogGroup
+    Properties:
+      Family: !Sub "${applicationName}-${environmentName}-frontend-task-definition"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
+      ContainerDefinitions:
+        - Name: !Sub ${applicationName}-${environmentName}-frontend
+          Image: !Sub
+            - "${imageUri}:${whichTag}"
+            - imageUri:  
+                Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
+              whichTag: !Ref tag
+          PortMappings:
+            - ContainerPort: !Ref port
+          EnvironmentFiles:
+            - Type: s3
+              Value: !Sub
+                - "${bucketArn}/web.${env}.env"
+                - bucketArn: 
+                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
+                  env:
+                    Fn::FindInMap:
+                      - BranchMap
+                      - !Ref environmentName
+                      - branch
+          # TODO: replace environmentfile with Environment: and Secrets: 
+          #       script for creating frontend secrets
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref FrontendLogGroup
+              awslogs-stream-prefix: ecs
+
+  FrontendService:
+    Type: AWS::ECS::Service
+    Properties: 
+      ServiceName: !Sub ${applicationName}-${environmentName}-frontend
+      Cluster: 
+        Fn::ImportValue: !Sub ${clusterStack}-Cluster
+      TaskDefinition: !Ref FrontendTaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: ENABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+          SecurityGroups:
+            - Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${applicationName}-${environmentName}-frontend
+          ContainerPort: !Ref port
+          TargetGroupArn: !Ref FrontendTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt FrontendDiscoveryService.Arn
+          Port: !Ref port
+      DeploymentController:
+        Type: CODE_DEPLOY
+
+  FrontendDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: !Sub "Discovery service for the ${applicationName}-${environmentName}-frontend service"
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+          - TTL: 60
+            Type: SRV
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: !Sub ${applicationName}-${environmentName}-frontend-discovery
+      NamespaceId: 
+        Fn::ImportValue: !Sub ${clusterStack}-Namespace
+
+Outputs:
+  FrontendTargetGroup:
+    Value: !GetAtt FrontendTargetGroup.TargetGroupName
+    Description: Name of first frontend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendTargetGroup
+  FrontendTargetGroupAlt:
+    Value: !GetAtt FrontendTargetGroupAlt.TargetGroupName
+    Description: Name of second frontend target group
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendTargetGroupAlt
+  FrontendServiceName:
+    Value: !GetAtt FrontendService.Name
+    Description: Name of the frontend service
+    Export: 
+      Name: !Sub ${AWS::StackName}-FrontendServiceName
+  FrontendServiceArn:
+    Value: !Ref FrontendService
+    Description: Arn of the frontend service
+    Export: 
+      Name: !Sub ${AWS::StackName}-FrontendServiceARN
+  FrontendTaskDefinitionArn:
+    Value: !Ref FrontendTaskDefinition
+    Description: Arn of the frontend task definition
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendTaskARN
+        
