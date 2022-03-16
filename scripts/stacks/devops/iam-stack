@@ -3,8 +3,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="user-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+PROJECT_DIR="$SCRIPT_DIR/../../.."
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     iam-stack --action <create | update | delete>
@@ -50,7 +50,7 @@ fi
 if [ "$ACTION" == "create" ]
 then
     log "Creating \e[1m${APPLICATION^}-$IAM_STACK\e[0m"
-    cp $PROJECT_DIR/templates/devops/iam.yml ./iam.yml
+    cp "$PROJECT_DIR/templates/devops/iam.yml" ./iam.yml
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-$IAM_STACK" \
         --template-body file://iam.yml \
@@ -63,7 +63,7 @@ then
 elif [ "$ACTION" == "update" ]
 then
     log "Updating \e[1m${APPLICATION^}-$IAM_STACK\e[0m"
-    cp $PROJECT_DIR/templates/devops/iam.yml ./iam.yml
+    cp "$PROJECT_DIR/templates/devops/iam.yml" ./iam.yml
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-$IAM_STACK" \
         --template-body file://iam.yml \

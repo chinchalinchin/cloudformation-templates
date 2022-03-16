@@ -3,8 +3,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="service-stack"
 SCRIPT_DES=$'Stand up a service in the Fargate cluster'
-PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+PROJECT_DIR="$SCRIPT_DIR/../../.."
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     service-stack --environment <Dev | Prod | Test | Staging> \
@@ -14,13 +14,16 @@ source $PROJECT_DIR/env/.env
 #                       --port <port>
 
 #   NOTE: `--action` defaults to `create` if not supplied
-#   NOTE: `--tag` defaults to `$ENVIRONMENT-v0.0.0` if not supplied
+#   NOTE: `--tag` defaults to `$ENVIRONMENT` if not supplied.
+#   NOTE: `--tag` represents the image *tag*!
 
 # EXAMPLES: 
 #   ## BACKEND SERVICE
 #       service-stack --environment Dev --service backend --port 8000
 #   ## FRONTEND SERVICE
 #       service-stack --environment Dev --service frontend --port 8080
+#   ## SONAR SERVICE
+#       service-stack --environment Dev --service sonar --port 9000
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -101,15 +104,15 @@ fi
 ## SERVICE PARSING
 case $SERVICE in 
     frontend)
-        cp $PROJECT_DIR/templates/cluster/services/frontend.yml ./service.yml
+        cp "$PROJECT_DIR/templates/cluster/services/frontend.yml" ./service.yml
         SERVICE_NAME="${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}"
         ;;
     backend)
-        cp $PROJECT_DIR/templates/cluster/services/backend.yml ./service.yml
+        cp "$PROJECT_DIR/templates/cluster/services/backend.yml" ./service.yml
         SERVICE_NAME="${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}-${ENVIRONMENT}"
         ;;
     sonar)
-        cp $PROJECT_DIR/templates/cluster/services/sonar.yml ./service.yml
+        cp "$PROJECT_DIR/templates/cluster/services/sonar.yml" ./service.yml
         ENVIRONMENT="Dev"
         SERVICE_NAME="${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}"
         ;;

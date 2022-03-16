@@ -512,6 +512,22 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-DockerCloneSSH
 
+  MigrationRepository:
+    Value: !GetAtt MigrationRepo.Name
+    Description: Repository name for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRepository
+  MigrationRepositoryARN:
+    Value: !GetAtt MigrationRepo.Arn
+    Description: Repository ARN for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRepositoryARN
+  MigrationRepositorySSHClone:
+    Value: !GetAtt DockerRepo.CloneUrlSsh
+    Description: SSH clone URL for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationCloneSSH
+
   CloudFormationRepository:
     Value: !GetAtt CloudFormationRepo.Name
     Description: Repository name for CloudFormation template repository

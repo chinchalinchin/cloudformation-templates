@@ -50,7 +50,7 @@ fi
 if [ "$ACTION" == "create" ]
 then
     log "Creating \e[1m${APPLICATION^}-${COVERAGE_STACK}\e[0m"
-    cp $PROJECT_DIR/templates/devops/coverage.yml ./coverage.yml
+    cp "$PROJECT_DIR/templates/devops/coverage.yml" ./coverage.yml
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${COVERAGE_STACK}" \
         --template-body file://coverage.yml \
@@ -63,6 +63,7 @@ then
 elif [ "$ACTION" == "update" ]
 then
     log "Updating \e[1m${APPLICATION^}-${COVERAGE_STACK}\e[0m"
+    cp "$PROJECT_DIR/templates/devops/coverage.yml" ./coverage.yml
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-${COVERAGE_STACK}" \
         --template-body file://coverage.yml \

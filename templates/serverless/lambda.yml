@@ -527,6 +527,7 @@ Resources:
         resources:
           - Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepositoryARN"
           - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
+          - Fn::ImportValue: !Sub "${repoStack}-MigrationRepositoryARN"
         detail:
           event:
             - referenceCreated
@@ -536,8 +537,6 @@ Resources:
           referenceName:
             - master
       Targets:
-        - Arn: !GetAtt LambdaGamma.Arn
-          Id: !Sub "${applicationName}-lambda-gamma-cloudwatch-master"
         - Arn: !GetAtt LambdaZeta.Arn
           Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-master"
   
