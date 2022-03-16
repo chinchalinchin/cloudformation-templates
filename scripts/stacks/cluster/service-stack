@@ -9,7 +9,7 @@ source "$PROJECT_DIR/env/.env"
 # Example Usage:
 # >$     service-stack --environment <Dev | Prod | Test | Staging> \
 #                       --action <create | update | delete> \
-#                       --service <frontend | backend | sonar>
+#                       --service <frontend | backend | sonar | alation>
 #                       --tag <tag>
 #                       --port <port>
 
@@ -23,7 +23,9 @@ source "$PROJECT_DIR/env/.env"
 #   ## FRONTEND SERVICE
 #       service-stack --environment Dev --service frontend --port 8080
 #   ## SONAR SERVICE
-#       service-stack --environment Dev --service sonar --port 9000
+#       service-stack --service sonar --port 9000
+#   ## ALATION SERVICE
+#       service-stack --service alation --port 80
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -116,8 +118,13 @@ case $SERVICE in
         ENVIRONMENT="Dev"
         SERVICE_NAME="${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}"
         ;;
+    alation)
+        cp "$PROJECT_DIR/templates/cluster/services/alation.yml" ./service.yml
+        ENVIRONMENT="Dev"
+        SERVICE_NAME="${APPLICATION^}-${SERVICE^}-${SERVICE_STACK}"
+        ;;
     *)
-        log "\e3[m--service\e[0m input not understood; must be <frontend | backend>"
+        log "\e3[m--service\e[0m input not understood; must be <frontend | backend | sonar | alation>"
         exit 1
         ;;
 esac

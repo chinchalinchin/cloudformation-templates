@@ -136,7 +136,7 @@ Resources:
         - Field: host-header
           HostHeaderConfig:
             Values:
-              - !Sub "alation.${domainName}"
+              - !Sub "alation.${domain}"
       Actions:
         - Type: forward
           TargetGroupArn: !Ref AlationTargetGroup
@@ -149,13 +149,13 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: 256
-      Memory: 512
+      Cpu: 4096
+      Memory: 30720
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
       ContainerDefinitions:
         - Name: !Sub ${applicationName}-${environmentName}-alation
-          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/innolab-alation"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/innolab-alation:latest"
           PortMappings:
             - ContainerPort: !Ref port
           LogConfiguration:
