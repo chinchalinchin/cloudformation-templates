@@ -10,13 +10,15 @@ source "$PROJECT_DIR/env/.env"
 # >$     vpc-stack --action <create | update | delete>
 #                   --environment <Dev | Staging | Prod>
 #                   --bastion-host <true | false>
+#                   --keygen <true | false>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
-#   NOTE: This script will generate an SSH key with the name given by the environment
+#   NOTE: ``-bastion-host``` will default to true if not provided.
+#   NOTE: ``--keygen`` will default to false if not provided. If true is passed in,
+#           This script will generate an SSH key with the name given by the environment
 #           variable $SSH_KEY_NAME in your user's *~/.ssh/* directory. The private key
 #           in this directory can be used to initiate an SSH tunnel with the RDS instance
 #           through the NAT Instance bastion host.
-#   NOTE: '`-bastion-host` will default to true if not provided.
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -51,6 +53,11 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
+        --keygen|-keygen|--kg|-kg|--k|-k)
+            KEYGEN="true"
+            shift
+            shift 
+            ;;
         --help|-help|--h|-h)
             help
             exit 0
@@ -74,18 +81,27 @@ then
     BASTION_HOST="true"
 fi
 
+if [ -z "$KEYGEN" ]
+then
+    log "No \e[3m--keygen\e[0m specified. Defaulting to \e[1mfalse\e[0m"
+    KEYGEN="false"
+fi
+
 cp "$PROJECT_DIR/templates/core/vpc.yml" ./vpc.yml
 
 if [ "$ACTION" == "create" ]
 then
-    # ssh-keygen \
-    #     -t rsa \
-    #     -C "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
-    #     -f ~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
+    if [ "$KEYGEN" == "true" ]
+    then
+      ssh-keygen \
+          -t rsa \
+          -C "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
+          -f ~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
 
-    # aws ec2 import-key-pair \
-    #     --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"  \
-    #     --public-key-material fileb://~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
+      aws ec2 import-key-pair \
+          --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"  \
+          --public-key-material fileb://~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
+    fi
 
     log "Creating \e[1m${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}\e[0m"
     aws cloudformation create-stack \

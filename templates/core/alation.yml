@@ -15,7 +15,7 @@ Description: "Configuration and resources for deploying Alation service into ${a
 
 
 Resources:
-  EC2Instance:
+  Alation:
     Type: "AWS::EC2::Instance"
     Properties:
       ImageId: "ami-0b0af3577fe5e3532"
@@ -38,7 +38,7 @@ Resources:
           SubnetId: 
             Fn::ImportValue: !Sub "${vpcStack}-PublicSubnetB"
           AssociatePublicIpAddress: true
-          GroupSet: [Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup"]  
+          GroupSet: [Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup", !Ref AlationSecurityGroup]  
       #######################################
       EbsOptimized: true
       SourceDestCheck: true
@@ -115,11 +115,23 @@ Resources:
         - Key: "Environment"
           Value: "Dev"
 
-  IAMInstanceProfile:
+  AlationInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
       Path: "/"
-      InstanceProfileName: "${applicationName}-alation-instance-profile"
+      InstanceProfileName: !Sub "${applicationName}-alation-instance-profile"
       Roles: 
         - !Ref AlationRole
+
+  AlationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${applicationName}-alation-security-group
+      GroupDescription: Allow internet ingress into Alation
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
 

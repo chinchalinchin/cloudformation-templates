@@ -8,14 +8,14 @@ source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     alation-stack --action <create | update | delete>
-#                       --environment <Dev | Staging | Prod>
+#                       --keygen <true | false>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
-#   NOTE: This script will generate an SSH key with the name given by the environment
-#           variable $SSH_KEY_NAME in your user's *~/.ssh/* directory. The private key
+#   NOTE: ``--keygen`` will default to false if not provided. If true is passed in,
+#           This script will generate an SSH key with the name given by the environment
+#           variable $APPLICATION_alation_key in your user's *~/.ssh/* directory. The private key
 #           in this directory can be used to initiate an SSH tunnel with the RDS instance
 #           through the NAT Instance bastion host.
-#   NOTE: '`-bastion-host` will default to true if not provided.
 
 function log(){
     echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
@@ -36,6 +36,11 @@ while [[ $# -gt 0 ]]; do
         --help|-help|--h|-h)
             help
             exit 0
+            ;;
+        --keygen|-keygen|--kg|-kg|--k|-k)
+            KEYGEN="true"
+            shift
+            shift 
             ;;
         *)
             log "Input not understood. See \e[3m--help\e[0m for information on using this command."
