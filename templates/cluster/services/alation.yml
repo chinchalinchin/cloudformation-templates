@@ -237,7 +237,7 @@ Outputs:
     Export: 
       Name: !Sub ${AWS::StackName}-AlationServiceARN
   AlationTaskDefinitionArn:
-    Value: !Ref AlaltionTaskDefinition
+    Value: !Ref AlationTaskDefinition
     Description: Arn of the alation task definition
     Export:
       Name: !Sub ${AWS::StackName}-AlationTaskARN
