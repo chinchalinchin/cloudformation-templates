@@ -21,12 +21,11 @@ Resources:
       AvailabilityZone: !Sub "${AWS::Region}b"
       Tenancy: "default"
       SubnetId: 
-        Fn::ImportValue:
-          !Sub: "${vpcStack}-PrivateSubnetA"
+        Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetA"
       EbsOptimized: true
       SecurityGroupIds: 
         - Fn::ImportValue:
-            !Sub "${vpcStack}-DatabaseSecurityGroupId"
+            !Sub "${vpcStack}-DatabaseSecurityGroup"
       SourceDestCheck: true
       BlockDeviceMappings: 
         - 

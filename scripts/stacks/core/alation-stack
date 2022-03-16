@@ -3,13 +3,12 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="vpc-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+PROJECT_DIR="$SCRIPT_DIR/../../.."
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
-# >$     vpc-stack --action <create | update | delete>
-#                   --environment <Dev | Staging | Prod>
-#                   --bastion-host <true | false>
+# >$     alation-stack --action <create | update | delete>
+#                       --environment <Dev | Staging | Prod>
 
 #   NOTE: ``--action`` defaults to `create` if not supplied
 #   NOTE: This script will generate an SSH key with the name given by the environment
@@ -51,32 +50,34 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/core/vpc.yml ./vpc.yml
+cp "$PROJECT_DIR/templates/core/alation.yml" ./alation.yml
 
 if [ "$ACTION" == "create" ]
 then
-    ssh-keygen \
-        -t rsa \
-        -C "${APPLICATION}_alation_key" \
-        -f ~/.ssh/"${APPLICATION}_alation_key"
+    # ssh-keygen \
+    #     -t rsa \
+    #     -C "${APPLICATION}_alation_key" \
+    #     -f ~/.ssh/"${APPLICATION}_alation_key"
 
-    aws ec2 import-key-pair \
-        --key-name "${APPLICATION}_alation_key"  \
-        --public-key-material fileb://~/.ssh/"${APPLICATION}_alation_key.pub"
+    # aws ec2 import-key-pair \
+    #     --key-name "${APPLICATION}_alation_key"  \
+    #     --public-key-material fileb://~/.ssh/"${APPLICATION}_alation_key.pub"
 
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-AlationStack" \
-        --template-body file://vpc.yml \
-        --parameters ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_alation_key" \
-                     ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+        --template-body file://alation.yml \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --parameters ParameterKey=alationKeyName,ParameterValue="${APPLICATION}_alation_key" \
+                     ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-Dev"
 
 elif [ "$ACTION" == "update" ]
 then
     aws cloudformation update-stack \
         --stack-name "${APPLICATION^}-AlationStack" \
-        --template-body file://vpc.yml \
-        --parameters ParameterKey=dbKeyName,ParameterValue="${APPLICATION}_alation_key" \
-                     ParameterKey=vpcStack,ParameterValue=$VPC_STACK
+        --template-body file://alation.yml \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --parameters ParameterKey=alationKeyName,ParameterValue="${APPLICATION}_alation_key" \
+                     ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-Dev"
 
 elif [ "$ACTION" == "delete" ]
 then
@@ -88,4 +89,4 @@ then
 
 fi
 
-rm ./vpc.yml
+rm ./alation.yml
