@@ -67,8 +67,6 @@ Resources:
       UserData: 
         Fn::Base64: !Sub |
           #!/bin/bash
-          echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALATION BOOTSTRAP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           TOKEN=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id innolab-alationToken --query SecretString --output text)
           dnf install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
           dnf install -y https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
@@ -81,9 +79,6 @@ Resources:
           mkdir /home/backup
           /etc/init.d/alation init /home/main/ /home/backup/
           /etc/init.d/alation start
-
-          
-
 
   AlationRole:
     Type: "AWS::IAM::Role"
