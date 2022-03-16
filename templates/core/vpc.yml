@@ -397,6 +397,10 @@ Outputs:
     Value: !Ref DatabaseSecurityGroup
     Export: 
       Name: !Sub ${AWS::StackName}-DatabaseSecurityGroup
+  NatSecurityGroupId:
+    Value: !Ref NATSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-NATSecurityGroup
   DatabaseSubnetGroup:
     Value: !Ref RDSDBSubnetGroup
     Export:

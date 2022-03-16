@@ -7,6 +7,9 @@ Parameters:
   alationKeyName: 
     Type: String
     Default: alation_key
+  applicationName:
+    Type: String
+    Default: innolab
 
 Description: ""
 
@@ -20,12 +23,24 @@ Resources:
       KeyName: !Ref alationKeyName
       AvailabilityZone: !Sub "${AWS::Region}b"
       Tenancy: "default"
-      SubnetId: 
-        Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetB"
+      ## NOTE: Deploy into Private Subnet.
+      ######################################
+      # SubnetId: 
+      #   Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetB"
+      # SecurityGroupIds: 
+      #   - Fn::ImportValue:
+      #       !Sub "${vpcStack}-DatabaseSecurityGroup"
+      ######################################
+      ## NOTE: Deploy into Public Subnet.
+      ######################################
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          SubnetId: 
+            Fn::ImportValue: !Sub "${vpcStack}-PublicSubnetB"
+          AssociatePublicIpAddress: true
+          GroupSet: [Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup"]  
+      #######################################
       EbsOptimized: true
-      SecurityGroupIds: 
-        - Fn::ImportValue:
-            !Sub "${vpcStack}-DatabaseSecurityGroup"
       SourceDestCheck: true
       BlockDeviceMappings: 
         - DeviceName: "/dev/sda1"
@@ -36,6 +51,8 @@ Resources:
             DeleteOnTermination: true
       IamInstanceProfile: !Ref AlationRole
       Tags: 
+        - Key: Name
+          Value: !Sub ${applicationName}-Dev-alation 
         - Key: "Environment"
           Value: "Dev"
         - Key: "Application"
@@ -52,10 +69,21 @@ Resources:
           #!/bin/bash
           echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALATION BOOTSTRAP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          TOKEN=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id innolab-alationToken --query SecretString --output text)
           dnf install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
           dnf install -y https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
           systemctl enable amazon-ssm-agent
           systemctl start amazon-ssm-agent
+          cd /home/
+          curl -kLH "Authorization: Token $TOKEN" https://customerportal.alationdata.com/api/build_artifact/13195/download/ > alation-2022.1-11.2.2.159547.rpm
+          rpm -i alation-2022.1-11.2.2.159547.rpm
+          mkdir /home/main
+          mkdir /home/backup
+          /etc/init.d/alation init /home/main/ /home/backup/
+          /etc/init.d/alation start
+
+          
+
 
   AlationRole:
     Type: "AWS::IAM::Role"
@@ -75,10 +103,18 @@ Resources:
       ManagedPolicyArns: 
         - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-ecs-task-execution-role-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SecretManagerPermissions
+                Action: 
+                  - secretsmanager:GetSecretValue
+                Effect: Allow
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
       Description: "Role for Alation EC2 to access other services"
       Tags:
-        - Key: Name
-          Value: !Sub ${applicationName}-Dev-bastion-host 
         - Key: "Application"
           Value: "innolab"
         - Key: "Environment"

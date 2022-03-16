@@ -68,6 +68,7 @@ then
         --template-body file://alation.yml \
         --capabilities CAPABILITY_NAMED_IAM \
         --parameters ParameterKey=alationKeyName,ParameterValue="${APPLICATION}_alation_key" \
+                     ParameterKey=applicationName,ParameterValue="${APPLICATION}"
                      ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-Dev"
 
 elif [ "$ACTION" == "update" ]
