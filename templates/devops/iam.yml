@@ -16,6 +16,7 @@ Parameters:
     Description: Username for the Bitbucket pipeline account
   bitbucketFlag:
     Type: String
+    Description: Flag to signal the creation of an account for the Bitbucket pipeline
     Default: false
     AllowedValues: 
       - true
@@ -270,96 +271,109 @@ Resources:
 
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
-      Type: AWS::IAM::Role
-      Description: Role to allow Innolab Pipeline access to other AWS Services
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - "codepipeline.amazonaws.com"
-              Action: 
-                - "sts:AssumeRole"
-        Policies:
-          - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Sid: IAMPermissions
-                  Action: 
-                    - iam:PassRole
-                  Effect: Allow
-                  Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${applicationName}-*"
-                - Sid: CodeCommitPermissions
-                  Action:
-                    - codecommit:CancelUploadArchive
-                    - codecommit:GetBranch
-                    - codecommit:GetCommit
-                    - codecommit:GetRepository
-                    - codecommit:GetUploadArchiveStatus
-                    - codecommit:UploadArchive
-                  Effect: Allow
-                  Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
-                - Sid: CloudWatchPermissions
-                  Action:
-                    - cloudwatch:*
-                  Resource: "*" # TODO: restrict scope
-                  Effect: Allow
-                - Sid: S3Permissions
-                  Action:
-                    - s3:*
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:s3:::${applicationName}-*"
-                - Sid: LambdaPermissions
-                  Action:
-                    - lambda:UpdateFunctionCode
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
-                - Sid: CodeBuildPermissions
-                  Action:
-                    - codebuild:BatchGetBuilds
-                    - codebuild:StartBuild
-                    - codebuild:BatchGetBuildBatches
-                    - codebuild:StartBuildBatch
-                  Resource: 
-                    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:*/${applicationName}*"
-                  Effect: Allow
-                - Sid: CodeDeployPermissions
-                  Action:
-                    - codedeploy:GetDeployment
-                    - codedeploy:CreateDeployment
-                    - codedeploy:GetDeploymentConfig
-                  Resource: 
-                    - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
-                    - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${applicationName}-*/${applicationName}-*"               
-                    - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:*"
-                  Effect: Allow
-                - Sid: ECRAuthPermissions
-                  Action:
-                    - ecr:GetAuthorizationToken
-                  Effect: Allow
-                  Resource: '*'
-                - Sid: ECRPermissions
-                  Action:
-                    - ecr:GetDownloadUrlForLayer
-                    - ecr:GetRepositoryPolicy
-                    - ecr:DescribeRepositories
-                    - ecr:ListImages
-                    - ecr:DescribeImages
-                    - ecr:BatchGetImage
-                  Effect: Allow
-                  Resource: 
-                    - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-                - Sid: ECSPermissions
-                  Action:
-                    - ecs:RegisterTaskDefinition
-                  Effect: Allow
-                  Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
-        RoleName: !Sub ${applicationName}-codepipeline-exector
+    Type: AWS::IAM::Role
+    Description: Role to allow Innolab Pipeline access to other AWS Services
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: IAMPermissions
+                Action: 
+                  - iam:PassRole
+                Effect: Allow
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${applicationName}-*"
+              - Sid: CodeCommitPermissions
+                Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetRepository
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                Effect: Allow
+                Resource: !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
+              - Sid: CloudWatchPermissions
+                Action:
+                  - cloudwatch:*
+                Resource: "*" # TODO: restrict scope
+                Effect: Allow
+              - Sid: S3Permissions
+                Action:
+                  - s3:*
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:s3:::${applicationName}-*"
+              - Sid: LambdaPermissions
+                Action:
+                  - lambda:UpdateFunctionCode
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+              - Sid: CodeBuildPermissions
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuildBatches
+                  - codebuild:StartBuildBatch
+                Resource: 
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:*/${applicationName}*"
+                Effect: Allow
+              - Sid: CodeDeployPermissions
+                Action:
+                  - codedeploy:GetDeployment
+                  - codedeploy:CreateDeployment
+                  - codedeploy:GetDeploymentConfig
+                  - codedeploy:GetApplication
+                  - codedeploy:GetApplicationRevision
+                  - codedeploy:RegisterApplicationRevision
+                Resource: 
+                  - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${applicationName}-*
+                  - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${applicationName}-*/${applicationName}-*"               
+                  - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:*"
+                Effect: Allow
+              - Sid: CodeStarPermissions
+                Action: 
+                  - codestar-connections:CreateConnection
+                  - codestar-connections:DeleteConnection
+                  - codestar-connections:UseConnection
+                  - codestar-connections:GetConnection
+                  - codestar-connections:ListConnections
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:codestar-connections:${AWS::Region}:${AWS::AccountId}:connection/*"
+              - Sid: ECRAuthPermissions
+                Action:
+                  - ecr:GetAuthorizationToken
+                Effect: Allow
+                Resource: '*'
+              - Sid: ECRPermissions
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
+                  - ecr:DescribeRepositories
+                  - ecr:ListImages
+                  - ecr:DescribeImages
+                  - ecr:BatchGetImage
+                Effect: Allow
+                Resource: 
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
+              - Sid: ECSPermissions
+                Action:
+                  - ecs:RegisterTaskDefinition
+                Effect: Allow
+                Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
+      RoleName: !Sub ${applicationName}-codepipeline-exector
         
   # CODEBUILD SERVICE ROLE
   CodeBuildRole:
@@ -425,6 +439,16 @@ Resources:
                   - codedeploy:CreateCloudFormationDeployment
                 Effect: Allow
                 Resource: '*' # TODO: figure out which resources to scope this to... 
+              - Sid: CodeStarPermissions
+                Action: 
+                  - codestar-connections:CreateConnection
+                  - codestar-connections:DeleteConnection
+                  - codestar-connections:UseConnection
+                  - codestar-connections:GetConnection
+                  - codestar-connections:ListConnections
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:codestar-connections:${AWS::Region}:${AWS::AccountId}:connection/*"
               - Sid: SecretManagerPermissions
                 Action:
                   - secretsmanager:GetSecretValue
@@ -491,6 +515,13 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
+              - Sid: SecretManagerPermissions
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:UpdateSecret
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}*"
               - Sid: CognitoPermissions
                 Effect: Allow
                 Action:
@@ -517,6 +548,7 @@ Resources:
                   - codecommit:BatchGetCommit
                   - codecommit:GetDifferences
                   - codecommit:GetTree
+                  - codecommit:GetFile
                   - codecommit:ListRepositories
                 Resource:
                   - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
@@ -621,15 +653,10 @@ Resources:
     Properties:
       GroupName: developer-group
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
         - arn:aws:iam::aws:policy/AWSLambda_FullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
-        - arn:aws:iam::aws:policy/CloudFrontFullAccess
         - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
       Policies:
         - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
@@ -664,20 +691,20 @@ Resources:
     DependsOn:
       - BasicAccessGroup
 
-  # IAMGrant:
-  #   Type: AWS::IAM::User
-  #   Properties:
-  #     Groups:
-  #       - basic-access-group
-  #     LoginProfile:
-  #       Password: !Ref masterPassword
-  #       PasswordResetRequired: True
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/AdministratorAccess
-  #     Path: !Sub "/${applicationName}/"
-  #     UserName: gmoore
-  #   DependsOn:
-  #     - BasicAccessGroup
+  IAMGrant:
+    Type: AWS::IAM::User
+    Properties:
+      Groups:
+        - basic-access-group
+      LoginProfile:
+        Password: !Ref masterPassword
+        PasswordResetRequired: True
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: !Sub "/${applicationName}/"
+      UserName: gmoore
+    DependsOn:
+      - BasicAccessGroup
 
   IAMPeter:
     Type: AWS::IAM::User
@@ -732,6 +759,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
         - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
         - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: tklock
     DependsOn:
@@ -768,20 +796,20 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
-  IAMSelah:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: skonur
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
+  # IAMSelah:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Groups:
+  #       - basic-access-group
+  #       - developer-group
+  #     LoginProfile:
+  #       Password: !Ref masterPassword
+  #       PasswordResetRequired: True
+  #     Path: !Sub "/${applicationName}/"
+  #     UserName: skonur
+  #   DependsOn:
+  #     - BasicAccessGroup
+  #     - DeveloperGroup
 
 Outputs:
   BitbucketPipelineUserArn:

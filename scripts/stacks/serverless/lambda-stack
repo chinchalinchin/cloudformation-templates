@@ -3,8 +3,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="lambda-stack"
 SCRIPT_DES=$'Stands up the \e[1mLambdaStack\e[0m with the configuration specified in the \e[1menv/.env file'
-PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+PROJECT_DIR="$SCRIPT_DIR/../../.."
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     lambda-stack --environment <Dev | Prod | Test | Staging> \
@@ -25,27 +25,27 @@ function help(){
 }
 
 while [[ $# -gt 0 ]]; do
-       key="$1"
-       case $key in
-              --action|-action|--a|-a)
-                     ACTION="$2"
-                     shift
-                     shift 
-                     ;;
-              --environment|-environment|--env|-env|--e|-e)
-                     ENVIRONMENT="$2"
-                     shift
-                     shift
-                     ;;
-              --help|-help|--h|-h)
-                     help
-                     exit 0
-                     ;;
-              *)
-                     log "Input not understood. See \e[3m--help\e[0m for information on using this command."
-                     exit 1
-                     ;;
-       esac
+  key="$1"
+  case $key in
+    --action|-action|--a|-a)
+      ACTION="$2"
+      shift
+      shift 
+      ;;
+    --environment|-environment|--env|-env|--e|-e)
+      ENVIRONMENT="$2"
+      shift
+      shift
+      ;;
+    --help|-help|--h|-h)
+      help
+      exit 0
+      ;;
+    *)
+      log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+      exit 1
+      ;;
+  esac
 done
 
 if [ -z "$ENVIRONMENT" ]
@@ -59,7 +59,7 @@ then
        ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/serverless/lambda.yml ./lambda.yml
+cp "$PROJECT_DIR/templates/serverless/lambda.yml" ./lambda.yml
 
 if [ "$ACTION" == "create" ]
 then

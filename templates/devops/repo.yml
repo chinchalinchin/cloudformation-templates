@@ -1,13 +1,35 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "A stack for provisioning the CodeCommit repositories where the application source code will be housed and S3 buckets that will hold application artifacts."
+Description: "A stack for provisioning the CodeCommit repositories where the application source code will be housed and S3 buckets that will hold application artifacts. Alternatively, if GitHub is being used as the version control, this stack can be configured to create a CodeStar connection instead of CodeCommit repositories; Note: if using this configuration, the stack will stall until a user logs into the CodeStar console and manually completes the Github OAuth authorization."
 
 Parameters:
   applicationName:
     Type: String
     Default: innolab
+  github:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
+Conditions:
+  GitHubSource: !Equals
+    - !Ref github
+    - true
+
+  CodeCommitSource: !Equals
+    - !Ref github
+    - false
 
 Resources:
+  GitHubConnection:
+    Type: AWS::CodeStarConnections::Connection
+    Condition: GitHubSource
+    Properties:
+      ConnectionName: !Sub ${applicationName}-github-connection
+      ProviderType: GitHub
+
   EnvironmentBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
@@ -65,42 +87,56 @@ Resources:
 
   MasterRepo:
     Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
     Properties:
       RepositoryName: !Sub "${applicationName}-master"
       RepositoryDescription: "A repository for documentation and master files"
 
+  MigrationRepo:
+    Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
+    Properties:
+      RepositoryName: !Sub "${applicationName}-migration"
+      RepositoryDescription: "A repository for data migration files"
+
   DockerRepo:
     Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
     Properties:
       RepositoryName: !Sub "${applicationName}-docker-images"
       RepositoryDescription: "A repository for Dockerfiles"
 
   CloudFormationRepo:
     Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
     Properties:
       RepositoryName: !Sub "${applicationName}-cloudformation"
       RepositoryDescription: "A repository for CloudFormation templates"
 
   FrontendRepo:
     Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
     Properties:
       RepositoryName: !Sub "${applicationName}-frontend"
       RepositoryDescription: "A repository for the frontend application"
 
   LambdaRepo:
     Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
     Properties:
       RepositoryName: !Sub "${applicationName}-lambdas"
       RepositoryDescription: "A repository for Lambda functions"
       
   BackendRepo:
     Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
     Properties:
       RepositoryName: !Sub "${applicationName}-backend"
       RepositoryDescription: "A repository for the backend application"
       
   TestingRepo:
     Type: AWS::CodeCommit::Repository
+    Condition: CodeCommitSource
     Properties:
       RepositoryName: !Sub "${applicationName}-test-harness"
       RepositoryDescription: "A repository for the BDD testing harness"
@@ -135,6 +171,50 @@ Resources:
       ImageScanningConfiguration: 
         ScanOnPush: true
       RepositoryName: !Sub "${applicationName}-node"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+
+  OpenJDKECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold OpenJDK image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-openjdk"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ecr-code-build-policy
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+      Tags:
+        - Key: Application
+          Value: !Ref applicationName
+
+  OWASPECR:
+    Type: AWS::ECR::Repository
+    Description: ECR to hold OWASP ZAP image
+    Properties:
+      ImageScanningConfiguration: 
+        ScanOnPush: true
+      RepositoryName: !Sub "${applicationName}-owasp"
       RepositoryPolicyText:
         Version: "2012-10-17"
         Statement:
@@ -432,6 +512,22 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-DockerCloneSSH
 
+  MigrationRepository:
+    Value: !GetAtt MigrationRepo.Name
+    Description: Repository name for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRepository
+  MigrationRepositoryARN:
+    Value: !GetAtt MigrationRepo.Arn
+    Description: Repository ARN for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRepositoryARN
+  MigrationRepositorySSHClone:
+    Value: !GetAtt DockerRepo.CloneUrlSsh
+    Description: SSH clone URL for the database migration repository
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationCloneSSH
+
   CloudFormationRepository:
     Value: !GetAtt CloudFormationRepo.Name
     Description: Repository name for CloudFormation template repository
@@ -536,6 +632,15 @@ Outputs:
     Value: !Ref PostgresECR
     Export:
       Name: !Sub ${AWS::StackName}-PostgresImageRepositoryName
+
+  OpenJDKImageRepository:
+    Value: !GetAtt OpenJDKECR.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-OpenJDKImageRepository
+  OpenJDKImageRepositoryName:
+    Value: !Ref OpenJDKECR
+    Export:
+      Name: !Sub ${AWS::StackName}-OpenJDKImageRepositoryName
 
   BackendImageRepository:
     Value: !GetAtt BackendECR.RepositoryUri

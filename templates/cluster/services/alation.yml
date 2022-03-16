@@ -1,7 +1,6 @@
-
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for the backendend service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack frontend ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created. Note: the backend service needs stood up before the frontend service.'
+Description: 'Provisions resources for the frontend service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack frontend ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created and a record is added to Route53 pointing to its load balancer. Note: the backend service needs stood up before the frontend service.'
 
 Parameters:
   ## CROSS STACK REFERENCES
@@ -36,12 +35,12 @@ Parameters:
     Description: Domain for the application cluster
   port:
     Type: Number
-    Default: 8000
-    Description: Port mapping for backend service
+    Default: 8080 
+    Description: Port mapping for frontend service 
   tag:
     Type: String
-    Default: Dev-v0.0.0
-    Description: Image tag for the backend service ECR
+    Default: Dev
+    Description: Image tag for the front service ECR
 
 Mappings:
   BranchMap:
@@ -59,29 +58,28 @@ Mappings:
       subdomain: ""
 
 Resources:
-  
-  BackendLogGroup:
+  AlationLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/ecs/${applicationName}/${environmentName}/backend/"
+      LogGroupName: !Sub "/ecs/${applicationName}/${environmentName}/alation/"
 
-  AutoScalingBackendTarget:
+  AutoScalingAlationTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
       MinCapacity: 1
       MaxCapacity: 3
-      ResourceId: !Join ['/', [service, Fn::ImportValue: !Sub "${clusterStack}-Cluster", !GetAtt BackendService.Name]]
+      ResourceId: !Join ['/', [service, Fn::ImportValue: !Sub "${clusterStack}-Cluster", !GetAtt AlationService.Name]]
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
-      RoleARN:
+      RoleARN: 
         Fn::ImportValue: !Sub "${iamStack}-ECSScalingRoleArn"
-  
-  AutoScalingBackendPolicy:
+
+  AutoScalingAlationPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
-      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-backend"
+      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-alation"
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref AutoScalingBackendTarget
+      ScalingTargetId: !Ref AutoScalingAlationTarget
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageCPUUtilization
@@ -90,7 +88,7 @@ Resources:
         # Keep things at or lower than 50% CPU utilization, for example
         TargetValue: 50
 
-  BackendTargetGroup:
+  AlationTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 60
@@ -99,7 +97,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-backend-target"
+      Name: !Sub "${applicationName}-${environmentName}-alation-target"
       Port: !Ref port
       Protocol: HTTP
       TargetGroupAttributes:
@@ -109,7 +107,7 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
-  BackendTargetGroupAlt:
+  AlationTargetGroupAlt:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 60
@@ -118,7 +116,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-backend-target-2"
+      Name: !Sub "${applicationName}-${environmentName}-alation-target-2"
       Port: !Ref port
       Protocol: HTTP
       TargetGroupAttributes:
@@ -128,68 +126,52 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
-  BackendLoadBalancerListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
+  AlationLoadBalancerListenerCondition:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref BackendTargetGroup
-          Type: 'forward'
-      LoadBalancerArn:
-        Fn::ImportValue: !Sub ${clusterStack}-PrivateLoadBalancerARN
-      Port: !Ref port
-      Protocol: HTTP
+      Priority: 1
+      ListenerArn: 
+        Fn::ImportValue: !Sub ${clusterStack}-PublicLoadBalancerListenerARN
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Sub "alation.${domain}"
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref AlationTargetGroup
 
-  BackendTaskDefinition:
+  AlationTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: BackendLogGroup
+    DependsOn: AlationLogGroup
     Properties:
-      Family: !Sub "${applicationName}-${environmentName}-backend-task-definition"
+      Family: !Sub "${applicationName}-${environmentName}-alation-task-definition"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: 512
-      Memory: 1024
+      Cpu: 4096
+      Memory: 30720
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
       ContainerDefinitions:
-        - Name: !Sub ${applicationName}-${environmentName}-backend
-          Image: !Sub
-            - "${imageUri}:${whichTag}"
-            - imageUri:  
-                Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
-              whichTag: !Ref tag
+        - Name: !Sub ${applicationName}-${environmentName}-alation
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/innolab-alation:latest"
           PortMappings:
             - ContainerPort: !Ref port
-          EnvironmentFiles:
-            - Type: s3
-              Value: !Sub
-                - "${bucketArn}/app.${env}.env"
-                - bucketArn: 
-                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
-                  env:
-                    Fn::FindInMap:
-                      - BranchMap
-                      - !Ref environmentName
-                      - branch
-          # TODO: replace environmentfile with Environment: and Secrets: 
-          #       script for creating backend secrets
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref BackendLogGroup
+              awslogs-group: !Ref AlationLogGroup
               awslogs-stream-prefix: ecs
 
-  BackendService:
+  AlationService:
     Type: AWS::ECS::Service
-    # This dependency is needed so that the load balancer is setup correctly in time
-    DependsOn:
-      - BackendLoadBalancerListener
     Properties: 
-      ServiceName: !Sub ${applicationName}-${environmentName}-backend
+      ServiceName: !Sub ${applicationName}-${environmentName}-alation
       Cluster: 
         Fn::ImportValue: !Sub ${clusterStack}-Cluster
-      TaskDefinition: !Ref BackendTaskDefinition
+      TaskDefinition: !Ref AlationTaskDefinition
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
         MaximumPercent: 200
@@ -200,26 +182,26 @@ Resources:
       NetworkConfiguration: 
         AwsvpcConfiguration:
           # change to DISABLED if you're using private subnets that have access to a NAT gateway
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           Subnets:
-            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
-            - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
+            - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
           SecurityGroups:
             - Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
       LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
+        - ContainerName: !Sub ${applicationName}-${environmentName}-alation
           ContainerPort: !Ref port
-          TargetGroupArn: !Ref BackendTargetGroup
+          TargetGroupArn: !Ref AlationTargetGroup
       ServiceRegistries:
-        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
+        - RegistryArn: !GetAtt AlationDiscoveryService.Arn
           Port: !Ref port
       DeploymentController:
         Type: CODE_DEPLOY
 
-  BackendDiscoveryService:
+  AlationDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties: 
-      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} backend service"
+      Description: !Sub "Discovery service for the ${applicationName}-${environmentName}-alation service"
       DnsConfig:
         RoutingPolicy: MULTIVALUE
         DnsRecords:
@@ -229,33 +211,34 @@ Resources:
             Type: SRV
       HealthCheckCustomConfig: 
         FailureThreshold: 1
-      Name: !Sub ${applicationName}-${environmentName}-backend-discovery
-      NamespaceId:
+      Name: !Sub ${applicationName}-${environmentName}-alation-discovery
+      NamespaceId: 
         Fn::ImportValue: !Sub ${clusterStack}-Namespace
 
 Outputs:
-  BackendTargetGroup:
-    Value: !GetAtt BackendTargetGroup.TargetGroupName
-    Description: Name of first backend target group
+  AlationTargetGroup:
+    Value: !GetAtt AlationTargetGroup.TargetGroupName
+    Description: Name of first alation target group
     Export:
-      Name: !Sub ${AWS::StackName}-BackendTargetGroup
-  BackendTargetGroupAlt:
-    Value: !GetAtt BackendTargetGroupAlt.TargetGroupName
-    Description: Name of second backend target group
+      Name: !Sub ${AWS::StackName}-AlationTargetGroup
+  AlationTargetGroupAlt:
+    Value: !GetAtt AlationTargetGroupAlt.TargetGroupName
+    Description: Name of second alation target group
     Export:
-      Name: !Sub ${AWS::StackName}-BackendTargetGroupAlt
-  BackendServiceName:
-    Value: !GetAtt BackendService.Name
-    Description: Name of the backend service
+      Name: !Sub ${AWS::StackName}-AlationTargetGroupAlt
+  AlationServiceName:
+    Value: !GetAtt AlationService.Name
+    Description: Name of the alation service
+    Export: 
+      Name: !Sub ${AWS::StackName}-AlationServiceName
+  AlationServiceArn:
+    Value: !Ref AlationService
+    Description: Arn of the alation service
+    Export: 
+      Name: !Sub ${AWS::StackName}-AlationServiceARN
+  AlationTaskDefinitionArn:
+    Value: !Ref AlationTaskDefinition
+    Description: Arn of the alation task definition
     Export:
-      Name: !Sub ${AWS::StackName}-BackendServiceName
-  BackendServiceArn:
-    Value: !Ref BackendService
-    Description: ARN of the backend service
-    Export:
-      Name: !Sub ${AWS::StackName}-BackendServiceARN
-  BackendTaskDefinitionArn:
-    Value: !Ref BackendTaskDefinition
-    Description: Arn of the backend task definition
-    Export:
-      Name: !Sub ${AWS::StackName}-BackendTaskARN
+      Name: !Sub ${AWS::StackName}-AlationTaskARN
+        

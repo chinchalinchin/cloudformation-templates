@@ -3,6 +3,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: "The top of the DevOps stackset. This stack creates the CI/CD pipelines for the frontend and backend, hooks them into a CodeBuild project configured to use the Amazon Linux Standard 5.0 as a build environment. CloudWatch event rules are used to trigger the pipeline anytime a commit is made to the frontend and backend repositories on the environment branches: Dev, Staging, Prod. "
 
 Parameters:
+  github:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
   applicationName:
     Type: String
     Default: innolab
@@ -32,6 +38,13 @@ Conditions:
   DevResources: !Equals
     - !Ref environmentName
     - Dev
+  GitHubSource: !Equals
+    - !Ref github
+    - true
+  CodeCommitSource: !Equals
+    - !Ref github
+    - false
+
 
 Mappings:
   BranchMap:
@@ -216,6 +229,24 @@ Resources:
       Stages:
         - Name: Source
           Actions:
+            # GITHUB CONNECTION SOURCE
+            # - Name: Source
+            #   InputArtifacts: []
+            #   ActionTypeId:
+            #     Category: Source
+            #     Owner: AWS
+            #     Version: 1
+            #     Provider: CodeStarSourceConnection
+            #   OutputArtifacts:
+            #     - Name: !Sub "${applicationName}-${environmentName}-frontend-source"    
+            #   Configuration:
+            #     ConnectionArn:
+            #       Fn::ImportValue: !Sub ${staticStack}-GitHubConnectionARN
+            #     # THIS NEEDS UPDATED TO POINT TO THE CORRECT REPO
+            #     FullRepositoryId: makpar-innovation-lab/react-template
+            #     BranchName: !Ref environmentName
+            #     OutputArtifactFormat: CODEBUILD_CLONE_REF
+            #     DetectChanges: true
             - Name: Source
               InputArtifacts: []
               ActionTypeId:
@@ -245,7 +276,7 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"SONAR_URL","value":"${app}-sonarURL", "type":"SECRETS_MANAGER"}, {"name":"SONAR_TOKEN","value":"${app}-sonarToken","type":"SECRETS_MANAGER"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}, {"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}, {"name": "SNYK_ORG", "value": "innolab-snykOrg", "type": "SECRETS_MANAGER"}, {"name": "SNYK_TOKEN", "value": "innolab-snykToken", "type": "SECRETS_MANAGER"}]'
                   - env: 
                       Fn::FindInMap:
                         - BranchMap
@@ -393,6 +424,26 @@ Resources:
         Type: S3 
         Location: !Ref PipelineArtifacts
       Stages:
+        # GITHUB CONNECTION SOURCE
+        # - Name: Source
+        #   Actions:
+        #     - Name: Source
+        #       InputArtifacts: []
+        #       ActionTypeId:
+        #         Category: Source
+        #         Owner: AWS
+        #         Version: 1
+        #         Provider: CodeStarSourceConnection
+        #       OutputArtifacts:
+        #         - Name: !Sub "${applicationName}-${environmentName}-backend-source"    
+        #       Configuration:
+        #         ConnectionArn:
+        #           Fn::ImportValue: !Sub ${staticStack}-GitHubConnectionARN
+        #         # THIS NEEDS UPDATED TO POINT TO THE CORRECT REPO
+        #         FullRepositoryId: makpar-innovation-lab/spring-template
+        #         BranchName: !Ref environmentName
+        #         OutputArtifactFormat: CODEBUILD_CLONE_REF
+        #         DetectChanges: true
         - Name: Source
           Actions:
             - Name: Source
@@ -444,7 +495,7 @@ Resources:
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}, {"name": "SNYK_ORG", "value": "innolab-snykOrg", "type": "SECRETS_MANAGER"}, {"name": "SNYK_TOKEN", "value": "innolab-snykToken", "type": "SECRETS_MANAGER"}]'
                   - env: 
                       Fn::FindInMap:
                         - BranchMap

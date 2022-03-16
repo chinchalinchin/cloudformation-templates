@@ -3,8 +3,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="vpc-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+PROJECT_DIR="$SCRIPT_DIR/../../.."
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     vpc-stack --action <create | update | delete>
@@ -31,21 +31,13 @@ while [[ $# -gt 0 ]]; do
     case $key in
         --action|-action|--a|-a)
             ACTION="$2"
-            if [ $ACTION != "create" ] || [ $ACTION != "update" ] || [ $ACTION != "delete" ]
-            then
-                log "'action==$ACTION' not in allowed values: <create | update | delete>"
-                exit 1
-            fi
+            
             shift
             shift 
             ;;
         --environment|-environment|--env|-env|--e|-e)
             ENVIRONMENT="$2"
-            if [ "$ENVIRONMENT" != "Dev" ] || [ "$ENVIRONMENT" != "Staging" ] || [ "$ENVIRONMENT" != "Prod" ]
-            then
-                log "'environment==$ENVIRONMENT' not in allowed values: <Dev | Staging | Prod>"
-                exit 1
-            fi
+            
             shift
             shift
             ;;
@@ -82,18 +74,18 @@ then
     BASTION_HOST="true"
 fi
 
-cp $PROJECT_DIR/templates/core/vpc.yml ./vpc.yml
+cp "$PROJECT_DIR/templates/core/vpc.yml" ./vpc.yml
 
 if [ "$ACTION" == "create" ]
 then
-    ssh-keygen \
-        -t rsa \
-        -C "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
-        -f ~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
+    # ssh-keygen \
+    #     -t rsa \
+    #     -C "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}" \
+    #     -f ~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"
 
-    aws ec2 import-key-pair \
-        --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"  \
-        --public-key-material fileb://~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
+    # aws ec2 import-key-pair \
+    #     --key-name "${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}"  \
+    #     --public-key-material fileb://~/.ssh/"${APPLICATION}_${SSH_KEY_NAME}_${ENVIRONMENT}.pub"
 
     aws cloudformation create-stack \
         --stack-name "${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \

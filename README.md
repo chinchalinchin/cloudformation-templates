@@ -1,23 +1,25 @@
-# AWS CloudFormation Environment Setup
+# Infrastructure
 
-A sweet collection of **CloudFormation** templates.
+The infrastructure supporting the Innovation Lab is provisioned using Infrastructure-as-Code through **CloudFormation**.
 
-```
+```shell
 aws cloudformation create-stack
     --stack-name <name>
     --template-body <body>
-    --parameters ParameterKey=<key>,ParameterValue=<value> ParameterKey=<key>,ParameterValue=<value>
+    --parameters ParameterKey=<key>,ParameterValue=<value> 
+                 ParameterKey=<key>,ParameterValue=<value>
+                 # ...
 ```
 
 ## Architecture
 
 The setup procedures in this section will provision the following architecture,
 
-![InnoLab Archiecture](/assets/innolab_architecture.svg)
+![InnoLab Architecture](/docs/innolab_architecture.png)
 
 ## Cross Stack Dependencies
 
-There are three separate stack groups, the **DevOps** group, the **Core** group, the **Serverless** group and the **Cluster** group. The stacks should be stood up, more or less, in the order listed below, due to cross-stack dependencies, i.e. the *VPCStack* must be stood up before the *RDSStack*, the *RepoStack* should be stood up before the *ClusterStack*, etc. 
+There are four separate stack groups, the **DevOps** group, the **Core** group, the **Serverless** group and the **Cluster** group. Due to cross-stack dependencies, the stacks must be stood up so that independent stacks go up before dependent stacks, i.e. the *VPCStack* must be stood up before the *RDSStack*, the *RepoStack* should be stood up before the *ClusterStack*, etc. 
 
 **NOTE**: The *DNSStack* only needs stood up if a HostedZone and an ACM Certificate need provisioned; if these already exist, ignore this stack.
 
@@ -111,7 +113,7 @@ After the *RDSStack* goes up, the RDS will get assigned a host URL and this valu
 
 A stack of Lambda functions with various integrations in **CloudWatch** and **APIGateway** can be stood up with,
 
-```
+```shell
 ./scripts/stacks/serverless/lambda-stack --environment <Dev | Prod | Test | Staging>
 ```
 
@@ -119,7 +121,7 @@ There are examples of **Lambda** integrations in the comments at the end of the 
 
 A stack for a **DynamoDB** table with a partition key can be stood up with the following script,
 
-```
+```shell
 ./scripts/stacks/serverless/dynamo-stack --environment <Dev | Prod | Test | Staging> \
                                             --table-name <table_name>
                                             --partition-key <partition_key>
@@ -129,15 +131,34 @@ A stack for a **DynamoDB** table with a partition key can be stood up with the f
 
 ## Fargate Cluster 
 
-TODO
+The *ClusterStack* can be stood up anytime after the *VPCStack* stack goes up. This stack will provision the core [Fargate](https://docs.aws.amazon.com/codedeploy/latest/userguide/tutorial-ecs-deployment.html) infrastructure necessary for services to be deployed to the cluster. Each individual service stack (see below) will still need service-specific resources, but each service will deploy onto this cluster and use the [service namespace](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) provisioned within the template.
+
+```shell
+./scripts/stacks/cluster/cluster-stack --environment <Dev | Prod | Test | Staging>
+```
 
 ### Services
 
-TODO
+Finally, once the rest of the stacks, beside the *PipelineStack* have been stood up, services can be deployed to the cluster, using the template yamls in the */templates/cluster/services/* directory. Currently, there are three services defined: `backend`, `frontend` and `sonar`. A single script can deploy any one of these services at a time, by providing the runtime information to the script,
+
+```shell
+./scripts/stacks/cluster/service-stack --environment <Dev | Prod | Test | Staging>
+                                        --service <sonar | backend | frontend>
+                                        --port <port>
+```
+
+The image used to deploy the service will default to using a tag with a value equal to the environment, i.e. if `--environment Dev --service backend`, the service will deploy the backend image tagged with `Dev`. Optionally, a different tag can be specified for the service,
+
+```
+./scripts/stacks/cluster/service-stack --environment <Dev | Prod | Test | Staging>
+                                        --service <sonar | backend | frontend>
+                                        --port <port>
+                                        --tag <tag>
+```
 
 ## Secrets
 
-There are other scripts for creating various secrets the application cluster may need. The scripts are used to enforce a naming convention, so the applications will be able to construct the secret name based on their deployment and environment.
+There are scripts for creating various secrets the application cluster may need. The scripts are used to enforce a naming convention, so the applications will be able to construct the secret name based on their deployment and environment.
 
 ```
 ./scripts/secrets/secret-sonar-creds
@@ -148,40 +169,24 @@ There are other scripts for creating various secrets the application cluster may
 
 ## Pipeline
 
-After all the preceding stacks have been set up and initialized, the final stack, the *PipelineStack*, can be stood up to kick off the CI/CD process. The pipeline has been split into three components, `master`, `app` and `lambdas`. `master` is a pipeline for generating documentation for the coverage **S3** bucket and **CloudFront** distribution provisioned in the **DNSStack**, `app` is a pipeline for building and deploying the services in *ECSStack* into the **Fargate ECS** cluster also provisioned within the stack and `lambdas` is a pipeline for building and deploying the **Lambda** functions in the *LambdaStack*,
+After all the preceding stacks have been set up and initialized, the final stack, the *PipelineStack*, can be stood up to kick off the CI/CD process. The pipeline has been split into three components, `master`, `app` and `lambdas`. `master` is a pipeline for generating documentation for the coverage **S3** bucket and **CloudFront** distribution provisioned in the **CoverageStack**, `app` is a pipeline for building and deploying the services in *ECSStack* into the **Fargate ECS** cluster also provisioned within the stack and `lambdas` is a pipeline for building and deploying the **Lambda** functions in the *LambdaStack*,
 
 ```
 ./scripts/stacks/devops/pipeline-stack --environment <Dev | Prod | Test | Staging> \
                                         --pipeline <master | app | lambdas>
 ```
 
+Unforunately, this process cannot be completely automated as of yet. The build stage can be stood up entirely through a **CloudFormation** template, but the deploy stage has several steps that need to be complete before the pipeline will perform *blue-green* deployments  It requires setting up deployment groups and deployment stages through the console. See [AWS CodePipeline](./AWS_PIPELINE.md) for more information on setting up the deployment stage of the pipeline.
+
 ## Notes
 
-1. When creating users through a **CloudFormation** template, you must explicitly tell **CloudFormation** that it's okay to create new users with new permissions. See [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html). Essentially, when you are creating a stack that involves creating new users, you have to pass in the following flag,
+## Notes
 
+1. **ECR** repositories and **S3** buckets must be emptied before their containing stacks can be deleted.
+
+2. **EC2** keypairs for the bastion host are not deleted when the stack is deleted. They must be manually deleted. First, grab and then delete the key-name,
+
+```shell
+aws ec2 describe-key-pairs
+aws ec2 delete-key-pair --key-name $KEY_NAME
 ```
-aws cloudformation create-stack
-    --stack-name UserStack
-    --template-body file://path/to/template.yml
-    --capabilities CAPABILITY_NAMED_IAM
-```
-
-2. In betweens standing up the **ECR** stack and the **Lambda** stack, the images for the **lambdas** will need initialized and pushed to the repo. **lambda** needs the image to exist before it can successfully deploy.
-
-3. **ECR** repositories and **S3** buckets must be emptied before their containing stacks can be deleted.
-
-4. **EC2** keypairs 
- 
-## Documentation
-### CloudFormation
-**CLI**
-- [create-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/create-stack.html)
-- [delete-stack](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/delete-stack.html)
-- [describe-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stacks.html)
-- [list-stacks](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-stacks.html)
-
-**Template References**
-- [API Gateway](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ApiGateway.html)
-- [ECR](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_ECR.html)
-- [IAM](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_IAM.html)
-- [Lambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_Lambda.html)

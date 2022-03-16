@@ -3,13 +3,13 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="rds-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+PROJECT_DIR="$SCRIPT_DIR/../../.."
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     rds-stack --environment <Dev | Prod | Test> \
 #                   --action <action | update>
-#                   --type <postgres | mysql>
+#                   --type <postgres | oracle>
 #                   --port <port>
 
 function log(){
@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
             help
             exit 0
             ;;
-        --type|-type|--t|o-t)
+        --type|-type|--t|-t)
             TYPE="$2"
             shift
             shift
@@ -54,21 +54,26 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Validate $ACTION
 if [ -z "$ACTION" ]
 then
     log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"
     ACTION="create"
 fi
-
-if [ "$TYPE" == 'postgres ']
+# Validate $TYPE
+if [ -z "$TYPE" ]
 then
-    cp $PROJECT_DIR/templates/core/rds/postgres.yml ./rds.yml
-elif [ "$TYPE" == "mysql" ]
-    echo "TODO"
-else
-    # default to postgres
-    cp $PROJECT_DIR/templates/core/rds/postgres.yml ./rds.yml
+    log "No \e[3m--type\e[0m specified. Defaulting to \e[1mpostgres\e[0m"
+    TYPE="postgres"
 fi
+# Validate $ENVIRONMENT
+if [ -z "$ENVIRONMENT" ]
+then
+    log "No \e[3m--environment\e[0m specified. Defaulting to \e[1mDev\e[0m"
+    ENVIRONMENT="Dev"
+fi
+
+cp "$PROJECT_DIR/templates/core/rds.yml" ./rds.yml
 
 if [ "$ACTION" == "create" ]
 then
@@ -80,44 +85,46 @@ then
     #       stack, the secrets will still exist in the SecretsManager, and you will
     #       want to use `update-secret` instead of `create-secret`
     
-    aws secretsmanager create-secret --name "${APPLICATION}-${ENVIRONMENT}-dbUsername" \
-                                     --description "Database Username Secret for ${ENVIRONMENT} environment" \
-                                     --secret-string $RDS_USERNAME
+    # aws secretsmanager create-secret --name "${APPLICATION^}-${ENVIRONMENT}-${TYPE}-dbUsername" \
+    #                                  --description "Database Username Secret for ${ENVIRONMENT} environment" \
+    #                                  --secret-string $RDS_USERNAME
 
-    #aws secretsmanager update-secret --secret-id "${APPLICATION}-${ENVIRONMENT}-dbUsername" \
-     #                                --description "Database Username Secret for ${ENVIRONMENT} environment" \
-      #                               --secret-string $RDS_USERNAME
+    aws secretsmanager update-secret --secret-id "${APPLICATION^}-${ENVIRONMENT}-${TYPE}-dbUsername" \
+                                    --description "Database Username Secret for ${ENVIRONMENT} environment" \
+                                    --secret-string $RDS_USERNAME
 
-    aws secretsmanager create-secret --name "${APPLICATION}-${ENVIRONMENT}-dbPassword" \
-                                     --description "Database Password Secret for ${ENVIRONMENT} environment" \
-                                     --secret-string $RDS_PASSWORD
+    # aws secretsmanager create-secret --name "${APPLICATION^}-${ENVIRONMENT}-${TYPE}-dbPassword" \
+    #                                  --description "Database Password Secret for ${ENVIRONMENT} environment" \
+    #                                  --secret-string $RDS_PASSWORD
 
-    #aws secretsmanager update-secret --secret-id "${APPLICATION}-${ENVIRONMENT}-dbPassword" \
-     #                                --description "Database Password Secret for ${ENVIRONMENT} environment" \
-      #                               --secret-string $RDS_PASSWORD
+    aws secretsmanager update-secret --secret-id "${APPLICATION^}-${ENVIRONMENT}-${TYPE}-dbPassword" \
+                                    --description "Database Password Secret for ${ENVIRONMENT} environment" \
+                                    --secret-string $RDS_PASSWORD
 
 
-    aws cloudformation create-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}" \
+    aws cloudformation create-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
                                     --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                                                  ParameterKey=applicationName,ParameterValue=$APPLICATION \
                                                  ParameterKey=port,ParameterValue=$PORT \
+                                                 ParameterKey=type,ParameterValue=$TYPE \
                                                  ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "update" ]
 then
-    aws cloudformation update-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}" \
+    aws cloudformation update-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}" \
                                     --template-body file://rds.yml \
                                     --capabilities CAPABILITY_NAMED_IAM \
                                     --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                                                  ParameterKey=applicationName,ParameterValue=$APPLICATION \
                                                  ParameterKey=port,ParameterValue=$PORT \
+                                                 ParameterKey=type,ParameterValue=$TYPE \
                                                  ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}" \
                                                  ParameterKey=iamStack,ParameterValue="${APPLICATION^}-${IAM_STACK}"
 elif [ "$ACTION" == "delete" ]
 then
-    aws cloudformation delete-stack --stack-name "${APPLICATION^}-${RDS_STACK}-${ENVIRONMENT}"
+    aws cloudformation delete-stack --stack-name "${APPLICATION^}-${TYPE^}${RDS_STACK}-${ENVIRONMENT}"
 fi
 
 rm ./rds.yml

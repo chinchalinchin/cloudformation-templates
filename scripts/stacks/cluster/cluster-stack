@@ -3,8 +3,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_NAME="cluster-stack"
 SCRIPT_DES=$''
-PROJECT_DIR=$SCRIPT_DIR/../../..
-source $PROJECT_DIR/env/.env
+PROJECT_DIR="$SCRIPT_DIR/../../.."
+source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     cluster-stack --environment <Dev | Prod | Test | Staging> \
@@ -56,8 +56,9 @@ then
     ACTION="create"
 fi
 
-cp $PROJECT_DIR/templates/cluster/cluster.yml ./cluster.yml
+cp "$PROJECT_DIR/templates/cluster/cluster.yml" ./cluster.yml
 
+CERTIFICATE_ARN="arn:aws:acm:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:certificate/$CERTIFICATE_ID"
 if [ "$ACTION" == "create" ]
 then
     log "Creating \e[1m${APPLICATION^}-${CLUSTER_STACK}-${ENVIRONMENT}\e[0m"
@@ -67,6 +68,9 @@ then
         --capabilities CAPABILITY_AUTO_EXPAND \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=hostedZoneId,ParameterValue="$HOSTED_ZONE_ID" \
+                        ParameterKey=certificateArn,ParameterValue="$CERTIFICATE_ARN" \
+                        ParameterKey=domain,ParameterValue="$DOMAIN" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-${ENVIRONMENT}"
 elif [ "$ACTION" == "update" ]
 then
@@ -77,6 +81,8 @@ then
         --capabilities CAPABILITY_AUTO_EXPAND \
         --parameters ParameterKey=environmentName,ParameterValue=$ENVIRONMENT \
                         ParameterKey=applicationName,ParameterValue=$APPLICATION \
+                        ParameterKey=hostedZoneId,ParameterValue="$HOSTED_ZONE_ID" \
+                        ParameterKey=certificateArn,ParameterValue="$CERTIFICATE_ARN" \
                         ParameterKey=vpcStack,ParameterValue="${APPLICATION^}-${VPC_STACK}-$ENVIRONMENT"
 elif [ "$ACTION" == "delete" ]
 then

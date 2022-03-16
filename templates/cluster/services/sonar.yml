@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for the sonar service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack sonar ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created and a record is added to Route53 pointing to its load balancer.'
+Description: 'Provisions resources for the Sonar service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with the official SonarQube iamge. The task definition is used to spin up a service instance of SonarQube.'
 
 Parameters:
   ## CROSS STACK REFERENCES
@@ -28,24 +28,18 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
-  hostedZoneId:
-    Type: String
-    Description: Hosted zone of the domain.
-  certificateArn:
-    Type: String
-    Description: AWS Arn of the domain certificate.
+  ## SERVICE CONFIGURATION
   domain:
     Type: String
     Default: makpar-innovation.net
     Description: Domain for the application cluster
-  ## SERVICE CONFIGURATION
   port:
     Type: Number
-    Default: 8080 
+    Default: 9000
     Description: Port mapping for sonar service 
   tag:
     Type: String
-    Default: Dev-v0.0.0
+    Default: Dev
     Description: Image tag for the front service ECR
 
 Mappings:
@@ -112,55 +106,22 @@ Resources:
       TargetType: ip
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
-
-  SonarLoadBalancerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Sub "${applicationName}-${environmentName}-load-balancer-security-group"
-      VpcId: 
-        Fn::ImportValue: !Sub "${vpcStack}-VPC"
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
   
-  SonarLoadBalancerClusterIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
-      GroupId:
-        Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
-      IpProtocol: -1
-      SourceSecurityGroupId: !Ref SonarLoadBalancerSecurityGroup
-
-  SonarLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  SonarLoadBalancerListenerCondition:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      LoadBalancerAttributes:
-        - Key: idle_timeout.timeout_seconds
-          Value: 60
-      Name: !Sub "${applicationName}-${environmentName}-sonar-load-balancer"
-      Scheme: internet-facing
-      SecurityGroups:
-        - !Ref SonarLoadBalancerSecurityGroup
-      Subnets:
-        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
-        - Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetB
+      Priority: 2
+      ListenerArn: 
+        Fn::ImportValue: !Sub ${clusterStack}-PublicLoadBalancerListenerARN
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values: 
+              - !Sub "${applicationName}-sonar.${domain}"
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref SonarTargetGroup
 
-  SonarLoadBalancerListenerHTTPS:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref SonarTargetGroup
-          Type: forward
-      LoadBalancerArn: !Ref SonarLoadBalancer
-      Port: 443
-      Protocol: HTTPS
-      Certificates:
-        - CertificateArn: !Ref certificateArn
-    DependsOn:
-      - SonarLoadBalancer
-  
   SonarTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     DependsOn: SonarLogGroup
@@ -178,17 +139,8 @@ Resources:
           Image: sonarqube:latest
           PortMappings:
             - ContainerPort: !Ref port
-          Command: 
-            - -Dsonar.ce.javaOpts=-Xmx1192m -Dsonar.web.javaOpts=-Xmx1192m
-          Environment:
-            - Name: SONAR_LOG_LEVEL_WEB
-              Value: DEBUG
-            - Name: SONAR_LOG_LEVEL_APP
-              Value: DEBUG
-            - Name:  SONAR_LOG_LEVEL_CE
-              Value: DEBUG
-            - Name:  SONAR_LOG_LEVEL_ES
-              Value: DEBUG
+          # Command: 
+          #   - -Dsonar.ce.javaOpts=-Xmx1192m -Dsonar.web.javaOpts=-Xmx1192m
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -198,9 +150,6 @@ Resources:
 
   SonarService:
     Type: AWS::ECS::Service
-    # This dependency is needed so that the load balancer is setup correctly in time
-    DependsOn:
-      - SonarLoadBalancerListenerHTTPS
     Properties: 
       ServiceName: !Sub ${applicationName}-${environmentName}-sonar
       Cluster: 
@@ -211,7 +160,7 @@ Resources:
         MaximumPercent: 200
       DesiredCount: 1
       # This may need to be adjusted if the container takes a while to start up
-      HealthCheckGracePeriodSeconds: 30
+      HealthCheckGracePeriodSeconds: 60
       LaunchType: FARGATE
       NetworkConfiguration: 
         AwsvpcConfiguration:
@@ -247,37 +196,12 @@ Resources:
       NamespaceId: 
         Fn::ImportValue: !Sub ${clusterStack}-Namespace
 
-  SonarRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref hostedZoneId
-      Name: !Sub "${applicationName}-sonar.${domain}"
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt SonarLoadBalancer.DNSName
-        HostedZoneId: !GetAtt SonarLoadBalancer.CanonicalHostedZoneID
-
 Outputs:
   SonarTargetGroup:
     Value: !GetAtt SonarTargetGroup.TargetGroupName
     Description: Name of first sonar target group
     Export:
       Name: !Sub ${AWS::StackName}-SonarTargetGroup
-  SonarLoadBalancerName:
-    Value: !GetAtt SonarLoadBalancer.LoadBalancerName
-    Description: Name of sonar load balancer
-    Export: 
-      Name: !Sub ${AWS::StackName}-SonarLoadBalancerName
-  SonarLoadBalancerDNS:
-    Value: !GetAtt SonarLoadBalancer.DNSName
-    Description: DNS name of sonar load balancer
-    Export:
-      Name: !Sub ${AWS::StackName}-SonarLoadBalancerDNSName
-  SonarLoadBalancerHostedZone:
-    Value: !GetAtt SonarLoadBalancer.CanonicalHostedZoneID
-    Description: Load Balancer Hosted Zone Id
-    Export:
-      Name: !Sub ${AWS::StackName}-SonarLoadBalancerHostedZoneID
   SonarServiceName:
     Value: !GetAtt SonarService.Name
     Description: Name of the sonar service

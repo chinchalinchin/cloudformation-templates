@@ -1,7 +1,7 @@
 
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for the backendend service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack frontend ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created. Note: the backend service needs stood up before the frontend service.'
+Description: 'Description goes here.'
 
 Parameters:
   ## CROSS STACK REFERENCES
@@ -58,30 +58,30 @@ Mappings:
       branch: "prod"
       subdomain: ""
 
+# NOTE: replace every instance of <service> with your service name.
 Resources:
-  
-  BackendLogGroup:
+  PrivateServiceLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/ecs/${applicationName}/${environmentName}/backend/"
+      LogGroupName: !Sub "/ecs/${applicationName}/${environmentName}/<service>/"
 
-  AutoScalingBackendTarget:
+  AutoScalingPrivateServiceTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
       MinCapacity: 1
       MaxCapacity: 3
-      ResourceId: !Join ['/', [service, Fn::ImportValue: !Sub "${clusterStack}-Cluster", !GetAtt BackendService.Name]]
+      ResourceId: !Join ['/', [service, Fn::ImportValue: !Sub "${clusterStack}-Cluster", !GetAtt PrivateService.Name]]
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
       RoleARN:
         Fn::ImportValue: !Sub "${iamStack}-ECSScalingRoleArn"
   
-  AutoScalingBackendPolicy:
+  AutoScalingPrivateServicePolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
-      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-backend"
+      PolicyName: !Sub "service/${applicationName}-${environmentName}-cluster/${applicationName}-${environmentName}-<service>"
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref AutoScalingBackendTarget
+      ScalingTargetId: !Ref AutoScalingServiceTarget
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageCPUUtilization
@@ -90,7 +90,7 @@ Resources:
         # Keep things at or lower than 50% CPU utilization, for example
         TargetValue: 50
 
-  BackendTargetGroup:
+  PrivateServiceTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 60
@@ -99,7 +99,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-backend-target"
+      Name: !Sub "${applicationName}-${environmentName}-<service>-target"
       Port: !Ref port
       Protocol: HTTP
       TargetGroupAttributes:
@@ -109,7 +109,8 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
-  BackendTargetGroupAlt:
+  PrivateServiceTargetGroupAlt:
+    # NOTE: Only needed if the application is being deployed through blue-green deployments.
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 60
@@ -118,7 +119,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
-      Name: !Sub "${applicationName}-${environmentName}-backend-target-2"
+      Name: !Sub "${applicationName}-${environmentName}-<service>-target-2"
       Port: !Ref port
       Protocol: HTTP
       TargetGroupAttributes:
@@ -128,22 +129,22 @@ Resources:
       VpcId: 
         Fn::ImportValue: !Sub "${vpcStack}-VPC"
 
-  BackendLoadBalancerListener:
+  PrivateLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref BackendTargetGroup
+        - TargetGroupArn: !Ref PrivateServiceTargetGroup
           Type: 'forward'
       LoadBalancerArn:
         Fn::ImportValue: !Sub ${clusterStack}-PrivateLoadBalancerARN
       Port: !Ref port
       Protocol: HTTP
 
-  BackendTaskDefinition:
+  PrivateTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     DependsOn: BackendLogGroup
     Properties:
-      Family: !Sub "${applicationName}-${environmentName}-backend-task-definition"
+      Family: !Sub "${applicationName}-${environmentName}-<service>-task-definition"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
@@ -152,44 +153,27 @@ Resources:
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "${iamStack}-ECSTaskExecutionRoleArn"
       ContainerDefinitions:
-        - Name: !Sub ${applicationName}-${environmentName}-backend
-          Image: !Sub
-            - "${imageUri}:${whichTag}"
-            - imageUri:  
-                Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
-              whichTag: !Ref tag
+        - Name: !Sub ${applicationName}-${environmentName}-<service>
+          Image: <image:tag> # Update this with the image and tag
           PortMappings:
             - ContainerPort: !Ref port
-          EnvironmentFiles:
-            - Type: s3
-              Value: !Sub
-                - "${bucketArn}/app.${env}.env"
-                - bucketArn: 
-                    Fn::ImportValue: !Sub "${repoStack}-EnvironmentBucketARN"
-                  env:
-                    Fn::FindInMap:
-                      - BranchMap
-                      - !Ref environmentName
-                      - branch
-          # TODO: replace environmentfile with Environment: and Secrets: 
-          #       script for creating backend secrets
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref BackendLogGroup
+              awslogs-group: !Ref PrivateLogGroup
               awslogs-stream-prefix: ecs
 
-  BackendService:
+  PrivateService:
     Type: AWS::ECS::Service
     # This dependency is needed so that the load balancer is setup correctly in time
     DependsOn:
-      - BackendLoadBalancerListener
+      - PrivateLoadBalancerListener
     Properties: 
-      ServiceName: !Sub ${applicationName}-${environmentName}-backend
+      ServiceName: !Sub ${applicationName}-${environmentName}-<service>
       Cluster: 
         Fn::ImportValue: !Sub ${clusterStack}-Cluster
-      TaskDefinition: !Ref BackendTaskDefinition
+      TaskDefinition: !Ref PrivateTaskDefinition
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
         MaximumPercent: 200
@@ -207,11 +191,11 @@ Resources:
           SecurityGroups:
             - Fn::ImportValue: !Sub ${clusterStack}-SecurityGroup
       LoadBalancers:
-        - ContainerName: !Sub ${applicationName}-${environmentName}-backend
+        - ContainerName: !Sub ${applicationName}-${environmentName}-<service>
           ContainerPort: !Ref port
-          TargetGroupArn: !Ref BackendTargetGroup
+          TargetGroupArn: !Ref PrivateTargetGroup
       ServiceRegistries:
-        - RegistryArn: !GetAtt BackendDiscoveryService.Arn
+        - RegistryArn: !GetAtt PrivateDiscoveryService.Arn
           Port: !Ref port
       DeploymentController:
         Type: CODE_DEPLOY
@@ -219,7 +203,6 @@ Resources:
   BackendDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties: 
-      Description: !Sub "Discovery service for the ${applicationName}-${environmentName} backend service"
       DnsConfig:
         RoutingPolicy: MULTIVALUE
         DnsRecords:
@@ -229,33 +212,34 @@ Resources:
             Type: SRV
       HealthCheckCustomConfig: 
         FailureThreshold: 1
-      Name: !Sub ${applicationName}-${environmentName}-backend-discovery
+      Name: !Sub ${applicationName}-${environmentName}-<service>-discovery
       NamespaceId:
         Fn::ImportValue: !Sub ${clusterStack}-Namespace
 
 Outputs:
-  BackendTargetGroup:
-    Value: !GetAtt BackendTargetGroup.TargetGroupName
-    Description: Name of first backend target group
+  PrivateTargetGroup:
+    Value: !GetAtt PrivateTargetGroup.TargetGroupName
+    Description: Name of first private target group
     Export:
-      Name: !Sub ${AWS::StackName}-BackendTargetGroup
-  BackendTargetGroupAlt:
-    Value: !GetAtt BackendTargetGroupAlt.TargetGroupName
-    Description: Name of second backend target group
+      Name: !Sub ${AWS::StackName}-PrivateTargetGroup
+  PrivateTargetGroupAlt:
+    # NOTE: only need if deployed through blue-green deployments
+    Value: !GetAtt PrivateTargetGroupAlt.TargetGroupName
+    Description: Name of second private target group
     Export:
-      Name: !Sub ${AWS::StackName}-BackendTargetGroupAlt
-  BackendServiceName:
-    Value: !GetAtt BackendService.Name
-    Description: Name of the backend service
+      Name: !Sub ${AWS::StackName}-PrivateTargetGroupAlt
+  PrivateServiceName:
+    Value: !GetAtt PrivateService.Name
+    Description: Name of the private service
     Export:
-      Name: !Sub ${AWS::StackName}-BackendServiceName
-  BackendServiceArn:
-    Value: !Ref BackendService
+      Name: !Sub ${AWS::StackName}-PrivateServiceName
+  PrivateServiceArn:
+    Value: !Ref PrivateService
     Description: ARN of the backend service
     Export:
-      Name: !Sub ${AWS::StackName}-BackendServiceARN
-  BackendTaskDefinitionArn:
-    Value: !Ref BackendTaskDefinition
+      Name: !Sub ${AWS::StackName}-PrivateServiceARN
+  PrivateTaskDefinitionArn:
+    Value: !Ref PrivateTaskDefinition
     Description: Arn of the backend task definition
     Export:
-      Name: !Sub ${AWS::StackName}-BackendTaskARN
+      Name: !Sub ${AWS::StackName}-PrivateTaskARN
