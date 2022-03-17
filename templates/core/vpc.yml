@@ -6,18 +6,22 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
+    Description: Application tag appended to the resourced being provisioned and deployed
   environmentName:
     Type: String
     Default: Dev
+    Description: Name of the environment into which the VPC is being deployed.
   dbKeyName:
     Type: String
     Default: innolab_db_key_Dev
+    Description: Name of the EC2 keypair used for SSH'ing into Bastion Host EC2 instance.
   bastionHost:
     AllowedValues:
       - "true"
       - "false"
     Type: String
     Default: "true"
+    Description: Flag to signal whether or not the Bastion Host should be provisioned. If false, a NAT Gateway will be provisioned and attached to VPC in its place.
 
 Conditions:
   BastionHost: !Equals

@@ -8,12 +8,11 @@ Parameters:
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
+    Description: Cross-stack reference to stack containing VPC resources
   domain:
     Type: String
     Default: makpar-innovation.net
-  subdomain:
-    Type: String
-    Default: innolab
+    Description: Domain where DNS records for the application are saved.
   hostedZoneId:
     Type: String
 
@@ -35,7 +34,7 @@ Resources:
     Properties:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
-        - Name: !Sub "${subdomain}-sonar.${domain}"
+        - Name: !Sub "${applicationName}-sonar.${domain}"
           Type: A
           ResourceRecords: 
             - !GetAtt Sonar.PublicIp

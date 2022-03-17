@@ -4,15 +4,24 @@ Parameters:
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
+    Description: Cross-stack reference to stack containing VPC resources
   alationKeyName: 
     Type: String
     Default: alation_key
+    Description: Name of the EC2 keypair for SSH'ing into Alation EC2 instance.
   applicationName:
     Type: String
     Default: innolab
+    Description: Application tag appended to the resourced being provisioned and deployed
+  domain:
+    Type: String
+    Default: makpar-innovation.net
+    Description: Domain where DNS records for the application are saved.
+  hostedZoneId:
+    Type: String
+    Description: Physical ID of the AWS Hosted Zone where the domain is served.
 
-Description: "Configuration and resources for deploying Alation service into ${applicationName}-VPCStack-Dev"
-
+Description: "A stack of configuration and resources for deploying Alation service into either a private or public subnet in ${applicationName}-VPCStack-Dev VPC."
 
 Resources:
   AlationRole:
@@ -140,4 +149,15 @@ Resources:
           mkdir /home/backup
           /etc/init.d/alation init /home/main/ /home/backup/
           /etc/init.d/alation start
+  
+  AlationRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Sub "${applicationName}-alation.${domain}"
+          Type: A
+          ResourceRecords: 
+            - !GetAtt Alation.PublicIp
+          TTL: 900
 
