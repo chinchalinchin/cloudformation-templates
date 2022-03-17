@@ -125,6 +125,10 @@ Resources:
           Value: !Ref environmentName
         - Key: "Application"
           Value: !Ref applicationName
+        - Key: "AutoStop"
+          Value: "17:00"
+        - Key: "AutoStart"
+          Value: "09:00"
       HibernationOptions: 
         Configured: false
       CpuOptions: 
