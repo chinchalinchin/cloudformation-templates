@@ -9,6 +9,10 @@ Parameters:
     Type: String
     Default: alation_key
     Description: Name of the EC2 keypair for SSH'ing into Alation EC2 instance.
+  environmentName:
+    Type: String
+    Default: Dev
+    Description: Name of the environment into which Alation is being deployed.
   applicationName:
     Type: String
     Default: innolab
@@ -116,11 +120,11 @@ Resources:
       IamInstanceProfile: !Ref AlationRole
       Tags: 
         - Key: Name
-          Value: !Sub ${applicationName}-Dev-alation 
+          Value: !Sub ${applicationName}-${environmentName}-alation 
         - Key: "Environment"
-          Value: "Dev"
+          Value: !Ref environmentName
         - Key: "Application"
-          Value: "innolab"
+          Value: !Ref applicationName
       HibernationOptions: 
         Configured: false
       CpuOptions: 
