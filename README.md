@@ -180,9 +180,9 @@ Unforunately, in the case of the `app` pipeline, this process cannot be complete
 
 ## Automated Deployments
 
-The `cloudformation` pipeline is hooked into the master branch of this repository, *innolab-cloudformation*. When changes are pushed or merged to `master`, **CodePipeline** will pull the template changes into **CodeBuild**, scan the proposed changes for security vulnerability and update the stacks defined the *deployments.yml* in the project's root directory. 
+The `cloudformation` pipeline is hooked into the master branch of this repository, *innolab-cloudformation*. When changes are pushed or merged to `master`, **CodePipeline** will pull the template changes into **CodeBuild**, scan the proposed changes for security vulnerability and update the stacks defined the */deploy/deployments.yml* in the project's root directory. 
 
-The *deployments.yml* determines which stacks will be updated through the pipeline. The pipeline will parse the YAML and pass the key-value pairs underneath a given stack entry into the script that deploys that stack. In other words, the configuration,
+The */deploy/deployments.yml* determines which stacks will be updated through the pipeline. The pipeline will parse the YAML and pass the key-value pairs underneath a given stack entry into the script that deploys that stack. In other words, the configuration,
 
 ```yaml
 rds-stack:
@@ -191,7 +191,13 @@ rds-stack:
   port: 5432
 ```
 
-Will ensure the pipeline posts the stack update to the **rds-stacks**.
+Will ensure the pipeline posts the stack update to the **rds-stacks**, i.e.
+
+```shell
+./scripts/stacks/core/rds-stack --action update --environment Dev --type postgres --port 5432
+```
+
+will get executed in the pipeline.
 
 
 ## Notes
