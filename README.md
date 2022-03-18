@@ -169,16 +169,30 @@ There are scripts for creating various secrets the application cluster may need.
 
 ## Pipeline
 
-After all the preceding stacks have been set up and initialized, the final stack, the *PipelineStack*, can be stood up to kick off the CI/CD process. The pipeline has been split into three components, `master`, `app` and `lambdas`. `master` is a pipeline for generating documentation for the coverage **S3** bucket and **CloudFront** distribution provisioned in the **CoverageStack**, `app` is a pipeline for building and deploying the services in *ECSStack* into the **Fargate ECS** cluster also provisioned within the stack and `lambdas` is a pipeline for building and deploying the **Lambda** functions in the *LambdaStack*,
+After all the preceding stacks have been set up and initialized, the final stack, the *PipelineStack*, can be stood up to kick off the CI/CD process. The pipeline has been split into four components, `master`, `app`, `lambda` and `cloudformation`. `master` is a pipeline for generating documentation for the coverage **S3** bucket and **CloudFront** distribution provisioned in the **CoverageStack**, `app` is a pipeline for building and deploying the services in *ECSStack* into the **Fargate ECS** cluster also provisioned within the stack,`lambda` is a pipeline for building and deploying the **Lambda** functions in the *LambdaStack*, and `cloudformation` is a pipeline for deploying changes to the AWS infrastructure. The pipelines can be stood up with the following script,
 
 ```
 ./scripts/stacks/devops/pipeline-stack --environment <Dev | Prod | Test | Staging> \
-                                        --pipeline <master | app | lambdas>
+                                        --pipeline <master | app | lambda | cloudformation>
 ```
 
-Unforunately, this process cannot be completely automated as of yet. The build stage can be stood up entirely through a **CloudFormation** template, but the deploy stage has several steps that need to be complete before the pipeline will perform *blue-green* deployments  It requires setting up deployment groups and deployment stages through the console. See [AWS CodePipeline](./AWS_PIPELINE.md) for more information on setting up the deployment stage of the pipeline.
+Unforunately, in the case of the `app` pipeline, this process cannot be completely automated as of yet. The build stage can be stood up entirely through a **CloudFormation** template, but the deploy stage has several steps that need to be complete before the pipeline will perform *blue-green* deployments  It requires setting up deployment groups and deployment stages through the console. 
 
-## Notes
+## Automated Deployments
+
+The `cloudformation` pipeline is hooked into the master branch of this repository, *innolab-cloudformation*. When changes are pushed or merged to `master`, **CodePipeline** will pull the template changes into **CodeBuild**, scan the proposed changes for security vulnerability and update the stacks defined the *deployments.yml* in the project's root directory. 
+
+The *deployments.yml* determines which stacks will be updated through the pipeline. The pipeline will parse the YAML and pass the key-value pairs underneath a given stack entry into the script that deploys that stack. In other words, the configuration,
+
+```yaml
+rds-stack:
+  environment: Dev
+  type: postgres
+  port: 5432
+```
+
+Will ensure the pipeline posts the stack update to the **rds-stacks**.
+
 
 ## Notes
 
