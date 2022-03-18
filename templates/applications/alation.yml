@@ -126,9 +126,9 @@ Resources:
         - Key: "Application"
           Value: !Ref applicationName
         - Key: "AutoStop"
-          Value: "17:00"
+          Value: True
         - Key: "AutoStart"
-          Value: "09:00"
+          Value: True
       HibernationOptions: 
         Configured: false
       CpuOptions: 

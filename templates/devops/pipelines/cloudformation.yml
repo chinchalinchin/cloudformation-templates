@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "The top of the DevOps stackset. This stack creates the CI/CD pipelines for the ${applicationName} CloudFormation templates, hooks them into a CodeBuild project configured to use the Amazon Linux Standard 5.0 as a build environment. CloudWatch event rules are used to trigger the pipeline anytime a commit is made to the master branch of the ${applicationName}-cloudformation CodeCommit repository."
+
+Parameters:
+  applicationName:
+    Type: String
+    Default: innolab
+  environmentName:
+    Type: String
+    Default: Dev
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+  repoStack:
+    Type: String
+    Default: Innolab-RepoStack
+
+Resources:
+    PipelineArtifacts:
+      Type: AWS::S3::Bucket
+      DeletionPolicy: Delete
+      Properties:
+        BucketName: !Sub "${applicationName}-cloudformation-pipeline-artifacts"
+    
+    CodeBuild:
+      Type: AWS::CodeBuild::Project
+      Properties:
+        Name: !Sub "${applicationName}-cloudformation-codebuild"
+        Artifacts:
+          Type: CODEPIPELINE
+        ServiceRole:
+          Fn::ImportValue: !Sub "${iamStack}-CodeBuildRoleArn"
+        Environment:
+          Type: LINUX_CONTAINER
+          ComputeType: BUILD_GENERAL1_MEDIUM
+          Image: aws/codebuild/standard:4.0
+          PrivilegedMode: true
+        Source:
+          Type: CODEPIPELINE
+        Cache:
+          Type: LOCAL
+          Modes: # You can specify one or more cache mode, 
+            - LOCAL_CUSTOM_CACHE
+            - LOCAL_DOCKER_LAYER_CACHE
+            - LOCAL_SOURCE_CACHE
+
+    CloudFormationEventRule:
+      Type: AWS::Events::Rule
+      Properties:
+        EventPattern:
+          source:
+            - aws.codecommit
+          detail-type:
+            - 'CodeCommit Repository State Change'
+          resources:
+            - Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepositoryARN"
+          detail:
+            event:
+              - referenceCreated
+              - referenceUpdated
+            referenceType:
+              - branch
+            referenceName:
+              - master
+        Targets:
+          - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-cloudformation-pipeline"
+            RoleArn: 
+              Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
+            Id: !Sub ${applicationName}-codepipeline-cloudformation
+
+    CloudFormationPipeline:
+      Type: AWS::CodePipeline::Pipeline
+      Properties:
+        Name: !Sub "${applicationName}-cloudformation-pipeline"
+        RoleArn:
+          Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
+        ArtifactStore: 
+          Type: S3 
+          Location: !Ref PipelineArtifacts
+        Stages:
+          - Name: Source
+            Actions:
+              - Name: Source
+                InputArtifacts: []
+                ActionTypeId:
+                  Category: Source
+                  Owner: AWS
+                  Version: 1
+                  Provider: CodeCommit
+                OutputArtifacts:
+                  - Name: !Sub "${applicationName}-cloudformation-source"    
+                Configuration:
+                  RepositoryName: 
+                    Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepository"
+                  BranchName: master
+                  PollForSourceChanges: false
+          - Name: Build   
+            Actions:
+              - Name: CodeBuild
+                ActionTypeId:
+                  Category: Build
+                  Owner: AWS
+                  Provider: CodeBuild
+                  Version: '1'
+                InputArtifacts:
+                  - Name: !Sub "${applicationName}-cloudformation-source"
+                OutputArtifacts:
+                  - Name: !Sub "${applicationName}-cloudformation-build"
+                Configuration: 
+                  ProjectName: !Ref CodeBuild
+                  EnvironmentVariables: !Sub 
+                    - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                    - app: !Ref applicationName
+      DependsOn:
+        - CodeBuild
