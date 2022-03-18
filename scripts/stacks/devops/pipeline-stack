@@ -76,6 +76,10 @@ case $PIPELINE in
         cp "$PROJECT_DIR/templates/devops/pipelines/master.yml" ./pipeline.yml
         STACK_NAME="${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}"
         ;;
+    cloudformation)
+        cp "$PROJECT_DIR/templates/devops/pipelines/cloudformation.yml" ./pipeline.yml
+        STACK_NAME="${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}"
+        ;;
     lambda)
         cp "$PROJECT_DIR/templates/devops/pipelines/lambda.yml" ./pipeline.yml
         STACK_NAME="${APPLICATION^}-${PIPELINE^}-${PIPELINE_STACK}-${ENVIRONMENT}"

@@ -2,31 +2,40 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: "The top of the DevOps stackset. This stack creates the CI/CD pipelines for the frontend and backend, hooks them into a CodeBuild project configured to use the Amazon Linux Standard 5.0 as a build environment. CloudWatch event rules are used to trigger the pipeline anytime a commit is made to the ${applicationName}-master repositories on the master branch. "
 
+# NOTE: All pipeline stacks ingest the same parameters, even if they don't use them. This is done so the script that stands up the pipelines can be generalized to stand up any of the pipeline stacks, instead of having a script for each type of pipeline.
 Parameters:
   applicationName:
     Type: String
     Default: innolab
+    Description: Tag appended to application resources
   environmentName:
     Type: String
     Default: Dev
+    Description: Environment into which resources are being deployed
   domainName:
     Type: String
     Default: makpar-innovation.net
+    Description: Domain name over which the appplication is served.
   iamStack:
     Type: String
     Default: Innolab-IAMStack
+    Description: Cross-stack reference to stack containing IAM resources
   repoStack:
     Type: String
     Default: Innolab-RepoStack
+    Description: Cross-stack reference to stack containing repository resources
   cognitoStack:
     Type: String
     Default: Innolab-CognitoStack
+    Description: Cross-stack reference to stack containing Cognito resources
   coverageStack:
     Type: String
     Default: Innolab-CoverageStack
+    Description: Cross-stack reference to stack containing coverage (documentation) resources
   clusterStack:
     Type: String
     Default: Innolab-ClusterStack
+    Description: Cross-stack reference to stack containing Fargate ECS resources
 
 Resources:
   PipelineArtifacts:
