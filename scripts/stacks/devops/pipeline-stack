@@ -8,7 +8,7 @@ source "$PROJECT_DIR/env/.env"
 
 # Example Usage:
 # >$     pipeline-stack --environment <Dev | Prod | Test | Staging> \
-#                       --pipeline <app | lambda | master>
+#                       --pipeline <app | lambda | master | cloudformation>
 #                       --action <create | update | delete> 
 
 #      NOTE: `--action` defaults to `create` if not supplied.
@@ -56,15 +56,14 @@ done
 
 if [ -z "$PIPELINE" ]
 then
-    log "No \e[3m--pipeline\e[0m specified. Defaulting to \e[1mapp\e[0m"
-    PIPELINE="app"
+    log "No \e[3m--pipeline\e[0m specified. Please re-executed and specify \e[1m<app | lambda | master | cloudformation>\e[0m"
+    exit 1
 fi
 if [ -z "$ENVIRONMENT" ]
 then 
     log "No \e[3m--environment\e[0m specified. Defaulting to \e[1mDev\e[0m"
     ENVIRONMENT="Dev"
 fi
-
 if [ -z "$ACTION" ]
 then
     log "No \e[3m--action\e[0m specified. Defaulting to \e[1mcreate\e[0m"

@@ -1,0 +1,21 @@
+iam-stack:
+
+repo-stack:
+
+vpc-stack:
+  environment: Dev
+  keygen: false
+  bastion-host: true
+
+rds-stack:
+  environment: Dev
+  type: postgres
+  port: 5432
+
+rds-stack: 
+  environment: Dev
+  type: oracle
+  port: 1521
+
+alation-stack:
+  keygen: false
