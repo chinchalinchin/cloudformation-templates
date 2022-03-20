@@ -10,19 +10,22 @@ import yaml
 import settings
 from logger import get_logger
 
-
 log = get_logger('innolab-cloudformation.deploy.deployer')
 
 def env_var_constructor(loader: yaml.SafeLoader, node: yaml.nodes.ScalarNode) -> str:
-  return os.getenv(loader.construct_scalar(node))
+    """Pull YAML node reference from corresponding environment variable"""
+    return os.getenv(loader.construct_scalar(node))
 
-def get_loader():
-  """Add constructors to PyYAML loader."""
-  loader = yaml.SafeLoader
-  loader.add_constructor("!env", env_var_constructor)
-  return loader
+def get_loader() -> yaml.SafeLoader:
+    """Add environment variable constructor to PyYAML loader.
+    """
+    loader = yaml.SafeLoader
+    loader.add_constructor("!env", env_var_constructor)
+    return loader
 
-def get_deployment():
+def get_deployment() -> dict:
+    """Parse deployment YAML
+    """
     if os.path.exists(settings.DEPLOYMENT_FILE):
         with open(settings.DEPLOYMENT_FILE, 'r') as infile:
             deployment = yaml.load(infile, Loader=get_loader())
