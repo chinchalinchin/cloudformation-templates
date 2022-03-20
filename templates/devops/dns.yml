@@ -25,7 +25,6 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-CertificateID
   HostedZoneId:
-    Condition: NotDNSExists
     Value: !Ref HostedZone
     Export:
       Name: !Sub ${AWS::StackName}-HostedZoneID
