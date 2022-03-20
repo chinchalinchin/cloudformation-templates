@@ -14,7 +14,7 @@ Parameters:
     Type: String
     Default: innolab-bb-pipeline
     Description: Username for the Bitbucket pipeline account
-  bitbucketFlag:
+  bitbucket:
     Type: String
     Description: Flag to signal the creation of an account for the Bitbucket pipeline
     Default: false
@@ -24,7 +24,7 @@ Parameters:
 
 Conditions:
   Bitbucket: !Equals
-    - !Ref bitbucketFlag
+    - !Ref bitbucket
     - true
   
 Resources:

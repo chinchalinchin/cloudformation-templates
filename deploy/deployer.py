@@ -7,22 +7,25 @@
 import os
 import pprint
 import yaml
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
-
 import settings
 from logger import get_logger
 
 
 log = get_logger('innolab-cloudformation.deploy.deployer')
 
+def env_var_constructor(loader: yaml.SafeLoader, node: yaml.nodes.ScalarNode) -> str:
+  return os.getenv(loader.construct_scalar(node))
+
+def get_loader():
+  """Add constructors to PyYAML loader."""
+  loader = yaml.SafeLoader
+  loader.add_constructor("!env", env_var_constructor)
+  return loader
 
 def get_deployment():
     if os.path.exists(settings.DEPLOYMENT_FILE):
         with open(settings.DEPLOYMENT_FILE, 'r') as infile:
-            deployment = yaml.load(infile, Loader=Loader)
+            deployment = yaml.load(infile, Loader=get_loader())
         return deployment
     raise FileNotFoundError(f'{settings.DEPLOYMENT_FILE} does not exist')
         

@@ -3,28 +3,54 @@
 # SYNTAX:
 
 # StackName:
-#     template: vpc | rds | cognito | lambda | cloudfront
-#     
-IAMStack:
+#     template: <templateFile>
+#     <templateParameter>: value | !env <environmentVariable>
+#     <templateParameter>: value | !env <environmentVariable>
+#     ...
 
-RepoStack:
+Innolab-IAMStack:
+  template: iam.yml
+  applicationName: innolab
+  masterPassword: !env MASTER_PASSWORD
+  pipelineUser: !env PIPELINE_USER
+  bitbucket: false
 
-VPCStack:
-  environment: Dev
-  keygen: false
-  bastion-host: true
+Innolab-RepoStack:
+  template: repo.yml
+  applicationName: innolab
+  github: false
 
-PostgresStack:
-  environment: Dev
+Innolab-VPCStack-Dev:
+  template: vpc.yml
+  applicationName: innolab
+  environmentName: Dev
+  dbKeyName: innolab_tunnel_key_Dev
+  bastionHost: true
+
+Innolab-Postgres-RDSStack-Dev:
+  template: rds.yml
+  applicationName: innolab
+  environmentName: Dev
   type: postgres
   port: 5432
+  vpcStack: Innolab-VPCStack-Dev
+  iamStack: Innolab-IAMStack
 
-OracleStack: 
-  template: rds
+Innolab-Oracle-RDSStack-Dev: 
+  template: rds.yml
+  applicationName: innolab
   environment: Dev
   type: oracle
   port: 1521
+  vpcStack: Innolab-VPCStack-Dev
+  iamStack: Innolab-IAMStack
 
-AlationStack:
-  keygen: false
-
+Innolab-AlationStack-Dev:
+  template: applications/alation.yml
+  applicationName: innolab
+  environmentName: Dev
+  alationKeyName: alation_key
+  domain: makpar-innovation.net
+  hostedZoneId: !env HOSTED_ZONE_ID
+  vpcStack: Innolab-VPCStack-Dev
+  
