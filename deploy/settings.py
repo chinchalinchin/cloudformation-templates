@@ -41,6 +41,7 @@ if os.path.exists(os.path.join(ENV_DIR, '.env')):
     CLUSTER_STACK="-".join([APPLICATION, os.environ.setdefault('CLUSTER_STACK'), ENVIRONMENT])
 
     # CONFIGURATION
+    MASTER_PASSWORD=os.getenv('MASTER_PASSWORD')
     RDS_USERNAME=os.getenv('RDS_USERNAME')
     RDS_PASSWORD=os.getenv('RDS_PASSWORD')
     SSH_KEY_NAME="_".join(APPLICATION, os.environ.setdefault('SSH_KEY_NAME', 'tunnel_key'), ENVIRONMENT)
