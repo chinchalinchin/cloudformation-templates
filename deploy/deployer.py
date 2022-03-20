@@ -4,12 +4,22 @@
 # alternatively, use boto3 api wrapper around cloudformation directly:
 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html#CloudFormation.Client.update_stack
 
+import os
 import yaml
 
-import os
-import logging
-from dotenv import load_dotenv
+import settings
+from logger import get_logger
 
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.dirname(os.path.dirname(APP_DIR))
-ENV_DIR = os.path.join(PROJECT_DIR, 'env')
+
+log = get_logger('innolab-cloudformation.deploy.deployer')
+
+
+def get_deployment():
+    if os.path.exists(settings.DEPLOYMENT_FILE):
+        with open(settings.DEPLOYMENT_FILE, 'r') as infile:
+            deployment = yaml.load(infile)
+        return deployment
+    raise FileNotFoundError(f'{settings.DEPLOYMENT_FILE} does not exist')
+        
+if __name__=="__main__":
+    deployment = get_deployment()
