@@ -25,22 +25,22 @@ Resources:
       AccessControl: LogDeliveryWrite
       BucketName: !Sub "${applicationName}-coverage-logs"
 
-  CoverageBucket:
+  CloudfrontBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       AccessControl: PublicRead
-      BucketName: !Sub "${applicationName}-coverage"
+      BucketName: !Sub "${applicationName}-cloudfront"
       LoggingConfiguration:
         DestinationBucketName: !Ref BucketLogs
         LogFilePrefix: 'cov/'
       WebsiteConfiguration:
         IndexDocument: 'index.html'
 
-  CoverageBucketPolicy:
+  CloudfrontBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref CoverageBucket
+      Bucket: !Ref CloudfrontBucket
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -50,21 +50,21 @@ Resources:
               - "s3:PutObject"
               - "s3:DeleteObject"
             Principal: '*'
-            Resource: !Sub '${CoverageBucket.Arn}/*'
+            Resource: !Sub '${CloudfrontBucket.Arn}/*'
     DependsOn:
-      - CoverageBucket
+      - CloudfrontBucket
 
-  CoverageDistribution:
+  CloudfrontDistribution:
     Type: "AWS::CloudFront::Distribution"
     Properties:
       DistributionConfig: 
         Aliases: 
-          - !Sub "${applicationName}-coverage.${domainName}"
+          - !Sub "${applicationName}.${domainName}"
         Origins: 
         - ConnectionAttempts: 3
           ConnectionTimeout: 10
-          DomainName: !GetAtt CoverageBucket.DomainName
-          Id: !Ref CoverageBucket
+          DomainName: !GetAtt CloudfrontBucket.DomainName
+          Id: !Ref CloudfrontBucket
           CustomOriginConfig:
               HTTPPort: 80
               HTTPSPort: 443
@@ -93,7 +93,7 @@ Resources:
             QueryString: true
           Compress: false
           SmoothStreaming: false
-          TargetOriginId: !Ref CoverageBucket
+          TargetOriginId: !Ref CloudfrontBucket
           ViewerProtocolPolicy: "redirect-to-https"
         PriceClass: "PriceClass_All"
         Enabled: true
@@ -109,30 +109,30 @@ Resources:
           IncludeCookies: false
           Prefix: 'cov/'
 
-  CoverageRoute53RecordSetGroup:
+  CloudfrontRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
-        - Name: !Sub "${applicationName}-coverage.${domainName}"
+        - Name: !Sub "${applicationName}.${domainName}"
           Type: A
           AliasTarget:
-            DNSName: !GetAtt CoverageDistribution.DomainName
+            DNSName: !GetAtt CloudfrontDistribution.DomainName
             EvaluateTargetHealth: false
             # Specify Z2FDTNDATAQYW2. This is always the hosted zone ID when you create an
             # alias record that routes traffic to a CloudFront distribution.
             HostedZoneId: Z2FDTNDATAQYW2
     DependsOn:
-      - CoverageDistribution
+      - CloudfrontDistribution
 
 Outputs:
-  CoverageDistributionID:
-    Value: !Ref CoverageDistribution
+  CloudfrontDistributionID:
+    Value: !Ref CloudfrontDistribution
     Description: Resource ID for CloudFront Distribution
     Export:
-      Name: !Sub ${AWS::StackName}-CoverageDistributionID
-  CoverageDomain:
-    Value: !GetAtt CoverageDistribution.DomainName
+      Name: !Sub ${AWS::StackName}-CloudfrontDistributionID
+  CloudfrontDomain:
+    Value: !GetAtt CloudfrontDistribution.DomainName
     Description: Domain name of CloudFront Distribution
     Export:
-      Name: !Sub ${AWS::StackName}-CoverageDistributionDomain
+      Name: !Sub ${AWS::StackName}-CloudfrontDistributionDomain
