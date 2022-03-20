@@ -1,4 +1,4 @@
-# This configuration YML is used within the *innolab-cloudformation* pipeline to determine which stacks it should update when changes are pushed to the master branch. 
+# This configuration YML is used within the *innolab-cloudformation* pipeline to determine which stacks it should update or create when changes are pushed to the master branch. 
 
 # SYNTAX:
 
@@ -27,7 +27,7 @@ Innolab-VPCStack-Dev:
   dbKeyName: innolab_tunnel_key_Dev
   bastionHost: true
 
-Innolab-Postgres-RDSStack-Dev:
+Innolab-RDSStack-Dev:
   template: rds.yml
   applicationName: innolab
   environmentName: Dev
@@ -36,7 +36,7 @@ Innolab-Postgres-RDSStack-Dev:
   vpcStack: Innolab-VPCStack-Dev
   iamStack: Innolab-IAMStack
 
-Innolab-Oracle-RDSStack-Dev: 
+Innolab-OracleRDSStack-Dev: 
   template: rds.yml
   applicationName: innolab
   environment: Dev
@@ -53,4 +53,11 @@ Innolab-AlationStack-Dev:
   domain: makpar-innovation.net
   hostedZoneId: !env HOSTED_ZONE_ID
   vpcStack: Innolab-VPCStack-Dev
+
+Innolab-LambdaStack-Dev:
+
+Innolab-DynamoStack-Dev:
+
+Innolab-CognitoStack-Dev:
+
   
