@@ -1,20 +1,14 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - master
 
 variables:
 - group: Dev
 
-
 pool:
   vmImage: ubuntu-latest
 
 jobs:
-  - job: Deploy
+  - job: WaitForValidation
     pool: server
     steps:
     - task: ManualValidation@0
@@ -28,11 +22,10 @@ jobs:
           skonur@makpar.com
           nsibley@makpar.com
         instructions: 'Validate and approve infrastructure configuration before deployment'
-  - job: Validate
+  - job: DeployCloudResources
     steps:
     - script: pip install -r requirements.txt
       displayName: Install deployment dependencies
-
     - script: |
         python ./deploy/deployer.py
       displayName: Deploy cloud resources
