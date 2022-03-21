@@ -1,3 +1,4 @@
 *.env
 !.sample.envvenv
 venv
+*.pyc
