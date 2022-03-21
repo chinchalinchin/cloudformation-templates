@@ -23,7 +23,8 @@ jobs:
       inputs:
         notifyUsers: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
         instructions: 'Validate and approve infrastructure configuration before deployment'
-
+  - job: Validate
+    steps:
     - script: pip install -r requirements.txt
       displayName: Install deployment dependencies
 
