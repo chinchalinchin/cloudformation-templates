@@ -7,10 +7,6 @@ Parameters:
     Type: String
     Default: makpar-innovation.net
     Description: Domain used in the callback registered with the Cognito Auth clients.
-  subdomainName:
-    Type: String
-    Default: innolab
-    Description: Subdomain used in the callback registered with the Cognito Auth clients.
   applicationName:
     Type: String
     Default: innolab
@@ -79,7 +75,7 @@ Resources:
       CallbackURLs:
         - !Sub 
           - "https://${subdomain}${subdomainEnv}.${domain}"
-          - subdomain: !Ref subdomainName
+          - subdomain: !Ref applicationName
             subdomainEnv: 
               Fn::FindInMap:
                 - SubEnvDomainMap

@@ -589,7 +589,7 @@ Resources:
   RestAPIDomainName:
     Type: 'AWS::ApiGateway::DomainName'
     Properties:
-      CertificateArn: !Ref certificateArn
+      CertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${certificateId}"
       DomainName: !Sub 
         - "apigateway${subdomainEnv}.${domain}"
         - subdomainEnv: 

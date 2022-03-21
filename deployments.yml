@@ -4,60 +4,141 @@
 
 # StackName:
 #     template: <templateFile>
-#     <templateParameter>: value | !env <environmentVariable>
-#     <templateParameter>: value | !env <environmentVariable>
-#     ...
+#     parameters:
+#       - ParameterKey: <templateParameter> 
+#         ParameterValue: value | !env <environmentVariable>
+#       - ParameterKey: <templateParameter>
+#         ParameterValue: value | !env <environmentVariable>
+#       ...
 
 Innolab-IAMStack:
   template: iam.yml
-  applicationName: innolab
-  masterPassword: !env MASTER_PASSWORD
-  pipelineUser: !env PIPELINE_USER
-  bitbucket: false
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: masterPassword
+      ParameterValue: !env MASTER_PASSWORD
+    - ParameterKey: pipelineUser
+      ParameterValue: !env PIPELINE_USER
+    - ParameterKey: bitbucket
+      ParameterValue: false
 
 Innolab-RepoStack:
   template: repo.yml
-  applicationName: innolab
-  github: false
+  parameters: 
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: github
+      ParameterValue: false
+
+Innolab-CognitoStack-Dev:
+  template: cognito.yml
+  parameters:
+    - ParameterKey:
+      ParameterValue:
 
 Innolab-VPCStack-Dev:
   template: vpc.yml
-  applicationName: innolab
-  environmentName: Dev
-  dbKeyName: innolab_tunnel_key_Dev
-  bastionHost: true
+  parameters:
+    - ParameterKey: applicationName 
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev
+    - ParameterKey: dbKeyName
+      ParameterValue: innolab_tunnel_key_Dev
+    - ParameterKey: bastionHost
+      ParameterValue: true
 
 Innolab-RDSStack-Dev:
   template: rds.yml
-  applicationName: innolab
-  environmentName: Dev
-  type: postgres
-  port: 5432
-  vpcStack: Innolab-VPCStack-Dev
-  iamStack: Innolab-IAMStack
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev
+    - ParameterKey: type
+      ParameterValue: postgres
+    - ParameterKey: port
+      ParameterValue: 5432
+    - ParameterKey: vpcStack
+      ParameterValue: Innolab-VPCStack-Dev
+    - ParameterKey: iamStack
+      ParameterValue: Innolab-IAMStack
 
 Innolab-OracleRDSStack-Dev: 
   template: rds.yml
-  applicationName: innolab
-  environment: Dev
-  type: oracle
-  port: 1521
-  vpcStack: Innolab-VPCStack-Dev
-  iamStack: Innolab-IAMStack
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environment
+      ParameterValue: Dev
+    - ParameterKey: type
+      ParameterValue: oracle
+    - ParameterKey: port
+      ParameterValue: 1521
+    - ParameterKey: vpcStack
+      ParameterValue: Innolab-VPCStack-Dev
+    - ParameterKey: iamStack
+      ParameterValue: Innolab-IAMStack
 
 Innolab-AlationStack-Dev:
   template: applications/alation.yml
-  applicationName: innolab
-  environmentName: Dev
-  alationKeyName: alation_key
-  domain: makpar-innovation.net
-  hostedZoneId: !env HOSTED_ZONE_ID
-  vpcStack: Innolab-VPCStack-Dev
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev 
+    - ParameterKey: alationKeyName
+      ParameterValue: alation_key
+    - ParameterKey: domain
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: hostedZoneId
+      ParameterValue: !env HOSTED_ZONE_ID
+    - ParameterKey: vpcStack
+      ParameterValue: Innolab-VPCStack-Dev
 
 Innolab-LambdaStack-Dev:
+  template: lambda.yml
+  parameters:
+    - ParameterKey: iamStack
+      ParameterValue: Innolab-IAMStack
+    - ParameterKey: vpcStack
+      ParameterValue: Innolab-VPCStack-Dev
+    - ParameterKey: cognitoStack 
+      ParameterValue: Innolab-CognitoStack-Dev
+    - ParameterKey: repoStack
+      ParameterValue: Innolab-RepoStack
+    - ParameterKey: environmentName
+      ParameterValue: Dev
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: domainName
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: hostedZoneId
+      ParameterValue: !env HOSTED_ZONE_ID
+    - ParameterKey: certificateId
+      ParameterValue: !env CERTIFICATE_ID
 
 Innolab-DynamoStack-Dev:
+  template: dynamo.yml
+  parameters:
+    - ParameterKey: tableName
+      ParameterValue: CommitTable
+    - ParameterKey: partitionKey
+      ParameterValue: commit_hash
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev
 
 Innolab-CognitoStack-Dev:
+  template: cognito.yml
+  parameters:
+    - ParameterKey: domainName
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev
 
   
