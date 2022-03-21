@@ -20,8 +20,13 @@ jobs:
     - task: ManualValidation@0
       continueOnError: false
       enabled: true
+      timeoutInMinutes: 1440
       inputs:
-        notifyUsers: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
+        notifyUsers: |
+          gmoore@makpar.com
+          tislam@makpar.com
+          skonur@makpar.com
+          nsibley@makpar.com
         instructions: 'Validate and approve infrastructure configuration before deployment'
   - job: Validate
     steps:
