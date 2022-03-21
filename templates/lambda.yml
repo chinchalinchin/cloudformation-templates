@@ -29,7 +29,7 @@ Parameters:
   hostedZoneId:
     Type: String
     Description: Physical ID of the hosted zone where the domain is being served.
-  certificateArn:
+  certificateId:
     Type: String
     Description: ARN of the ACM SSL Certificate used to sign requests to domain.
 

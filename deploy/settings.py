@@ -20,6 +20,6 @@ DEPLOYMENT_FILE = os.path.join(PROJECT_DIR, 'deployments.yml')
 if os.path.exists(os.path.join(ENV_DIR, '.env')):
     load_dotenv(os.path.join(ENV_DIR, '.env'))
 else:
-    log.warn(f'No environment file found in {ENV_DIR}')
+    log.warning(f'No environment file found in {ENV_DIR}')
 
 APPLICATION = os.environ.setdefault('APPLICATION', 'innolab')

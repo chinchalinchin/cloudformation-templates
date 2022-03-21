@@ -1,3 +1,7 @@
 boto3==1.21.21
 pyyaml==6.0
 python-dotenv==0.19.2
+keyring==23.5.0
+artifacts-keyring==0.3.1 
+setuptools==60.10.0
+wheel==0.37.1

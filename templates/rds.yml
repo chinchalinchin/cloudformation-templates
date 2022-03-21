@@ -19,10 +19,10 @@ Parameters:
   # Stack Dependencies
   vpcStack:
     Type: String
-    Default: InnoLab-VPCStack
+    Default: Innolab-VPCStack
   iamStack:
     Type: String
-    Default: InnoLab-IAMStack
+    Default: Innolab-IAMStack
 
   ## NOTE: see note below for ``DatabaseConnectPolicy`` resource.
   # iamStack:

@@ -1,6 +1,6 @@
 # Infrastructure
 
-The infrastructure supporting the Innovation Lab is provisioned through an **Azure DevOps pipeline** hooked into this repository. Resources are configured using Infrastructure-as-Code. When changes are merged into the `master` branch, this pipeline will pull in the changes into the **Azure** build environment, and then deploy or update the resources defined in the *deployments.yml*. 
+The infrastructure supporting the Innovation Lab is provisioned through an **Azure DevOps pipeline** hooked into this repository. Resources are configured using [Infrastructure-as-Code](https://en.wikipedia.org/wiki/Infrastructure_as_code). When changes are merged into the `master` branch, this pipeline will pull in the changes into the **Azure** build environment, and then deploy or update the resources defined in the *deployments.yml*. 
 
 ## Procedure For Provisioning
 
@@ -18,12 +18,13 @@ cp ./env/.sample.env ./env/.env
 
 ```yaml
 MyNewStack:
-    template: <tempate-file-name (just file, no path)>
+    template: <template-file-name (just file, no path)>
     parameters:
         - ParameterKey: <parameter1-name>
           ParameterValue: <parameter1-value>
         - ParameterKey: <parameter2-name>
           ParameterValue: <paramter2-value>
+        ## ... as many as it takes ... 
 ```
 
 If the parameter contains sensitive information, such as credentials, put the value in the *.env* file and then reference the variable name in the *deployments.yml* using the `!env` YAML object,
@@ -34,9 +35,10 @@ MyNewStack:
     parameters:
         - ParameterKey: secretKey
           ParameterValue: !env ENVIRONMENT_SECRET
+        ## ... as many as it takes ...
 ```
 
-In the above example, the template has a parameter `secretKey` in the `Parameters` section, and the *deployments.yml* passed in the value of the environment variable `ENVIRONMENT_SECRET` into this parameter.
+In the above example, the template has a parameter `secretKey` in the `Parameters` section, and the *deployments.yml* passes in the value of the environment variable `ENVIRONMENT_SECRET` for this parameter.
 
 **NOTE**: All environment variables that are required locally are also required within the **Azure DevOps** pipeline. [Refer to the official documentation for information on how to provision variables and secrets within the pipeline](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch)
 
@@ -46,11 +48,11 @@ In the above example, the template has a parameter `secretKey` in the `Parameter
 python ./deploy/deployer.py
 ```
 
-**NOTE**: In order for this script to succeed, you must have your **AWS CLI** authenticated with an **IAM** account that has permission to deploy resources through **CloudFormation**. 
+**NOTE**: In order for this script to succeed, you must have your **AWS CLI** authenticated with an **IAM** account that has permission to deploy resources through **CloudFormation**. Similarly, the **Azure DevOps** pipeline requires an **IAM** account with the appropriate policies attached. 
 
 ## Notes
 
-1. Before provisioning the **VPCStack**, ensure the SSH key has been generated locally and imported in the **AWS EC2** keyring,
+1. Before provisioning the **VPCStack**, ensure the SSH key has been generated locally and imported into the **AWS EC2** keyring,
 
 ```shell
 aws ec2 import-key-pair --key-name <name-of-key> --public-key-material fileb://<path-to-public-key>
