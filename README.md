@@ -38,6 +38,8 @@ MyNewStack:
 
 In the above example, the template has a parameter `secretKey` in the `Parameters` section, and the *deployments.yml* passed in the value of the environment variable `ENVIRONMENT_SECRET` into this parameter.
 
+**NOTE**: All environment variables that are required locally are also required within the **Azure DevOps** pipeline. [Refer to the official documentation for information on how to provision variables and secrets within the pipeline](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch)
+
 3. Invoke the python *deployer.py* script, which in turn will use the **boto3** python library to post the contents of *deployments.yml* to **CloudFormation**,
 
 ```shell
@@ -56,7 +58,7 @@ aws ec2 import-key-pair --key-name <name-of-key> --public-key-material fileb://<
 
 **NOTE**: Ensure you import the *public* key, not the *private* key. The *private* key is used to establish the identity of the person initiating an SSH connection.
 
-2. Before provisioning the **RDSStack**, ensure secrets for the username and password have been created into the **SecretsManager**. See */templates/rds.yml* lines 77 -78 for the secret naming convention.
+2. Before provisioning the **RDSStack**, ensure secrets for the username and password have been created in the **SecretsManager**. See */templates/rds.yml* lines 77 -78 for the secret naming convention.
 
 ## Stack Dependencies
 
