@@ -13,23 +13,38 @@ variables:
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- task: ManualValidation@0
-  continueOnError: false
-  enabled: true
-  inputs:
-    notifyUsers: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
-- task: ManualValidation@0
-  inputs:
-    notifyUsers: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
-    instructions: 'Validate and approve infrastructure configuration before deployment'
+jobs:
+  - job: waitForValidation
+    displayName: Wait for external validation
+    pool: server
+    timeoutInMinutes: 4320 # job times out in 3 days
+    steps:
+    - task: ManualValidation@0
+      timeoutInMinutes: 1440 # task times out in 1 day
+      inputs:
+        notifyUsers: |
+          test@test.com
+          example@example.com
+        instructions: 'Please validate the build configuration and resume'
+        onTimeout: 'resume'
 
-- script: pip install -r requirements.txt
-  displayName: Install deployment dependencies
+jobs:
+  - job: Deploy
+    pool: server
+    steps:
+    - task: ManualValidation@0
+      continueOnError: false
+      enabled: true
+      inputs:
+        notifyUsers: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
+        instructions: 'Validate and approve infrastructure configuration before deployment'
 
-- script: |
-    python ./deploy/deployer.py
-  displayName: Deploy cloud resources
-  env:
-    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+    - script: pip install -r requirements.txt
+      displayName: Install deployment dependencies
+
+    - script: |
+        python ./deploy/deployer.py
+      displayName: Deploy cloud resources
+      env:
+        AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+        AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
