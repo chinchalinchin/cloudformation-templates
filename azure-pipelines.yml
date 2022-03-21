@@ -14,9 +14,9 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: printenv
-  displayName: 'Debug'
+- script: pip install -r ./deploy/requirements.txt
+  displayName: Install deployment dependencies
 
 - script: |
     python ./deploy/deployer.py
-  displayName: 'Install AWS CLI'
+  displayName: Deploy cloud resources
