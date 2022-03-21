@@ -31,7 +31,7 @@ If the parameter contains sensitive information, such as credentials, put the va
 
 ```yaml
 MyNewStack:
-    template: <tempate-file-name (just file, no path)>
+    template: <template-file-name (just file, no path)>
     parameters:
         - ParameterKey: secretKey
           ParameterValue: !env ENVIRONMENT_SECRET
