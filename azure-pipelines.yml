@@ -19,6 +19,9 @@ steps:
   enabled: true
   inputs:
     notifyUsers: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
+- task: ManualValidation@0
+  inputs:
+    notifyUsers: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
     instructions: 'Validate and approve infrastructure configuration before deployment'
 
 - script: pip install -r requirements.txt
