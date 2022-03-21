@@ -1,8 +1,10 @@
 # Infrastructure
 
-The infrastructure supporting the Innovation Lab is provisioned using Infrastructure-as-Code through **CloudFormation** and **boto3**. This repository is hooked into an **Azure DevOps pipeline**. When changes are merged into the `master` branch, this pipeline will deploy and update the resources defined through the *deployments.yml*. 
+The infrastructure supporting the Innovation Lab is provisioned through an **Azure DevOps pipeline** hooked into this repository using Infrastructure-as-Code. When changes are merged into the `master` branch, this pipeline will pull in the changes into the **Azure** build environment, and then deploy or update the resources defined in the *deployments.yml*. 
 
 ## Procedure For Provisioning
+
+You can provision infrastructure locally with the following steps. The pipeline automates, essentially, the exact same steps.
 
 0. Copy the */env/.sample.env* environment file into a new environment file and configure the values. See notes in the sample file for more information on the purpose of each variable,
 
@@ -35,6 +37,14 @@ MyNewStack:
 ```
 
 In the above example, the template has a parameter `secretKey` in the `Parameters` section, and the *deployments.yml* passed in the value of the environment variable `ENVIRONMENT_SECRET` into this parameter.
+
+3. Invoke the python *deployer.py* script, which in turn will use the **boto3** python library to post the contents of *deployments.yml* to **CloudFormation**,
+
+```shell
+python ./deploy/deployer.py
+```
+
+**NOTE**: In order for this script to succeed, you must have your **AWS CLI** authenticated with an **IAM** account that has permission to deploy resources through **CloudFormation**. 
 
 ## Notes
 
