@@ -14,6 +14,13 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+- task: ManualIntervention@8
+  continueOnError: false
+  enabled: true
+  inputs:
+    instructions: 'Verify and approve infrastructure configuration before deployment.'
+    emailRecipients: 'gmoore@makpar.com,tislam@makpar.com,skonur@makpar.com,nsibley@makpar.com'
+
 - script: pip install -r requirements.txt
   displayName: Install deployment dependencies
 
