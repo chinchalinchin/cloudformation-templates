@@ -105,7 +105,16 @@ def update_stack(stack: str, deployment: dict) -> dict:
     )
 
 def create_stack(stack: str, deployment: dict) -> dict:
-    log.info('Updating stack %s', stack)
+    """Create the given `stack` with the given `deployment` configuration
+
+    :param stack: Name of the stack to be updated.
+    :type stack: str
+    :param deployment: `dict` containing the deployment configuration
+    :type deployment: dict
+    :return: **CloudFormation** response
+    :rtype: dict
+    """
+    log.info('Creating stack %s', stack)
     parameters = deployment['parameters']
     client=get_client()
     client.create_stack(
