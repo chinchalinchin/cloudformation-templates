@@ -14,7 +14,7 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: pip install -r ./deploy/requirements.txt
+- script: pip install -r requirements.txt
   displayName: Install deployment dependencies
 
 - script: |
