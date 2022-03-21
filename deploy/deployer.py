@@ -137,9 +137,11 @@ if __name__=="__main__":
         pprint.pprint(stack_deployments)
         for stack, deployment in stack_deployments.items():
             if stack in stack_names:
-                update_stack(stack, deployment)
+                pass
+                # update_stack(stack, deployment)
             else:
-                create_stack(stack, deployment)
+                pass
+                # create_stack(stack, deployment)
         print(get_stack_names())
 
     except FileNotFoundError as e:
