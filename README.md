@@ -1,6 +1,6 @@
 # Infrastructure
 
-The infrastructure supporting the Innovation Lab is provisioned through an **Azure DevOps pipeline** hooked into this repository using Infrastructure-as-Code. When changes are merged into the `master` branch, this pipeline will pull in the changes into the **Azure** build environment, and then deploy or update the resources defined in the *deployments.yml*. 
+The infrastructure supporting the Innovation Lab is provisioned through an **Azure DevOps pipeline** hooked into this repository. Resources are configured using Infrastructure-as-Code. When changes are merged into the `master` branch, this pipeline will pull in the changes into the **Azure** build environment, and then deploy or update the resources defined in the *deployments.yml*. 
 
 ## Procedure For Provisioning
 
@@ -26,7 +26,7 @@ MyNewStack:
           ParameterValue: <paramter2-value>
 ```
 
-If the parameter contains sensitive information, such as credentials, put the value in the *.env* file and then reference the variable name it in the *deployments.yml* using the YAML object `!env`,
+If the parameter contains sensitive information, such as credentials, put the value in the *.env* file and then reference the variable name in the *deployments.yml* using the `!env` YAML object,
 
 ```yaml
 MyNewStack:
