@@ -21,4 +21,4 @@ if os.path.exists(os.path.join(ENV_DIR, '.env')):
     load_dotenv(os.path.join(ENV_DIR, '.env'))
     
 else:
-    raise FileNotFoundError(f'No environment file found in {ENV_DIR}')
+    log.warn(f'No environment file found in {ENV_DIR}')
