@@ -18,5 +18,9 @@ steps:
   displayName: Install deployment dependencies
 
 - script: |
+    export AWS_ACCOUNT_ID
+    export AWS_ACCESS_KEY_ID
+    export AWS_SECRET_ACCESS_KEY
+    export AWS_DEFAULT_REGION
     python ./deploy/deployer.py
   displayName: Deploy cloud resources
