@@ -1,4 +1,5 @@
 *.env
-!.sample.envvenv
+!.sample.env
 venv
 *.pyc
+reports

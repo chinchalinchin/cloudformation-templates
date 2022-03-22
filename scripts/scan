@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJECT_DIR=$SCRIPT_DIR/..
+snyk iac test $PROJECT_DIR/templates/** \
+    --json-file-output=$PROJECT_DIR/reports/"$(date +'%m-%d-%Y')_report.json"

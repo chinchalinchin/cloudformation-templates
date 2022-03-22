@@ -11,9 +11,9 @@ import pprint
 import yaml
 import settings
 import time
-from logger import get_logger
+import logger
 
-log = get_logger('innolab-cloudformation.deploy.deployer')
+log = logger.get_logger('innolab-cloudformation.deploy.deployer')
 
 ACTIVE_STACKS=[
     'CREATE_IN_PROGRESS', 
