@@ -176,17 +176,21 @@ def deploy():
     """
     stack_deployments, stack_names = get_deployment(), get_stack_names()
 
-    for stack, deployment in stack_deployments.items():
-        if stack in stack_names:
-            result = update_stack(stack, deployment)
-        else:
-            result = create_stack(stack, deployment)
+    if stack_deployments is not None:
+        for stack, deployment in stack_deployments.items():
+            if stack in stack_names:
+                result = update_stack(stack, deployment)
+            else:
+                result = create_stack(stack, deployment)
 
-        log.info(result)
+            log.info(result)
 
-        while stack in get_stack_names(in_progress=True):
-            log.info('Waiting on %s...', stack)
-            time.sleep(10)
+            while stack in get_stack_names(in_progress=True):
+                log.info('Waiting on %s...', stack)
+                time.sleep(10)
+    else:
+        log.info(stack_names)
+
 
 if __name__=="__main__":
     deploy()
