@@ -1,0 +1,6 @@
+setuptools==60.10.0
+wheel==0.37.1
+## still testing these out...these should theoretically allow us to publish to the Azure Artifact repository...
+## https://docs.microsoft.com/en-us/azure/devops/artifacts/quickstarts/python-packages?view=azure-devops
+# keyring==23.5.0
+# artifacts-keyring==0.3.1 
