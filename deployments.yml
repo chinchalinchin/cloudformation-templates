@@ -53,17 +53,17 @@
 #     - ParameterKey: environmentName
 #       ParameterValue: Dev
 
-Innolab-VPCStack-Staging:
-  template: vpc.yml
-  parameters:
-    - ParameterKey: applicationName 
-      ParameterValue: innolab
-    - ParameterKey: environmentName
-      ParameterValue: Staging
-    - ParameterKey: dbKeyName
-      ParameterValue: innolab_tunnel_key_Dev
-    - ParameterKey: bastionHost
-      ParameterValue: "true"
+# Innolab-VPCStack-Dev:
+#   template: vpc.yml
+#   parameters:
+#     - ParameterKey: applicationName 
+#       ParameterValue: innolab
+#     - ParameterKey: environmentName
+#       ParameterValue: Dev
+#     - ParameterKey: dbKeyName
+#       ParameterValue: innolab_tunnel_key_Dev
+#     - ParameterKey: bastionHost
+#       ParameterValue: "true"
 
 # Innolab-PostgresRDSStack-Dev:
 #   template: rds.yml

@@ -7,6 +7,7 @@ variables:
 pool:
   vmImage: ubuntu-latest
 
+
 jobs:
   - job: WaitForValidation
     pool: server
@@ -14,22 +15,31 @@ jobs:
     - task: ManualValidation@0
       continueOnError: false
       enabled: true
-      timeoutInMinutes: 1440
+      timeoutInMinutes: 30
       inputs:
         notifyUsers: |
           gmoore@makpar.com
-          tislam@makpar.com
-          skonur@makpar.com
-          nsibley@makpar.com
         instructions: 'Validate and approve infrastructure configuration before deployment'
-  - job: DeployCloudResources
-    steps:
-    - script: |
-        pip install -r ./src/requirements.txt
-      displayName: Install deployment dependencies
-    - script: |
-        python ./src/deploy/deployer.py
-      displayName: Deploy cloud resources
-      env:
-        AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-        AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+        onTimeout: 'reject'
+
+  - deployment: DeployInnoLab
+    dependsOn: WaitForValidation
+    displayName: Deploy Innovation Lab Cloud Resources
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'Dev'
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - script: |
+              pip install -r ./src/requirements.txt
+            displayName: Install deployment dependencies
+          - script: |
+              python ./src/deploy/deployer.py
+            displayName: Deploy cloud resources
+            env:
+              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+              HOSTED_ZONE_ID: $(HOSTED_ZONE_ID)
+              CERTIFICATE_ID: $(CERTIFICATE_ID)
