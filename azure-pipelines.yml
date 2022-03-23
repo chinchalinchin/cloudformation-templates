@@ -10,16 +10,10 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - script: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-          export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        displayName: Install Node version manager
-      - script: |
-          nvm install $NODE_VERSION
-          nvm use $NODE_VERSION
           npm install snyk -g
           snyk config set org=$SNYK_ORG_ID
-        displayName: Install Node and SNYK CLI scanner
+          snyk auth $SNYK_TOKEN
+        displayName: Install SNYK CLI scanner
         env:
           NODE_VERSION: 14.0.0
           SNYK_TOKEN: $(SNYK_TOKEN)
