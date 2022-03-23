@@ -2,11 +2,7 @@ trigger:
 - master
 
 variables:
-- group: Dev
-
-pool:
-  vmImage: ubuntu-latest
-
+- group: Deploy
 
 jobs:
   - job: WaitForValidation
@@ -27,7 +23,7 @@ jobs:
     displayName: Deploy Innovation Lab Cloud Resources
     pool:
       vmImage: 'ubuntu-latest'
-    environment: 'Dev'
+    environment: 'AWS'
     strategy: 
       runOnce:
         deploy:
