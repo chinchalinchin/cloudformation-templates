@@ -58,9 +58,9 @@ Resources:
       Description: "Role for Alation EC2 to access other services"
       Tags:
         - Key: "Application"
-          Value: "innolab"
+          Value: !Ref applicationName
         - Key: "Environment"
-          Value: "Dev"
+          Value: !Ref environmentName
 
   AlationInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
