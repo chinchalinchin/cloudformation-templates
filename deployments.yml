@@ -53,17 +53,17 @@
 #     - ParameterKey: environmentName
 #       ParameterValue: Dev
 
-# Innolab-VPCStack-Dev:
-#   template: vpc.yml
-#   parameters:
-#     - ParameterKey: applicationName 
-#       ParameterValue: innolab
-#     - ParameterKey: environmentName
-#       ParameterValue: Dev
-#     - ParameterKey: dbKeyName
-#       ParameterValue: innolab_tunnel_key_Dev
-#     - ParameterKey: bastionHost
-#       ParameterValue: "true"
+Innolab-VPCStack-Staging:
+  template: vpc.yml
+  parameters:
+    - ParameterKey: applicationName 
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Staging
+    - ParameterKey: dbKeyName
+      ParameterValue: innolab_tunnel_key_Dev
+    - ParameterKey: bastionHost
+      ParameterValue: "true"
 
 # Innolab-PostgresRDSStack-Dev:
 #   template: rds.yml
@@ -97,21 +97,21 @@
 #     - ParameterKey: iamStack
 #       ParameterValue: Innolab-IAMStack
 
-# Innolab-AlationStack:
-#   template: applications/alation.yml
-#   parameters:
-#     - ParameterKey: applicationName
-#       ParameterValue: innolab
-#     - ParameterKey: environmentName
-#       ParameterValue: Dev 
-#     - ParameterKey: alationKeyName
-#       ParameterValue: innolab_alation_key
-#     - ParameterKey: domain
-#       ParameterValue: makpar-innovation.net
-#     - ParameterKey: hostedZoneId
-#       ParameterValue: !env HOSTED_ZONE_ID
-#     - ParameterKey: vpcStack
-#       ParameterValue: Innolab-VPCStack-Dev
+Innolab-AlationStack:
+  template: applications/alation.yml
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev 
+    - ParameterKey: alationKeyName
+      ParameterValue: innolab_alation_key
+    - ParameterKey: domain
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: hostedZoneId
+      ParameterValue: !env HOSTED_ZONE_ID
+    - ParameterKey: vpcStack
+      ParameterValue: Innolab-VPCStack-Dev
 
 # Innolab-LambdaStack-Dev:
 #   template: lambda.yml

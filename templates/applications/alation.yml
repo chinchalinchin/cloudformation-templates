@@ -87,7 +87,7 @@ Resources:
     Type: "AWS::EC2::Instance"
     Properties:
       ImageId: "ami-0b0af3577fe5e3532"
-      InstanceType: "t3.2xlarge"
+      InstanceType: "m4.xlarge"
       KeyName: !Ref alationKeyName
       AvailabilityZone: !Sub "${AWS::Region}b"
       Tenancy: "default"
@@ -113,10 +113,23 @@ Resources:
       BlockDeviceMappings: 
         - DeviceName: "/dev/sda1"
           Ebs: 
-            Encrypted: false
-            VolumeSize: 1000
+            DeleteOnTermination: false
+            Encrypted: true
+            VolumeSize: 80
             VolumeType: "gp2"
             DeleteOnTermination: true
+        - DeviceName: "/dev/sdb"
+          Ebs: 
+            DeleteOnTermination: false
+            Encrypted: true
+            VolumeSize: 300
+            VolumeType: "st1"
+        - DeviceName: "/dev/sdd"
+          Ebs: 
+            DeleteOnTermination: false
+            Encrypted: true
+            VolumeSize: 200
+            VolumeType: "gp2"
       IamInstanceProfile: !Ref AlationRole
       Tags: 
         - Key: Name
@@ -132,7 +145,7 @@ Resources:
       HibernationOptions: 
         Configured: false
       CpuOptions: 
-        CoreCount: 4
+        CoreCount: 2
         ThreadsPerCore: 2
       EnclaveOptions: 
         Enabled: false
