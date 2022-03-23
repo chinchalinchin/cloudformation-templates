@@ -5,7 +5,28 @@ variables:
 - group: Deploy
 
 jobs:
+  - job: ScanForVulnerabilities
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+          export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+          npm install snyk -g
+          snyk config set org=$SNYK_ORG_ID
+        displayName: Install SNYK CLI scanner
+        env:
+          NODE_VERSION: 14.0.0
+          SNYK_TOKEN: $(SNYK_TOKEN)
+          SNYK_ORG_ID: $(SNYK_ORG_ID)
+      - script: |
+          ./scripts/scan
+        displayName: Scan templates for vulnerabilities
   - job: WaitForValidation
+    dependsOn: ScanForVulnerabilities
     pool: server
     steps:
     - task: ManualValidation@0
