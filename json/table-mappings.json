@@ -1,0 +1,26 @@
+{"rules":[{
+        "rule-type":"transformation",
+        "rule-id": "127012249", 
+        "rule-name":"127012249",
+        "rule-target":"column",
+        "object-locator":{
+            "schema-name":"%",
+            "table-name":"%",
+            "column-name":"%"
+        },
+        "rule-action":"convert-lowercase",
+        "value":null,
+        "old-value":null
+    },
+    {
+        "rule-type":"selection",
+        "rule-id":"126989950",
+        "rule-name":"126989950",
+        "object-locator":{
+            "schema-name":"MARRYSHELLY",
+            "table-name":"%"
+        },
+        "rule-action":"include",
+        "filters":[]
+    }
+]}
