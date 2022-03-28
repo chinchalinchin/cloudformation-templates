@@ -113,6 +113,41 @@ Innolab-AlationStack:
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
 
+Innolab-MigrationStack:
+  template: applications/migration.yml
+  parameter:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev
+    - ParameterKey: dbSourceUserName
+      ParameterValue: !env ORACLE_RDS_USERNAME
+    - ParameterKey: dbSourcePassword
+      ParameterValue: !env ORACLE_RDS_PASSOWRD
+    - ParameterKey: dbSourcePort
+      ParameterValue: 5432
+    - ParameterKey: dbSourceDatabase
+      ParameterValue: ORCL
+    - ParameterKey: dbSourceEngine
+      ParameterValue: oracle
+    - ParameterKey: dbTargetUserName
+      ParameterValue: !env POSTGRES_RDS_USERNAME
+    - ParameterKey: dbTargetPassword
+      ParameterValue: !env POSTGRES_RDS_PASSWORD
+    - ParameterKey: dbTargetPort
+      ParameterValue: 5432
+    - ParameterKey: dbTargetDatabase
+      ParameterValue: postgres
+    - ParameterKey: dbTargetEngine
+      ParameterValue: postgres
+    # TODO: update this once the postgres stack is deployed with new naming convention
+    - ParameterKey: targetStack
+      ParameterValue: Innolab-RDSStack-Dev
+    - ParameterKey: sourceStack
+      ParameterValue: Innolab-OracleRDSStack-Dev
+    - ParameterKey: vpcStack
+      ParameterValue: Innolab-VPCStack-Dev
+
 # Innolab-LambdaStack-Dev:
 #   template: lambda.yml
 #   parameters:

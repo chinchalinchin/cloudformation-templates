@@ -17,7 +17,7 @@
         "rule-id":"126989950",
         "rule-name":"126989950",
         "object-locator":{
-            "schema-name":"MARRYSHELLY",
+            "schema-name":"%",
             "table-name":"%"
         },
         "rule-action":"include",
