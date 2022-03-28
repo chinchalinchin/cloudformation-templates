@@ -77,6 +77,20 @@ Resources:
             KmsKeyId: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/40c5b9e3-fa3b-4a98-96f8-e269ab2762f9"
             SslMode: "none"
 
+    myReplicationSubnetGroup: 
+        Type: "AWS::DMS::ReplicationSubnetGroup"
+        Properties: 
+            ReplicationSubnetGroupDescription: !Sub "Replication group for the ${applicationName} ${environmentName} environment"
+            ReplicationSubnetGroupIdentifier: !Sub "${applicationName}-${environmentName}-rep-subnet-group"
+            SubnetIds: 
+                - Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetA"
+                - Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetB"
+            Tags: 
+                -   Key: Application
+                    Value: !Ref applicationName
+                -   Key: Environment
+                    Value: !Ref environmentName
+            
     DMSReplicationInstance:
         Type: "AWS::DMS::ReplicationInstance"
         Properties:
