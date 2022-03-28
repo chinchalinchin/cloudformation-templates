@@ -1,44 +1,90 @@
+
 AWSTemplateFormatVersion: "2010-09-09"
-Metadata:
-    Generator: "former2"
-Description: ""
+
+Parameters:
+    applicationName:
+        Type: String
+        Default: innolab
+        Description: Name of the application resources being deployed.
+    environmentName:
+        Type: String
+        Default: Dev
+        Description: Environment into which resources are being deplyoed
+    dbSourceUsername: 
+        Type: String
+    dbSourcePassword:
+        Type: String
+    dbSourceDatabase:
+        Type: String
+    dbSourcePort:
+        Type: String
+    dbSourceEngine:
+        Type: String
+        AllowedValues:
+            - postgres
+            - oracle
+    dbTargetUsername:
+        Type: String
+    dbTargetPassword:
+        Type: String
+    dbTargetDatabase:
+        Type: String
+    dbTargetPort:
+        Type: String
+    dbTargetEngine:
+        Type: String
+        AllowedValues:
+            - postgres
+            - oracle
+    targetStack:
+        Type: String
+    sourceStack:
+        Type: String
+    vpcStack:
+        Type: String
+        Default: Innolab-VPCStack-Dev
+    
+    
+
 Resources:
-    DMSEndpoint:
+    SourceDMSEndpoint:
         Type: "AWS::DMS::Endpoint"
         Properties:
-            EndpointIdentifier: "innolab-orcl-db-ep-dev"
+            EndpointIdentifier: !Sub "${applicationName}-${environmentName}-source-endpoint"
             EndpointType: "SOURCE"
-            EngineName: "oracle"
-            Username: "MarryShelly"
-            Password: "REPLACEME"
-            ServerName: !Sub "innolab-oracle-database-dev.ctppkczgyf0n.${AWS::Region}.rds.amazonaws.com"
-            Port: 1521
-            DatabaseName: "ORCL"
+            EngineName: !Ref dbSourceEngine
+            Username: !Ref dbSourceUserName
+            Password: !Ref dbSourceUserPassword
+            ServerName: 
+                Fn::ImportValue: !Sub "${sourceStack}-RDSEndpoint"
+            Port: !Ref dbSourcePort
+            DatabaseName: !Ref dbSourceDatabase
             KmsKeyId: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/40c5b9e3-fa3b-4a98-96f8-e269ab2762f9"
             SslMode: "none"
 
-    DMSEndpoint2:
+    TargetDMSEndpoint:
         Type: "AWS::DMS::Endpoint"
         Properties:
-            EndpointIdentifier: "innolab-pg-db-ep-dev"
+            EndpointIdentifier: !Sub "${applicationName}-${environmentName}-target-endpoint"
             EndpointType: "TARGET"
-            EngineName: "postgres"
-            Username: "MarryShelly"
-            Password: "REPLACEME"
-            ServerName: !Sub "innolab-database-dev.ctppkczgyf0n.${AWS::Region}.rds.amazonaws.com"
-            Port: 5432
-            DatabaseName: "postgres"
+            EngineName: !Ref dbTargetEngine
+            Username: !Ref dbTargetUserName
+            Password: !Ref dbTargetUserPassword
+            ServerName: 
+                Fn::ImportValue: !sub "${targetStack}-RDSEndpoint"
+            Port: !Ref dbTargetPort
+            DatabaseName: !Ref dbTargetDatabase
             KmsKeyId: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/40c5b9e3-fa3b-4a98-96f8-e269ab2762f9"
             SslMode: "none"
 
     DMSReplicationInstance:
         Type: "AWS::DMS::ReplicationInstance"
         Properties:
-            ReplicationInstanceIdentifier: "innolab-migtask-orcl2pgres-dev"
+            ReplicationInstanceIdentifier: "${applicationName}-${environmentName}-replication-instance"
             ReplicationInstanceClass: "dms.t3.medium"
             AllocatedStorage: 5
             VpcSecurityGroupIds:
-              - "sg-06993ece5e10f189e"
+              - Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
             AvailabilityZone: !Sub "${AWS::Region}b"
             ReplicationSubnetGroupIdentifier: "default-vpc-0c49b94fb0784d704"
             PreferredMaintenanceWindow: "wed:10:19-wed:10:49"
@@ -52,9 +98,9 @@ Resources:
         Type: "AWS::DMS::ReplicationTask"
         Properties:
             ReplicationTaskIdentifier: "innolab-migtask-orcl2pgres-dev"
-            SourceEndpointArn: !Sub "arn:aws:dms:${AWS::Region}:${AWS::AccountId}:endpoint:innolab-orcl-db-ep-dev"
-            TargetEndpointArn: !Sub "arn:aws:dms:${AWS::Region}:${AWS::AccountId}:endpoint:innolab-pg-db-ep-dev"
-            ReplicationInstanceArn: !Sub "arn:aws:dms:${AWS::Region}:${AWS::AccountId}:rep:innolab-migtask-orcl2pgres-dev"
+            SourceEndpointArn: !Ref SourceDMSEndpoint
+            TargetEndpointArn: !Ref TargetDMSEndpoint
+            ReplicationInstanceArn: !Ref DMSReplicationInstance
             MigrationType: "full-load"
             TableMappings: "{\"rules\":[{\"rule-type\":\"transformation\",\"rule-id\":\"127012249\",\"rule-name\":\"127012249\",\"rule-target\":\"column\",\"object-locator\":{\"schema-name\":\"%\",\"table-name\":\"%\",\"column-name\":\"%\"},\"rule-action\":\"convert-lowercase\",\"value\":null,\"old-value\":null},{\"rule-type\":\"selection\",\"rule-id\":\"126989950\",\"rule-name\":\"126989950\",\"object-locator\":{\"schema-name\":\"MARRYSHELLY\",\"table-name\":\"%\"},\"rule-action\":\"include\",\"filters\":[]}]}"
             ReplicationTaskSettings: "{\"TargetMetadata\":{\"TargetSchema\":\"\",\"SupportLobs\":true,\"FullLobMode\":false,\"LobChunkSize\":0,\"LimitedSizeLobMode\":true,\"LobMaxSize\":32,\"InlineLobMaxSize\":0,\"LoadMaxFileSize\":0,\"ParallelLoadThreads\":0,\"ParallelLoadBufferSize\":0,\"BatchApplyEnabled\":false,\"TaskRecoveryTableEnabled\":false,\"ParallelLoadQueuesPerThread\":0,\"ParallelApplyThreads\":0,\"ParallelApplyBufferSize\":0,\"ParallelApplyQueuesPerThread\":0},\"FullLoadSettings\":{\"TargetTablePrepMode\":\"DROP_AND_CREATE\",\"CreatePkAfterFullLoad\":false,\"StopTaskCachedChangesApplied\":false,\"StopTaskCachedChangesNotApplied\":false,\"MaxFullLoadSubTasks\":8,\"TransactionConsistencyTimeout\":600,\"CommitRate\":10000},\"Logging\":{\"EnableLogging\":true,\"LogComponents\":[{\"Id\":\"TRANSFORMATION\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SOURCE_UNLOAD\",\"Severity\":\"LOGGER_SEVERITY_DETAILED_DEBUG\"},{\"Id\":\"IO\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_LOAD\",\"Severity\":\"LOGGER_SEVERITY_DETAILED_DEBUG\"},{\"Id\":\"PERFORMANCE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SOURCE_CAPTURE\",\"Severity\":\"LOGGER_SEVERITY_DETAILED_DEBUG\"},{\"Id\":\"SORTER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"REST_SERVER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"VALIDATOR_EXT\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_APPLY\",\"Severity\":\"LOGGER_SEVERITY_DETAILED_DEBUG\"},{\"Id\":\"TASK_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DETAILED_DEBUG\"},{\"Id\":\"TABLES_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"METADATA_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"FILE_FACTORY\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"COMMON\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"ADDONS\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"DATA_STRUCTURE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"COMMUNICATION\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"FILE_TRANSFER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"}],\"CloudWatchLogGroup\":\"dms-tasks-innolab-migtask-orcl2pgres-dev\",\"CloudWatchLogStream\":\"dms-task-innolab-migtask-orcl2pgres-dev\"},\"ControlTablesSettings\":{\"historyTimeslotInMinutes\":5,\"ControlSchema\":\"\",\"HistoryTimeslotInMinutes\":5,\"HistoryTableEnabled\":false,\"SuspendedTablesTableEnabled\":false,\"StatusTableEnabled\":false,\"FullLoadExceptionTableEnabled\":false},\"StreamBufferSettings\":{\"StreamBufferCount\":3,\"StreamBufferSizeInMB\":8,\"CtrlStreamBufferSizeInMB\":5},\"ChangeProcessingDdlHandlingPolicy\":{\"HandleSourceTableDropped\":true,\"HandleSourceTableTruncated\":true,\"HandleSourceTableAltered\":true},\"ErrorBehavior\":{\"DataErrorPolicy\":\"LOG_ERROR\",\"DataTruncationErrorPolicy\":\"LOG_ERROR\",\"DataErrorEscalationPolicy\":\"SUSPEND_TABLE\",\"DataErrorEscalationCount\":0,\"TableErrorPolicy\":\"SUSPEND_TABLE\",\"TableErrorEscalationPolicy\":\"STOP_TASK\",\"TableErrorEscalationCount\":0,\"RecoverableErrorCount\":-1,\"RecoverableErrorInterval\":5,\"RecoverableErrorThrottling\":true,\"RecoverableErrorThrottlingMax\":1800,\"RecoverableErrorStopRetryAfterThrottlingMax\":true,\"ApplyErrorDeletePolicy\":\"IGNORE_RECORD\",\"ApplyErrorInsertPolicy\":\"LOG_ERROR\",\"ApplyErrorUpdatePolicy\":\"LOG_ERROR\",\"ApplyErrorEscalationPolicy\":\"LOG_ERROR\",\"ApplyErrorEscalationCount\":0,\"ApplyErrorFailOnTruncationDdl\":false,\"FullLoadIgnoreConflicts\":true,\"FailOnTransactionConsistencyBreached\":false,\"FailOnNoTablesCaptured\":true},\"ChangeProcessingTuning\":{\"BatchApplyPreserveTransaction\":true,\"BatchApplyTimeoutMin\":1,\"BatchApplyTimeoutMax\":30,\"BatchApplyMemoryLimit\":500,\"BatchSplitSize\":0,\"MinTransactionSize\":1000,\"CommitTimeout\":1,\"MemoryLimitTotal\":1024,\"MemoryKeepTime\":60,\"StatementCacheSize\":50},\"ValidationSettings\":{\"EnableValidation\":true,\"ValidationMode\":\"ROW_LEVEL\",\"ThreadCount\":5,\"PartitionSize\":10000,\"FailureMaxCount\":10000,\"RecordFailureDelayInMinutes\":5,\"RecordSuspendDelayInMinutes\":30,\"MaxKeyColumnSize\":8096,\"TableFailureMaxCount\":1000,\"ValidationOnly\":false,\"HandleCollationDiff\":false,\"RecordFailureDelayLimitInMinutes\":0,\"SkipLobColumns\":false,\"ValidationPartialLobSize\":0,\"ValidationQueryCdcDelaySeconds\":0},\"PostProcessingRules\":null,\"CharacterSetSettings\":null,\"LoopbackPreventionSettings\":null,\"BeforeImageSettings\":null,\"FailTaskWhenCleanTaskResourceFailed\":false,\"TTSettings\":null}"
