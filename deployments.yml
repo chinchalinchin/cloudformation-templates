@@ -172,9 +172,10 @@ Innolab-Lambda-PipelineStack-Dev:
       ParameterValue: Innolab-IAMStack
     - ParameterKey: repoStack
       ParameterValue: Innolab-RepoStack
+    - ParameterKey: docStack
+      ParameterValue: Innolab-DocStack
     - ParameterKey: cognitoStack
       ParameterValue: Innolab-CognitoStack-Dev
-    - ParameterKey: 
 
 ## MIGRATION RESOURCES
 # Innolab-MigrationStack:
