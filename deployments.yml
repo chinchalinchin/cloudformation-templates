@@ -41,6 +41,28 @@ Innolab-RepoStack:
     - ParameterKey: github
       ParameterValue: "false"
 
+Innolab-DocStack:
+  template: cloudfront.yml
+  parameters:
+    - ParameterKey: applicationname
+      ParameterValue: innolab
+    - ParameterKey: domainName
+      ParameterValue: documentation.makpar-innovation.net
+    - ParameterKey: certificateId
+      ParameterValue: !env CERTIFICATE_ID
+    - ParameterKey: hostedZoneId
+      ParameterValue: !env HOSTED_ZONE_ID
+
+Innolab-CognitoStack-Dev:
+  template: cognito.yml
+  parameters:
+    - ParameterKey: domainName
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev
+
 Innolab-VPCStack-Dev:
   template: vpc.yml
   parameters:
@@ -85,7 +107,7 @@ Innolab-OracleRDSStack-Dev:
     - ParameterKey: iamStack
       ParameterValue: Innolab-IAMStack
 
-Innolab-AlationStack:
+Innolab-AlationStack-Dev:
   template: applications/alation.yml
   parameters:
     - ParameterKey: applicationName
@@ -100,42 +122,7 @@ Innolab-AlationStack:
       ParameterValue: !env HOSTED_ZONE_ID
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
-
-Innolab-MigrationStack:
-  template: applications/migration.yml
-  parameter:
-    - ParameterKey: applicationName
-      ParameterValue: innolab
-    - ParameterKey: environmentName
-      ParameterValue: Dev
-    - ParameterKey: dbSourceUserName
-      ParameterValue: !env ORACLE_RDS_USERNAME
-    - ParameterKey: dbSourcePassword
-      ParameterValue: !env ORACLE_RDS_PASSOWRD
-    - ParameterKey: dbSourcePort
-      ParameterValue: "5432"
-    - ParameterKey: dbSourceDatabase
-      ParameterValue: ORCL
-    - ParameterKey: dbSourceEngine
-      ParameterValue: oracle
-    - ParameterKey: dbTargetUserName
-      ParameterValue: !env POSTGRES_RDS_USERNAME
-    - ParameterKey: dbTargetPassword
-      ParameterValue: !env POSTGRES_RDS_PASSWORD
-    - ParameterKey: dbTargetPort
-      ParameterValue: "5432"
-    - ParameterKey: dbTargetDatabase
-      ParameterValue: postgres
-    - ParameterKey: dbTargetEngine
-      ParameterValue: postgres
-    # TODO: update this once the postgres stack is deployed with new naming convention
-    - ParameterKey: targetStack
-      ParameterValue: Innolab-RDSStack-Dev
-    - ParameterKey: sourceStack
-      ParameterValue: Innolab-OracleRDSStack-Dev
-    - ParameterKey: vpcStack
-      ParameterValue: Innolab-VPCStack-Dev
-
+      
 Innolab-LambdaStack-Dev:
   template: lambda.yml
   parameters:
@@ -157,6 +144,73 @@ Innolab-LambdaStack-Dev:
       ParameterValue: !env HOSTED_ZONE_ID
     - ParameterKey: certificateId
       ParameterValue: !env CERTIFICATE_ID
+
+Innolab-Doc-PipelineStack:
+  template: pipelines/documentation.yml
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: domainName
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: iamStack
+      ParameterValue: Innolab-IAMStack
+    - ParameterKey: repoStack
+      ParameterValue: Innolab-RepoStack
+    - ParameterKey: docStack:
+      ParameterValue: Innolab-DocStack
+
+Innolab-Lambda-PipelineStack-Dev:
+  template: pipelines/lambda.yml
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: innolab
+    - ParameterKey: environmentName
+      ParameterValue: Dev
+    - ParameterKey: domainName
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: iamStack
+      ParameterValue: Innolab-IAMStack
+    - ParameterKey: repoStack
+      ParameterValue: Innolab-RepoStack
+    - ParameterKey: cognitoStack
+      ParameterValue: Innolab-CognitoStack-Dev
+    - ParameterKey: 
+
+## MIGRATION RESOURCES
+# Innolab-MigrationStack:
+#   template: applications/migration.yml
+#   parameter:
+#     - ParameterKey: applicationName
+#       ParameterValue: innolab
+#     - ParameterKey: environmentName
+#       ParameterValue: Dev
+#     - ParameterKey: dbSourceUserName
+#       ParameterValue: !env ORACLE_RDS_USERNAME
+#     - ParameterKey: dbSourcePassword
+#       ParameterValue: !env ORACLE_RDS_PASSOWRD
+#     - ParameterKey: dbSourcePort
+#       ParameterValue: "5432"
+#     - ParameterKey: dbSourceDatabase
+#       ParameterValue: ORCL
+#     - ParameterKey: dbSourceEngine
+#       ParameterValue: oracle
+#     - ParameterKey: dbTargetUserName
+#       ParameterValue: !env POSTGRES_RDS_USERNAME
+#     - ParameterKey: dbTargetPassword
+#       ParameterValue: !env POSTGRES_RDS_PASSWORD
+#     - ParameterKey: dbTargetPort
+#       ParameterValue: "5432"
+#     - ParameterKey: dbTargetDatabase
+#       ParameterValue: postgres
+#     - ParameterKey: dbTargetEngine
+#       ParameterValue: postgres
+#     # TODO: update this once the postgres stack is deployed with new naming convention
+#     - ParameterKey: targetStack
+#       ParameterValue: Innolab-RDSStack-Dev
+#     - ParameterKey: sourceStack
+#       ParameterValue: Innolab-OracleRDSStack-Dev
+#     - ParameterKey: vpcStack
+#       ParameterValue: Innolab-VPCStack-Dev
 
 # TODO: configure pipeline stacks
   

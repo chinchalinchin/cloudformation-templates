@@ -699,6 +699,7 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -714,6 +715,7 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -729,6 +731,7 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -759,6 +762,7 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -769,18 +773,16 @@ Resources:
       - DeveloperGroup
 
 Outputs:
-  BitbucketPipelineUserArn:
-    Condition: Bitbucket
-    Value: !GetAtt BitbucketPipelineUser.Arn
-    Description: ARN for BitBucket Pipeline User
+  PipelineUserArn:
+    Value: !GetAtt PipelineUser.Arn
+    Description: ARN for external Pipeline User
     Export:
-      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserArn
-  BitbucketPipelineUserName:
-    Condition: Bitbucket
+      Name: !Sub ${AWS::StackName}-PipelineUserArn
+  PipelineUserName:
     Value: !Ref pipelineUser
-    Description: Username for BitBucket Pipeline User
+    Description: Username for Pipeline User
     Export:
-      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserName
+      Name: !Sub ${AWS::StackName}-PipelineUserName
   LambdaExecutorRoleArn:
     Value: !GetAtt LambdaExecutorRole.Arn
     Description: ARN for Lambda Execution Role

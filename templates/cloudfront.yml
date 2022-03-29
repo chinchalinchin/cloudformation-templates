@@ -7,15 +7,16 @@ Parameters:
     Type: String
     Description: Name of the web application
     Default: innolab
-  certificateArn:
-    Type: String
-    Description: ARN of the ACM certificate used to sign requests on the domain.
-  hostedZoneId:
-    Type: String
-    Description: Physical ID of the hosted zone where the domain is being served.
   domainName:
     Type: String
     Description: Domain name that is hosting the application
+    Default: documentation.makpar-innovation.net
+  certificateId:
+    Type: String
+    Description: Physical ID of the ACM certificate used to sign requests on the domain.
+  hostedZoneId:
+    Type: String
+    Description: Physical ID of the hosted zone where the domain is being served
 
 Resources:
   WebsiteBucketLogs:
@@ -84,7 +85,7 @@ Resources:
         PriceClass: "PriceClass_All"
         Enabled: true
         ViewerCertificate: 
-          AcmCertificateArn: !Ref certificateArn
+          AcmCertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${certificateId}"
           MinimumProtocolVersion: "TLSv1.2_2019"
           SslSupportMethod: "sni-only"
         HttpVersion: "http2"
@@ -118,11 +119,11 @@ Resources:
       - WebsiteDistribution
 
 Outputs:
-  WebsiteBucketDistributionID:
+  WebsiteDistributionID:
     Value: !Ref WebsiteDistribution
     Description: Resource ID for CloudFront Distribution
     Export:
-      Name: !Sub ${AWS::StackName}-WebsiteBucketDistributionID
+      Name: !Sub ${AWS::StackName}-WebsiteDistributionID
   WebsiteBucketDomain:
     Value: !GetAtt WebsiteDistribution.DomainName
     Description: Domain name of CloudFront Distribution
