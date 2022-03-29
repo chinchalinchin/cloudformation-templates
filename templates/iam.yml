@@ -12,45 +12,31 @@ Parameters:
     Description: Initial password for IAM users before required password reset.
   pipelineUser:
     Type: String
-    Default: innolab-bb-pipeline
-    Description: Username for the Bitbucket pipeline account
-  bitbucket:
-    Type: String
-    Description: Flag to signal the creation of an account for the Bitbucket pipeline
-    Default: false
-    AllowedValues: 
-      - true
-      - false
-
-Conditions:
-  Bitbucket: !Equals
-    - !Ref bitbucket
-    - true
+    Default: innolab-pipeline
+    Description: Username for the external pipeline account
   
 Resources:
   ## PIPELINE USER & POLICY
   PipelineUser:
     Type: AWS::IAM::User
-    Condition: Bitbucket
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
 
   PipelinePolicy:
     Type: AWS::IAM::Policy
-    Condition: Bitbucket
     Properties:
-      PolicyName: !Sub pipeline-${applicationName}-policy
+      PolicyName: !Sub ${applicationName}-pipeline-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: UpdateLambdaFunction
+          - Sid: LambdaPermissions
             Effect: Allow
             Action: 
               - "lambda:UpdateFunctionCode"
             Resource:
               - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*"
-          - Sid: RepositoryPermissions
+          - Sid: ECRPermissions
             Effect: Allow
             Action:
               - "ecr:GetAuthorizationToken"
@@ -115,7 +101,7 @@ Resources:
           Action: 
             - 'sts:AssumeRole'
       Policies:
-      - PolicyName: ecs-service
+      - PolicyName: !Sub ${applicationName}-ecs-baseline-permissions
         PolicyDocument:
           Statement:
           - Effect: Allow
@@ -183,7 +169,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
       Policies:
-        - PolicyName: !Sub ${applicationName}-ecs-task-execution-role-policy
+        - PolicyName: !Sub ${applicationName}-ecs-task-execution-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -252,7 +238,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS'
       Policies:
-        - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
+        - PolicyName: !Sub ${applicationName}-codedeploy-artifact-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -278,7 +264,7 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
+        - PolicyName: !Sub ${applicationName}-codepipeline-baseline-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -384,7 +370,7 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: !Sub ${applicationName}-codebuild-role-policy
+        - PolicyName: !Sub ${applicationName}-codebuild-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -505,7 +491,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
       Policies:
-        - PolicyName: !Sub "${applicationName}-cognito-token-policy"
+        - PolicyName: !Sub "${applicationName}-lambda-execution-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
