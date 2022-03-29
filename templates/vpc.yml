@@ -365,6 +365,11 @@ Resources:
       ResourceSignal:
         Count: 1
         Timeout: PT5M
+    
+  NATElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref NATInstance
 
 Outputs:
   VPC:

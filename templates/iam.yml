@@ -224,7 +224,7 @@ Resources:
   # CODEDEPLOY EXECUTION ROLE
   CodeDeployRole:
     Type: AWS::IAM::Role
-    Description: Role to allow Innolab CodeDeploy access to other AWS Services
+    Description: Role to allow CodeDeploy access to other AWS Services
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -248,6 +248,8 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:s3:::${applicationName}-*"
+      RoleName: !Sub ${applicationName}-codedeploy-executor
+
 
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
@@ -353,7 +355,7 @@ Resources:
                   - ecs:RegisterTaskDefinition
                 Effect: Allow
                 Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
-      RoleName: !Sub ${applicationName}-codepipeline-exector
+      RoleName: !Sub ${applicationName}-codepipeline-executor
         
   # CODEBUILD SERVICE ROLE
   CodeBuildRole:
@@ -469,7 +471,7 @@ Resources:
                   - cognito-idp:AdminCreateUser
                 Resource: 
                   - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
-      RoleName: !Sub ${applicationName}-codebuild-exector
+      RoleName: !Sub ${applicationName}-codebuild-executor
 
   # LAMBDA FUNCTION ROLE
   LambdaExecutorRole:
@@ -561,7 +563,7 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-      RoleName: !Sub ${applicationName}-apigateway-logger
+      RoleName: !Sub ${applicationName}-apigateway-executor
 
   # CLOUDWATCH ROLE
   CloudWatchEventRole:
@@ -584,7 +586,7 @@ Resources:
               - Effect: Allow
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
-      RoleName: !Sub ${applicationName}-cloudwatch-role
+      RoleName: !Sub ${applicationName}-cloudwatch-executor
 
   BasicAccessGroup:
     Type: AWS::IAM::Group
@@ -647,7 +649,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
       Policies:
-        - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
+        - PolicyName: !Sub ${applicationName}-repository-branch-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
