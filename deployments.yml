@@ -156,7 +156,7 @@ Innolab-Doc-PipelineStack:
       ParameterValue: Innolab-IAMStack
     - ParameterKey: repoStack
       ParameterValue: Innolab-RepoStack
-    - ParameterKey: docStack:
+    - ParameterKey: docStack
       ParameterValue: Innolab-DocStack
 
 Innolab-Lambda-PipelineStack-Dev:
