@@ -28,15 +28,15 @@ Conditions:
     - true
   
 Resources:
-  ## BITBUCKET PIPELINE USER & POLICY
-  BitbucketPipelineUser:
+  ## PIPELINE USER & POLICY
+  PipelineUser:
     Type: AWS::IAM::User
     Condition: Bitbucket
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
 
-  BitbucketPipelinePolicy:
+  PipelinePolicy:
     Type: AWS::IAM::Policy
     Condition: Bitbucket
     Properties:
@@ -49,7 +49,7 @@ Resources:
             Action: 
               - "lambda:UpdateFunctionCode"
             Resource:
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*"
           - Sid: RepositoryPermissions
             Effect: Allow
             Action:
@@ -67,28 +67,22 @@ Resources:
               - "ecr:PutImage"
             Resource: 
               - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-          - Sid: piplineCrudOps
+          - Sid: S3ObjectPermissions
             Effect: Allow
             Action:
               - "s3:PutObject"
               - "s3:GetObject"
               - "s3:DeleteObject"
             Resource: 
-                - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment/*"
-          - Sid: pipelineReadOp
+                - !Sub "arn:aws:s3:::${applicationName}-*/*"
+          - Sid: S3BucketPermissions
             Effect: Allow
             Action:
               - "s3:ListBucket"
             Resource: 
-              - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment"
-          - Sid: cloudfrontInvalidateOp
-            Effect: Allow
-            Action:
-              - "cloudfront:CreateInvalidation"
-            Resource:
-              - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
+              - !Sub "arn:aws:s3:::${applicationName}-*"
       Users: 
-        - !Ref BitbucketPipelineUser
+        - !Ref PipelineUser
 
   ## SERVICE ROLES
   # RDS MONITOR
@@ -538,9 +532,7 @@ Resources:
                   - dynamodb:Scan
                   - dynamodb:UpdateItem
                 Resource: 
-                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Dev"
-                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Staging"
-                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Prod"
+                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*"
               - Sid: CodeCommitPermissions
                 Effect: Allow
                 Action: 
@@ -641,13 +633,23 @@ Resources:
     Properties:
       GroupName: database-admin-group
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
         - arn:aws:iam::aws:policy/AmazonRDSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
   
+  PowerUserGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: power-user-group
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+
   DeveloperGroup:
     Type: AWS::IAM::Group
     Properties:
@@ -656,8 +658,8 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
         - arn:aws:iam::aws:policy/AWSLambda_FullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
       Policies:
         - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
           PolicyDocument:
@@ -675,21 +677,6 @@ Resources:
                       - "refs/heads/Prod"
                       - "refs/heads/Staging"
                       - "refs/heads/Dev"
-
-  IAMTariq:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: tislam
-    DependsOn:
-      - BasicAccessGroup
 
   IAMGrant:
     Type: AWS::IAM::User
@@ -715,11 +702,6 @@ Resources:
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
       Path: !Sub "/${applicationName}/"
       UserName: pcofrancesco
     DependsOn:
@@ -735,11 +717,6 @@ Resources:
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
       Path: !Sub "/${applicationName}/"
       UserName: jstauffer
     DependsOn:
@@ -755,11 +732,6 @@ Resources:
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: tklock
     DependsOn:
@@ -795,21 +767,6 @@ Resources:
     DependsOn:
       - BasicAccessGroup
       - DeveloperGroup
-
-  # IAMSelah:
-  #   Type: AWS::IAM::User
-  #   Properties:
-  #     Groups:
-  #       - basic-access-group
-  #       - developer-group
-  #     LoginProfile:
-  #       Password: !Ref masterPassword
-  #       PasswordResetRequired: True
-  #     Path: !Sub "/${applicationName}/"
-  #     UserName: skonur
-  #   DependsOn:
-  #     - BasicAccessGroup
-  #     - DeveloperGroup
 
 Outputs:
   BitbucketPipelineUserArn:
