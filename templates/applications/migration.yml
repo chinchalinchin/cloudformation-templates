@@ -56,62 +56,62 @@ Parameters:
         Default: Innolab-VPCStack-Dev
 
 Resources:
-    SourceDMSEndpoint:
-        Type: "AWS::DMS::Endpoint"
-        Properties:
-            EndpointIdentifier: !Sub "${applicationName}-${environmentName}-source-endpoint"
-            EndpointType: "SOURCE"
-            EngineName: !Ref dbSourceEngine
-            Username: !Ref dbSourceUserName
-            Password: !Ref dbSourceUserPassword
-            ServerName: 
-                Fn::ImportValue: !Sub "${sourceStack}-RDSEndpoint"
-            Port: !Ref dbSourcePort
-            DatabaseName: !Ref dbSourceDatabase
-            SslMode: "none"
+    # SourceDMSEndpoint:
+    #     Type: "AWS::DMS::Endpoint"
+    #     Properties:
+    #         EndpointIdentifier: !Sub "${applicationName}-${environmentName}-source-endpoint"
+    #         EndpointType: "SOURCE"
+    #         EngineName: !Ref dbSourceEngine
+    #         Username: !Ref dbSourceUserName
+    #         Password: !Ref dbSourceUserPassword
+    #         ServerName: 
+    #             Fn::ImportValue: !Sub "${sourceStack}-RDSEndpoint"
+    #         Port: !Ref dbSourcePort
+    #         DatabaseName: !Ref dbSourceDatabase
+    #         SslMode: "none"
 
-    TargetDMSEndpoint:
-        Type: "AWS::DMS::Endpoint"
-        Properties:
-            EndpointIdentifier: !Sub "${applicationName}-${environmentName}-target-endpoint"
-            EndpointType: "TARGET"
-            EngineName: !Ref dbTargetEngine
-            Username: !Ref dbTargetUserName
-            Password: !Ref dbTargetUserPassword
-            ServerName: 
-                Fn::ImportValue: !sub "${targetStack}-RDSEndpoint"
-            Port: !Ref dbTargetPort
-            DatabaseName: !Ref dbTargetDatabase
-            SslMode: "none"
+    # TargetDMSEndpoint:
+    #     Type: "AWS::DMS::Endpoint"
+    #     Properties:
+    #         EndpointIdentifier: !Sub "${applicationName}-${environmentName}-target-endpoint"
+    #         EndpointType: "TARGET"
+    #         EngineName: !Ref dbTargetEngine
+    #         Username: !Ref dbTargetUserName
+    #         Password: !Ref dbTargetUserPassword
+    #         ServerName: 
+    #             Fn::ImportValue: !sub "${targetStack}-RDSEndpoint"
+    #         Port: !Ref dbTargetPort
+    #         DatabaseName: !Ref dbTargetDatabase
+    #         SslMode: "none"
 
-    ReplicationSubnetGroup: 
-        Type: "AWS::DMS::ReplicationSubnetGroup"
-        Properties: 
-            ReplicationSubnetGroupDescription: !Sub "Replication group for the ${applicationName} ${environmentName} environment"
-            ReplicationSubnetGroupIdentifier: !Sub "${applicationName}-${environmentName}-rep-subnet-group"
-            SubnetIds: 
-                - Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetA"
-                - Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetB"
-            Tags: 
-                -   Key: Application
-                    Value: !Ref applicationName
-                -   Key: Environment
-                    Value: !Ref environmentName
+    # ReplicationSubnetGroup: 
+    #     Type: "AWS::DMS::ReplicationSubnetGroup"
+    #     Properties: 
+    #         ReplicationSubnetGroupDescription: !Sub "Replication group for the ${applicationName} ${environmentName} environment"
+    #         ReplicationSubnetGroupIdentifier: !Sub "${applicationName}-${environmentName}-rep-subnet-group"
+    #         SubnetIds: 
+    #             - Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetA"
+    #             - Fn::ImportValue: !Sub "${vpcStack}-PrivateSubnetB"
+    #         Tags: 
+    #             -   Key: Application
+    #                 Value: !Ref applicationName
+    #             -   Key: Environment
+    #                 Value: !Ref environmentName
             
-    DMSReplicationInstance:
-        Type: "AWS::DMS::ReplicationInstance"
-        Properties:
-            ReplicationInstanceIdentifier: "${applicationName}-${environmentName}-replication-instance"
-            ReplicationInstanceClass: "dms.t3.medium"
-            AllocatedStorage: 5
-            VpcSecurityGroupIds:
-              - Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
-            AvailabilityZone: !Sub "${AWS::Region}b"
-            ReplicationSubnetGroupIdentifier: !Ref ReplicationSubnetGroup
-            MultiAZ: false
-            EngineVersion: "3.4.6"
-            AutoMinorVersionUpgrade: true
-            PubliclyAccessible: false
+    # DMSReplicationInstance:
+    #     Type: "AWS::DMS::ReplicationInstance"
+    #     Properties:
+    #         ReplicationInstanceIdentifier: "${applicationName}-${environmentName}-replication-instance"
+    #         ReplicationInstanceClass: "dms.t3.medium"
+    #         AllocatedStorage: 5
+    #         VpcSecurityGroupIds:
+    #           - Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
+    #         AvailabilityZone: !Sub "${AWS::Region}b"
+    #         ReplicationSubnetGroupIdentifier: !Ref ReplicationSubnetGroup
+    #         MultiAZ: false
+    #         EngineVersion: "3.4.6"
+    #         AutoMinorVersionUpgrade: true
+    #         PubliclyAccessible: false
 
     ClientRole:
         Type: "AWS::IAM::Role"
@@ -251,18 +251,18 @@ Resources:
                 GroupSet: [Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup", !Sub "${vpcStack}-DatabaseSecurityGroup"]  
             EbsOptimized: true
             SourceDestCheck: true
-            IamInstanceProfile: !Ref AlationRole
+            IamInstanceProfile: !Ref ClientRole
             Tags: 
-                - Key: Name
-                Value: !Sub ${applicationName}-${environmentName}-alation 
-                - Key: "Environment"
-                Value: !Ref environmentName
-                - Key: "Application"
-                Value: !Ref applicationName
-                - Key: "AutoStop"
-                Value: True
-                - Key: "AutoStart"
-                Value: True
+                -   Key: Name
+                    Value: !Sub ${applicationName}-${environmentName}-migration
+                -   Key: "Environment"
+                    Value: !Ref environmentName
+                -   Key: "Application"
+                    Value: !Ref applicationName
+                -   Key: "AutoStop"
+                    Value: True
+                -   Key: "AutoStart"
+                    Value: True
             UserData: 
                 # This script below is to install AmazonCloudWatchAgent, restart AmazonCloudWatchAgent and tell the result to cloudformation.
                 Fn::Base64: !Sub |
