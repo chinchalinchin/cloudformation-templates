@@ -172,18 +172,16 @@ Resources:
                 Configuration: 
                   ProjectName: !Ref CodeBuild
                   EnvironmentVariables: !Sub 
-                    - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "SONAR_URL", "value":"${app}-sonarURL", "type":"SECRETS_MANAGER" }, { "name": "SONAR_TOKEN", "value":"${app}-sonarToken", "type": "SECRETS_MANAGER" },{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${docs}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${cognitoClient}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${userPool}", "type": "PLAINTEXT"}]'
+                    - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" },{ "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"CLIENT_ID", "value":"${client}", "type": "PLAINTEXT"},{"name":"POOL_ID", "value":"${pool}", "type": "PLAINTEXT"}]'
                     - env: 
                         Fn::FindInMap:
                           - BranchMap
                           - !Ref environmentName
                           - branch
                       app: !Ref applicationName
-                      docs:
-                        Fn::ImportValue: !Sub ${docStack}-WebsiteDistributionID
-                      cognitoClient:
+                      client:
                         Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-                      userPool:
+                      pool:
                         Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
                       
       DependsOn:

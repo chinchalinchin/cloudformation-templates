@@ -28,8 +28,6 @@ Innolab-IAMStack:
   parameters:
     - ParameterKey: applicationName
       ParameterValue: innolab
-    - ParameterKey: masterPassword
-      ParameterValue: !env MASTER_PASSWORD
     - ParameterKey: pipelineUser
       ParameterValue: !env PIPELINE_USER
 

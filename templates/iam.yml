@@ -6,10 +6,7 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
-    Description: Namespace for the application resources
-  masterPassword:
-    Type: String
-    Description: Initial password for IAM users before required password reset.
+    Description: Namespace for the application resources.
   pipelineUser:
     Type: String
     Default: innolab-pipeline
@@ -600,9 +597,11 @@ Resources:
               - Action: 
                   - iam:GetAccountPasswordPolicy
                   - iam:GetAccountSummary
+                  - iam:ListVirtualMFADevices
                 Effect: Allow
                 Resource: '*'
               - Action: 
+                  - iam:GetUser
                   - iam:ChangePassword
                   - iam:CreateAccessKey
                   - iam:DeleteAccessKey
@@ -613,17 +612,39 @@ Resources:
                   - iam:GetSSHPublicKey
                   - iam:UpdateSSHPublicKey
                   - iam:UploadSSHPublicKey
+                  - iam:DeleteSigningCertificate
+                  - iam:ListSigningCertificates
+                  - iam:UpdateSigningCertificate
+                  - iam:UploadSigningCertificate
+                  - iam:CreateVirtualMFADevice
+                  - iam:DeleteVirtualMFADevice
+                  - iam:DeactivateMFADevice
+                  - iam:EnableMFADevice
+                  - iam:ListMFADevices
+                  - iam:ResyncMFADevice
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
+              - Action:
+                  - iam:CreateVirtualMFADevice
+                  - iam:EnableMFADevice
+                  - iam:GetUser
+                  - iam:ListMFADevices
+                  - iam:ListVirtualMFADevices
+                  - iam:ResyncMFADevice
+                  - sts:GetSessionToken
+                Effect: Deny
+                Resource: '*'
+                Condition:
+                  BoolIfExists:
+                    aws:MultiFactorAuthPresent: false 
 
   DatabaseAdminGroup:
     Type: AWS::IAM::Group
     Properties:
       GroupName: database-admin-group
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSDataFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
   
@@ -633,10 +654,14 @@ Resources:
       GroupName: power-user-group
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
         - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
         - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+        - arn:aws:iam::aws:policy/AmazonVPCFullAccess
 
   DeveloperGroup:
     Type: AWS::IAM::Group
@@ -647,7 +672,9 @@ Resources:
         - arn:aws:iam::aws:policy/AWSLambda_FullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AWSCodePipelineReadOnlyAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonVPCReadOnlyAccess
       Policies:
         - PolicyName: !Sub ${applicationName}-repository-branch-policy
           PolicyDocument:
@@ -665,72 +692,6 @@ Resources:
                       - "refs/heads/Prod"
                       - "refs/heads/Staging"
                       - "refs/heads/Dev"
-
-  IAMPeter:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-        - power-user-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: pcofrancesco
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
-      - PowerUserGroup
-
-  IAMThomas:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-        - power-user-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: tklock
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
-      - PowerUserGroup
-  
-  IAMPhung:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: pngo
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
-
-  IAMAurora:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-        - power-user-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: apariseau
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
-      - PowerUserGroup
 
 Outputs:
   PipelineUserArn:

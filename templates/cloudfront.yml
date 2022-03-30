@@ -111,7 +111,7 @@ Resources:
     Properties:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
-        - Name: ${subdomainName}.${domainName}
+        - Name: !Sub ${subdomainName}.${domainName}
           Type: A
           AliasTarget:
             DNSName: !GetAtt WebsiteDistribution.DomainName
