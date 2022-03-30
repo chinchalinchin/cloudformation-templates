@@ -147,6 +147,7 @@ Resources:
                 - Key: "Environment"
                 Value: !Ref environmentName
 
+    # Metadata comes from: https://github.com/awslabs/aws-cloudformation-templates/blob/master/aws/solutions/AmazonCloudWatchAgent/inline/amazon_linux.template
     MigrationClient:
         Type: AWS::EC2::Instance
         Metadata:
