@@ -697,22 +697,6 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
-  IAMJustin:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-        - developer-group
-        - power-user-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      Path: !Sub "/${applicationName}/"
-      UserName: jstauffer
-    DependsOn:
-      - BasicAccessGroup
-      - DeveloperGroup
-      
   IAMThomas:
     Type: AWS::IAM::User
     Properties:

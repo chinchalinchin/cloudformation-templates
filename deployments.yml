@@ -44,7 +44,7 @@ Innolab-RepoStack:
 Innolab-DocStack:
   template: cloudfront.yml
   parameters:
-    - ParameterKey: applicationname
+    - ParameterKey: applicationName
       ParameterValue: innolab
     - ParameterKey: domainName
       ParameterValue: documentation.makpar-innovation.net
@@ -74,6 +74,10 @@ Innolab-VPCStack-Dev:
       ParameterValue: innolab_tunnel_key_Dev
     - ParameterKey: bastionHost
       ParameterValue: "true"
+    - ParameterKey: domainName
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: hostedZoneId
+      ParameterValue: !env HOSTED_ZONE_ID
 
 Innolab-PostgresRDSStack-Dev:
   template: rds.yml
@@ -107,7 +111,7 @@ Innolab-OracleRDSStack-Dev:
     - ParameterKey: iamStack
       ParameterValue: Innolab-IAMStack
 
-Innolab-AlationStack-Dev:
+Innolab-AlationStack:
   template: applications/alation.yml
   parameters:
     - ParameterKey: applicationName

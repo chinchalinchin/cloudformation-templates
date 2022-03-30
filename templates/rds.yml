@@ -19,7 +19,7 @@ Parameters:
   # Stack Dependencies
   vpcStack:
     Type: String
-    Default: Innolab-VPCStack
+    Default: Innolab-VPCStack-Dev
   iamStack:
     Type: String
     Default: Innolab-IAMStack
