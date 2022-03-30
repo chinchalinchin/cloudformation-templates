@@ -111,13 +111,12 @@ Resources:
       EbsOptimized: true
       SourceDestCheck: true
       BlockDeviceMappings: 
-        - DeviceName: "/dev/sda1"
+        - DeviceName: "/dev/xvda"
           Ebs: 
             DeleteOnTermination: true
             Encrypted: true
             VolumeSize: 80
             VolumeType: "gp2"
-            DeleteOnTermination: true
         - DeviceName: "/dev/sdb"
           Ebs: 
             DeleteOnTermination: true
