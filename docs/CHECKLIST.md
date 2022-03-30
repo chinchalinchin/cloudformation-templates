@@ -7,7 +7,7 @@
 
 - [] IAMStack
 - [] RepoStack
-- [] CoverageStack
+- [] DocStack
 - [] CognitoStack
 - [] VPCStack
 - [] RDSStack

@@ -20,11 +20,11 @@ Parameters:
   ## DNS CONFIGURATION
   hostedZoneId:
     Type: String
-    Description: Hosted zone of the domain.
-  certificateArn:
+    Description: Physical ID of the hosted zone where the domain is served.
+  certificateId:
     Type: String
-    Description: AWS Arn of the domain certificate.
-  domain:
+    Description: Physical ID of the ACM SSL certificate.
+  domainName:
     Type: String
     Description: Domain the cluster services are hosted on
     Default: makpar-innovation.net
@@ -161,7 +161,7 @@ Resources:
       Port: 443
       Protocol: HTTPS
       Certificates:
-        - CertificateArn: !Ref certificateArn
+        - CertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${certificateId}"
     DependsOn:
       - PublicLoadBalancer
 
@@ -170,9 +170,9 @@ Resources:
     Properties:
       HostedZoneId: !Ref hostedZoneId
       Name: !Sub
-        - "${subdomain}${subdomainEnv}.${domainName}"
+        - "${subdomain}${subdomainEnv}.${domain}"
         - subdomain: !Ref applicationName
-          domainName: !Ref domain
+          domain: !Ref domainName
           subdomainEnv: 
             Fn::FindInMap:
               - BranchMap
@@ -188,7 +188,7 @@ Resources:
     Condition: DevResources
     Properties:
       HostedZoneId: !Ref hostedZoneId
-      Name: !Sub "${applicationName}-sonar.${domain}"
+      Name: !Sub "${applicationName}-sonar.${domainName}"
       Type: A
       AliasTarget:
         DNSName: !GetAtt PublicLoadBalancer.DNSName

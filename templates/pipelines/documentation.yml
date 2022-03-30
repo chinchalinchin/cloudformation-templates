@@ -8,10 +8,6 @@ Parameters:
     Type: String
     Default: innolab
     Description: Tag appended to application resources
-  environmentName:
-    Type: String
-    Default: Dev
-    Description: Environment into which resources are being deployed
   domainName:
     Type: String
     Default: makpar-innovation.net
@@ -24,30 +20,22 @@ Parameters:
     Type: String
     Default: Innolab-RepoStack
     Description: Cross-stack reference to stack containing repository resources
-  cognitoStack:
+  docStack:
     Type: String
-    Default: Innolab-CognitoStack
-    Description: Cross-stack reference to stack containing Cognito resources
-  coverageStack:
-    Type: String
-    Default: Innolab-CoverageStack
-    Description: Cross-stack reference to stack containing coverage (documentation) resources
-  clusterStack:
-    Type: String
-    Default: Innolab-ClusterStack
-    Description: Cross-stack reference to stack containing Fargate ECS resources
+    Default: Innolab-DocStack
+    Description: Cross-stack reference to stack containing documentation resources
 
 Resources:
   PipelineArtifacts:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub "${applicationName}-master-pipeline-artifacts"
+      BucketName: !Sub "${applicationName}-documenation-pipeline-artifacts"
       
   CodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "${applicationName}-master-codebuild"
+      Name: !Sub "${applicationName}-documentation-codebuild"
       Artifacts:
         Type: CODEPIPELINE
       ServiceRole:
@@ -85,15 +73,15 @@ Resources:
           referenceName:
             - master
       Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-master-pipeline"
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-documentation-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
-          Id: !Sub ${applicationName}-codepipeline-master
+          Id: !Sub ${applicationName}-codepipeline-documentation
 
   MasterPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-master-pipeline"
+      Name: !Sub "${applicationName}-documentation-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 
@@ -110,7 +98,7 @@ Resources:
                 Version: 1
                 Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-master-source"    
+                - Name: !Sub "${applicationName}-documentation-source"    
               Configuration:
                 RepositoryName: 
                   Fn::ImportValue: !Sub "${repoStack}-MasterRepository"
@@ -125,16 +113,16 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-master-source"
+                - Name: !Sub "${applicationName}-documentation-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-master-build"
+                - Name: !Sub "${applicationName}-documentation-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${covDistro}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "API_USERNAME", "value": "${app}-APIUsername", "type":"SECRETS_MANAGER" }, {"name": "API_PASSWORD", "value": "${app}-APIPassword", "type": "SECRETS_MANAGER"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"},{"name":"COVERAGE_DISTRIBUTION_ID", "value": "${docs}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
-                    covDistro:
-                      Fn::ImportValue: !Sub ${coverageStack}-CoverageDistributionID
+                    docs:
+                      Fn::ImportValue: !Sub ${docStack}-WebsiteDistributionID
 
     DependsOn:
       - CodeBuild

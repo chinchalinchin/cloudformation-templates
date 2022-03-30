@@ -365,6 +365,22 @@ Resources:
       ResourceSignal:
         Count: 1
         Timeout: PT5M
+    
+  NATElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref NATInstance
+
+  NATRoute53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref hostedZoneId
+      RecordSets:
+        - Name: !Sub "${applicationName}-bastion.${domain}"
+          Type: A
+          ResourceRecords: 
+            - !Ref NATElasticIP
+          TTL: 900
 
 Outputs:
   VPC:

@@ -1,4 +1,5 @@
-{"rules":[{
+{
+    "rules":[{
         "rule-type":"transformation",
         "rule-id": "127012249", 
         "rule-name":"127012249",
@@ -17,7 +18,7 @@
         "rule-id":"126989950",
         "rule-name":"126989950",
         "object-locator":{
-            "schema-name":"MARRYSHELLY",
+            "schema-name":"%",
             "table-name":"%"
         },
         "rule-action":"include",

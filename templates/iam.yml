@@ -12,45 +12,31 @@ Parameters:
     Description: Initial password for IAM users before required password reset.
   pipelineUser:
     Type: String
-    Default: innolab-bb-pipeline
-    Description: Username for the Bitbucket pipeline account
-  bitbucket:
-    Type: String
-    Description: Flag to signal the creation of an account for the Bitbucket pipeline
-    Default: false
-    AllowedValues: 
-      - true
-      - false
-
-Conditions:
-  Bitbucket: !Equals
-    - !Ref bitbucket
-    - true
+    Default: innolab-pipeline
+    Description: Username for the external pipeline account
   
 Resources:
-  ## BITBUCKET PIPELINE USER & POLICY
-  BitbucketPipelineUser:
+  ## PIPELINE USER & POLICY
+  PipelineUser:
     Type: AWS::IAM::User
-    Condition: Bitbucket
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
 
-  BitbucketPipelinePolicy:
+  PipelinePolicy:
     Type: AWS::IAM::Policy
-    Condition: Bitbucket
     Properties:
-      PolicyName: !Sub pipeline-${applicationName}-policy
+      PolicyName: !Sub ${applicationName}-pipeline-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: UpdateLambdaFunction
+          - Sid: LambdaPermissions
             Effect: Allow
             Action: 
               - "lambda:UpdateFunctionCode"
             Resource:
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*-*"
-          - Sid: RepositoryPermissions
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*"
+          - Sid: ECRPermissions
             Effect: Allow
             Action:
               - "ecr:GetAuthorizationToken"
@@ -67,28 +53,22 @@ Resources:
               - "ecr:PutImage"
             Resource: 
               - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
-          - Sid: piplineCrudOps
+          - Sid: S3ObjectPermissions
             Effect: Allow
             Action:
               - "s3:PutObject"
               - "s3:GetObject"
               - "s3:DeleteObject"
             Resource: 
-                - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment/*"
-          - Sid: pipelineReadOp
+                - !Sub "arn:aws:s3:::${applicationName}-*/*"
+          - Sid: S3BucketPermissions
             Effect: Allow
             Action:
               - "s3:ListBucket"
             Resource: 
-              - !Sub "arn:aws:s3:::${applicationName}-frontend*deployment"
-          - Sid: cloudfrontInvalidateOp
-            Effect: Allow
-            Action:
-              - "cloudfront:CreateInvalidation"
-            Resource:
-              - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
+              - !Sub "arn:aws:s3:::${applicationName}-*"
       Users: 
-        - !Ref BitbucketPipelineUser
+        - !Ref PipelineUser
 
   ## SERVICE ROLES
   # RDS MONITOR
@@ -121,7 +101,7 @@ Resources:
           Action: 
             - 'sts:AssumeRole'
       Policies:
-      - PolicyName: ecs-service
+      - PolicyName: !Sub ${applicationName}-ecs-baseline-permissions
         PolicyDocument:
           Statement:
           - Effect: Allow
@@ -189,7 +169,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
       Policies:
-        - PolicyName: !Sub ${applicationName}-ecs-task-execution-role-policy
+        - PolicyName: !Sub ${applicationName}-ecs-task-execution-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -244,7 +224,7 @@ Resources:
   # CODEDEPLOY EXECUTION ROLE
   CodeDeployRole:
     Type: AWS::IAM::Role
-    Description: Role to allow Innolab CodeDeploy access to other AWS Services
+    Description: Role to allow CodeDeploy access to other AWS Services
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -258,7 +238,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS'
       Policies:
-        - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
+        - PolicyName: !Sub ${applicationName}-codedeploy-artifact-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -268,6 +248,8 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - !Sub "arn:aws:s3:::${applicationName}-*"
+      RoleName: !Sub ${applicationName}-codedeploy-executor
+
 
   # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
@@ -284,7 +266,7 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: !Sub ${applicationName}-codepipeline-role-policy
+        - PolicyName: !Sub ${applicationName}-codepipeline-baseline-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -373,7 +355,7 @@ Resources:
                   - ecs:RegisterTaskDefinition
                 Effect: Allow
                 Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
-      RoleName: !Sub ${applicationName}-codepipeline-exector
+      RoleName: !Sub ${applicationName}-codepipeline-executor
         
   # CODEBUILD SERVICE ROLE
   CodeBuildRole:
@@ -390,7 +372,7 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: !Sub ${applicationName}-codebuild-role-policy
+        - PolicyName: !Sub ${applicationName}-codebuild-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -489,7 +471,7 @@ Resources:
                   - cognito-idp:AdminCreateUser
                 Resource: 
                   - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
-      RoleName: !Sub ${applicationName}-codebuild-exector
+      RoleName: !Sub ${applicationName}-codebuild-executor
 
   # LAMBDA FUNCTION ROLE
   LambdaExecutorRole:
@@ -511,7 +493,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
       Policies:
-        - PolicyName: !Sub "${applicationName}-cognito-token-policy"
+        - PolicyName: !Sub "${applicationName}-lambda-execution-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -538,9 +520,7 @@ Resources:
                   - dynamodb:Scan
                   - dynamodb:UpdateItem
                 Resource: 
-                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Dev"
-                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Staging"
-                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Prod"
+                  - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*"
               - Sid: CodeCommitPermissions
                 Effect: Allow
                 Action: 
@@ -583,7 +563,7 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-      RoleName: !Sub ${applicationName}-apigateway-logger
+      RoleName: !Sub ${applicationName}-apigateway-executor
 
   # CLOUDWATCH ROLE
   CloudWatchEventRole:
@@ -606,7 +586,7 @@ Resources:
               - Effect: Allow
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
-      RoleName: !Sub ${applicationName}-cloudwatch-role
+      RoleName: !Sub ${applicationName}-cloudwatch-executor
 
   BasicAccessGroup:
     Type: AWS::IAM::Group
@@ -641,13 +621,23 @@ Resources:
     Properties:
       GroupName: database-admin-group
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
         - arn:aws:iam::aws:policy/AmazonRDSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
   
+  PowerUserGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: power-user-group
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+
   DeveloperGroup:
     Type: AWS::IAM::Group
     Properties:
@@ -656,10 +646,10 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
         - arn:aws:iam::aws:policy/AWSLambda_FullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
         - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
       Policies:
-        - PolicyName: !Sub ${applicationName}-repository-env-branch-policy
+        - PolicyName: !Sub ${applicationName}-repository-branch-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -675,21 +665,6 @@ Resources:
                       - "refs/heads/Prod"
                       - "refs/heads/Staging"
                       - "refs/heads/Dev"
-
-  IAMTariq:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: tislam
-    DependsOn:
-      - BasicAccessGroup
 
   IAMGrant:
     Type: AWS::IAM::User
@@ -712,14 +687,10 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
       Path: !Sub "/${applicationName}/"
       UserName: pcofrancesco
     DependsOn:
@@ -732,14 +703,10 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
       Path: !Sub "/${applicationName}/"
       UserName: jstauffer
     DependsOn:
@@ -752,14 +719,10 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
       Path: !Sub "/${applicationName}/"
       UserName: tklock
     DependsOn:
@@ -787,6 +750,7 @@ Resources:
       Groups:
         - basic-access-group
         - developer-group
+        - power-user-group
       LoginProfile:
         Password: !Ref masterPassword
         PasswordResetRequired: True
@@ -796,34 +760,17 @@ Resources:
       - BasicAccessGroup
       - DeveloperGroup
 
-  # IAMSelah:
-  #   Type: AWS::IAM::User
-  #   Properties:
-  #     Groups:
-  #       - basic-access-group
-  #       - developer-group
-  #     LoginProfile:
-  #       Password: !Ref masterPassword
-  #       PasswordResetRequired: True
-  #     Path: !Sub "/${applicationName}/"
-  #     UserName: skonur
-  #   DependsOn:
-  #     - BasicAccessGroup
-  #     - DeveloperGroup
-
 Outputs:
-  BitbucketPipelineUserArn:
-    Condition: Bitbucket
-    Value: !GetAtt BitbucketPipelineUser.Arn
-    Description: ARN for BitBucket Pipeline User
+  PipelineUserArn:
+    Value: !GetAtt PipelineUser.Arn
+    Description: ARN for external Pipeline User
     Export:
-      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserArn
-  BitbucketPipelineUserName:
-    Condition: Bitbucket
+      Name: !Sub ${AWS::StackName}-PipelineUserArn
+  PipelineUserName:
     Value: !Ref pipelineUser
-    Description: Username for BitBucket Pipeline User
+    Description: Username for Pipeline User
     Export:
-      Name: !Sub ${AWS::StackName}-BitbucketPipelineUserName
+      Name: !Sub ${AWS::StackName}-PipelineUserName
   LambdaExecutorRoleArn:
     Value: !GetAtt LambdaExecutorRole.Arn
     Description: ARN for Lambda Execution Role

@@ -17,7 +17,7 @@ Parameters:
     Type: String
     Default: innolab
     Description: Application tag appended to the resourced being provisioned and deployed
-  domain:
+  domainName:
     Type: String
     Default: makpar-innovation.net
     Description: Domain where DNS records for the application are saved.
@@ -170,7 +170,7 @@ Resources:
     Properties:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
-        - Name: !Sub "${applicationName}-alation.${domain}"
+        - Name: !Sub "${applicationName}-alation.${domainName}"
           Type: A
           ResourceRecords: 
             - !GetAtt Alation.PublicIp
