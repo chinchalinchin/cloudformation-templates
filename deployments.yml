@@ -47,7 +47,9 @@ Innolab-DocStack:
     - ParameterKey: applicationName
       ParameterValue: innolab
     - ParameterKey: domainName
-      ParameterValue: documentation.makpar-innovation.net
+      ParameterValue: makpar-innovation.net
+    - ParameterKey: subdomainName
+      ParameterValue: documentation
     - ParameterKey: certificateId
       ParameterValue: !env CERTIFICATE_ID
     - ParameterKey: hostedZoneId
@@ -79,7 +81,7 @@ Innolab-VPCStack-Dev:
     - ParameterKey: hostedZoneId
       ParameterValue: !env HOSTED_ZONE_ID
 
-Innolab-PostgresRDSStack-Dev:
+Innolab-Postgres-RDSStack-Dev:
   template: rds.yml
   parameters:
     - ParameterKey: applicationName
@@ -95,7 +97,7 @@ Innolab-PostgresRDSStack-Dev:
     - ParameterKey: iamStack
       ParameterValue: Innolab-IAMStack
 
-Innolab-OracleRDSStack-Dev: 
+Innolab-Oracle-RDSStack-Dev: 
   template: rds.yml
   parameters:
     - ParameterKey: applicationName

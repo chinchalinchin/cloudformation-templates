@@ -9,8 +9,12 @@ Parameters:
     Default: innolab
   domainName:
     Type: String
-    Description: Domain name that is hosting the application
-    Default: documentation.makpar-innovation.net
+    Description: Domain name that is hosting the web pages
+    Default: makpar-innovation.net
+  subdomainName:
+    Type: String
+    Description: Subdomain name that is hosting the web pages
+    Default: documentation
   certificateId:
     Type: String
     Description: Physical ID of the ACM certificate used to sign requests on the domain.
@@ -24,13 +28,13 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       AccessControl: LogDeliveryWrite
-      BucketName: !Sub "${applicationName}-logs"
+      BucketName: !Sub "${applicationName}-${subdomainName}-logs"
 
   WebsiteBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub "${applicationName}-web"
+      BucketName: !Sub "${applicationName}-${subdomainName}-web"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -62,7 +66,7 @@ Resources:
     Properties:
       DistributionConfig: 
         Aliases: 
-          - !Ref domainName
+          - !Sub ${subdomainName}.${domainName}
         Origins: 
         - DomainName: !GetAtt WebsiteBucket.DomainName
           Id: !Ref WebsiteBucket
@@ -107,7 +111,7 @@ Resources:
     Properties:
       HostedZoneId: !Ref hostedZoneId
       RecordSets:
-        - Name: !Ref domainName
+        - Name: ${subdomainName}.${domainName}
           Type: A
           AliasTarget:
             DNSName: !GetAtt WebsiteDistribution.DomainName

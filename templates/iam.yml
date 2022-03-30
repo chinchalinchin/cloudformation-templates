@@ -666,21 +666,6 @@ Resources:
                       - "refs/heads/Staging"
                       - "refs/heads/Dev"
 
-  IAMGrant:
-    Type: AWS::IAM::User
-    Properties:
-      Groups:
-        - basic-access-group
-      LoginProfile:
-        Password: !Ref masterPassword
-        PasswordResetRequired: True
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      Path: !Sub "/${applicationName}/"
-      UserName: gmoore
-    DependsOn:
-      - BasicAccessGroup
-
   IAMPeter:
     Type: AWS::IAM::User
     Properties:
@@ -696,6 +681,7 @@ Resources:
     DependsOn:
       - BasicAccessGroup
       - DeveloperGroup
+      - PowerUserGroup
 
   IAMThomas:
     Type: AWS::IAM::User
@@ -712,6 +698,7 @@ Resources:
     DependsOn:
       - BasicAccessGroup
       - DeveloperGroup
+      - PowerUserGroup
   
   IAMPhung:
     Type: AWS::IAM::User
@@ -743,6 +730,7 @@ Resources:
     DependsOn:
       - BasicAccessGroup
       - DeveloperGroup
+      - PowerUserGroup
 
 Outputs:
   PipelineUserArn:
