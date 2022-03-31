@@ -316,15 +316,18 @@ Resources:
       - IpProtocol: tcp
         FromPort: '0'
         ToPort: '65535'
+        Description: VPC Self Ingress
         CidrIp: !GetAtt VPC.CidrBlock
       SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: '0'
         ToPort: '65535'
+        Description: Allow all outgoing traffic
         CidrIp: 0.0.0.0/0
       - IpProtocol: udp
         FromPort: '0'
         ToPort: '65535'
+        Description: Allow all outgoing traffic
         CidrIp: 0.0.0.0/0
 
   # SECRET FOR PRIVATE KEY
@@ -393,6 +396,11 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub ${AWS::StackName}-VPC
+  BastionHostIP:
+    Description: Elastic IP of Bastion Host
+    Value: !Ref NATElasticIP
+    Export:
+      Name: !Sub ${AWS::StackName}-BastionHostIP
   BastionHostDNSUrl:
     Description: IPv4 DNS public URL for bastion host
     Value: !GetAtt NATInstance.PublicDnsName
