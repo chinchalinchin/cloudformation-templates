@@ -36,6 +36,12 @@ IN_PROGRESS_STACKS=[
 ]
 
 def handle_boto_error(err: botocore.exceptions.ClientError):
+    """Handle **boto3** client response errors.
+
+    :param err: Client error
+    :type err: :class:`botocore.exceptions.ClientError`
+    :return: Handled error
+    """
     log.warning("Client Response %s - %s: %s",
                     err.response['ResponseMetadata']['HTTPStatusCode'], 
                     err.response['Error']['Code'], 
