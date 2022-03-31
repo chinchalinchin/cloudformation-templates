@@ -15,6 +15,7 @@ jobs:
           snyk config set org=$SNYK_ORG_ID
           snyk auth $SNYK_TOKEN
           snyk --version
+          snyk iac test --help
         displayName: Install SNYK CLI scanner
         env:
           NODE_VERSION: 14.0.0
@@ -41,7 +42,7 @@ jobs:
 
   - deployment: DeployInnoLab
     dependsOn: WaitForValidation
-    displayName: Deploy Innovation Lab Cloud Resources
+    displayName: DeployCloudResources
     pool:
       vmImage: 'ubuntu-latest'
     environment: 'AWS'
