@@ -43,6 +43,11 @@ Resources:
       DeletionPolicy: Delete
       Properties:
         BucketName: !Sub "${applicationName}-cloudformation-pipeline-artifacts"
+        PublicAccessBlockConfiguration:
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+          BlockPublicPolicy: true
+          BlockPublicAcls: true
     
     CodeBuild:
       Type: AWS::CodeBuild::Project

@@ -29,6 +29,11 @@ Resources:
     Properties:
       AccessControl: LogDeliveryWrite
       BucketName: !Sub "${applicationName}-${subdomainName}-logs"
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+        BlockPublicPolicy: true
+        BlockPublicAcls: true
 
   WebsiteBucket:
     Type: AWS::S3::Bucket
@@ -44,6 +49,11 @@ Resources:
         LogFilePrefix: 'log/'
       WebsiteConfiguration:
         IndexDocument: 'index.html'
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+        BlockPublicPolicy: true
+        BlockPublicAcls: true
 
   WebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy

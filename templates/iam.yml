@@ -13,7 +13,7 @@ Parameters:
     Description: Username for the external pipeline account
   
 Resources:
-  ## PIPELINE USER & POLICY
+  ############################################################################### PIPELINE ACCOUNT
   PipelineUser:
     Type: AWS::IAM::User
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
@@ -64,11 +64,20 @@ Resources:
               - "s3:ListBucket"
             Resource: 
               - !Sub "arn:aws:s3:::${applicationName}-*"
+          - Sid: CloudFormationPermissions
+            Effect: Allow
+            Action:
+              - "cloudformation:*"
+            Resource:
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset*"
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset-target"
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:type"
       Users: 
         - !Ref PipelineUser
 
-  ## SERVICE ROLES
-  # RDS MONITOR
+  ############################################################################### SERVICE ROLES
+
   RDSMonitoringRole:
     Type: AWS::IAM::Role
     Description: Role to allow monitoring of RDS
@@ -112,7 +121,6 @@ Resources:
               - 'ec2:DeleteNetworkInterfacePermission'
               - 'ec2:Describe*'
               - 'ec2:DetachNetworkInterface'
-
               # Rules which allow ECS to update load balancers on your behalf
               # with the information sabout how to send traffic to your containers
               - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
@@ -122,7 +130,6 @@ Resources:
               - 'elasticloadbalancing:RegisterTargets'
             Resource: '*'
 
-  # ECS Backend Task Execution Role
   ECSBackendTaskRole:
     Type: AWS::IAM::Role
     Description: Role for the Backend ECS Task execution
@@ -138,7 +145,6 @@ Resources:
               - "sts:AssumeRole"
       # Policies: TODO!
 
-  # ECS Frontend Task Execution Role
   ECSFrontendTaskRole:
     Type: AWS::IAM::Role
     Description: Role for the Frontend ECS Task execution
@@ -154,7 +160,6 @@ Resources:
               - "sts:AssumeRole"
       # Policies: TODO!
   
-  # ECS Execution Role
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -204,7 +209,6 @@ Resources:
                 Effect: Allow
                 Resource: !Sub "arn:aws:s3:::${applicationName}-env"
                 
-  # ECS SCALING ROLE
   ECSScalingRole:
     Type: AWS::IAM::Role
     Properties:
@@ -218,7 +222,6 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
 
-  # CODEDEPLOY EXECUTION ROLE
   CodeDeployRole:
     Type: AWS::IAM::Role
     Description: Role to allow CodeDeploy access to other AWS Services
@@ -247,8 +250,6 @@ Resources:
                   - !Sub "arn:aws:s3:::${applicationName}-*"
       RoleName: !Sub ${applicationName}-codedeploy-executor
 
-
-  # CODEPIPELINE SERVICE ROLE
   CodePipelineRole:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Pipeline access to other AWS Services
@@ -544,7 +545,6 @@ Resources:
 
       RoleName: !Sub ${applicationName}-lambda-executor
       
-  # GATEWAY LOG ROLE
   APILoggerRole:
     Type: AWS::IAM::Role
     Description: Role to allow API Gateway to push logs to CloudWatch
@@ -562,7 +562,6 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       RoleName: !Sub ${applicationName}-apigateway-executor
 
-  # CLOUDWATCH ROLE
   CloudWatchEventRole:
     Type: AWS::IAM::Role
     Properties:
@@ -584,6 +583,8 @@ Resources:
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
       RoleName: !Sub ${applicationName}-cloudwatch-executor
+
+  ############################################################################### GROUPS
 
   BasicAccessGroup:
     Type: AWS::IAM::Group
@@ -696,14 +697,14 @@ Resources:
                       - "refs/heads/Prod"
                       - "refs/heads/Staging"
                       - "refs/heads/Dev"
-        # - PolicyName: !Sub "${applicationName}-data-migration-policy"
-        #   PolicyDocumnet:
-        #     Version: "2012-10-17"
-        #     Statement:
-        #       - Action:
-        #           - "dms:Describe*"
-        #         Effect: Allow
-        #         Resource: 
+        - PolicyName: !Sub "${applicationName}-data-migration-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "dms:Describe*"
+                Effect: Allow
+                Resource: '*'
         - PolicyName: !Sub "${applicationName}-secret-policy"
           PolicyDocument:
             Version: "2012-10-17"
@@ -712,7 +713,6 @@ Resources:
                   - "secretsmanager:*"
                 Effect: Allow
                 Resource: '*'
-                # TODO: deny putvalue
               - Action:
                   - "secretsmanager:Put*"
                   - "secretsmanager:Remove*"
@@ -720,7 +720,6 @@ Resources:
                   - "secretsmanager:Update*"
                 Effect: Deny
                 Resource: '*'
-
 
 Outputs:
   PipelineUserArn:

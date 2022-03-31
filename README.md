@@ -72,6 +72,26 @@ python ./deploy/deployer.py
 
 **NOTE**: In order for this script to succeed, you must have your **AWS CLI** authenticated with an **IAM** account that has permission to deploy resources through **CloudFormation**. Similarly, the **Azure DevOps** pipeline requires an **IAM** account with the appropriate policies attached. 
 
+## Development
+
+When adding a new template, before you push to the remote, make sure you run a local linter against templates and scan them for vulnerabilities.
+
+TODO: pre-commit git hook for cfn-linter.
+
+### Security Scan
+
+Use the [snyk iac test](https://docs.snyk.io/snyk-cli/commands/iac-test) CLI utility to analyze the new template configuration,
+
+```shell
+./scripts/scan
+```
+
+A report will be output into */reports/* as well as printed to console. Address any security vulnerabilites before pushing, as the CI/CD pipeline for provisioning infrastructure will fail if the security scan fails.
+
+### Linting
+
+Ensure the new template is formatted correctly by running the official [CloudFormation linter](https://github.com/aws-cloudformation/cfn-lint) against the new templates,
+
 ## Notes
 
 1. Before provisioning the **VPCStack**, ensure the SSH key has been generated locally and imported into the **AWS EC2** keyring,

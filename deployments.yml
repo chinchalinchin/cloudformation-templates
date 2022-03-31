@@ -1,12 +1,14 @@
 ## Innovation Lab Deployment Configuration
-#   This configuration YML is used within the *innolab-cloudformation* pipeline to determine
-#   which stacks it should update or create when changes are pushed to the master branch.
-#
-#   The *AWS* infrastructure itself is provisioned through a *Azure DevOps* pipeline subject to
-#   to team lead and project owner approval. This pipeline will deploy or update the *AWS*
-#   environment based on the configuration of this file. Note: this includes provisioning 
-#   the *AWS CodePipelines* that actually deploys the applications. In other words, the 
-#   *Azure Devops* pipeline is a "pipeline of pipelines".
+#   This configuration YML is used by the python *deploy* module in the */src/* directory.
+#   The *deploy.deployer* script will parse this YML and pass the parameters specified into 
+#   the appropriate **CloudFormation** template in the */templates/* directory. It will then
+#   call the **AWS CloudFormation API** through the **boto3** python wrapper with the 
+#   parameterized template. 
+
+#   Each block in the YML represents a distinct stack. The *template* property determines
+#   which **CloudFormation** template is retrieved from the */templates/* directory. The 
+#   *parameters* property is an array of parameters corresponding to the parameters of the
+#   **CloudFormation** template. 
 
 ## Syntax:
 #   StackName:
@@ -27,7 +29,7 @@ Innolab-IAMStack:
   template: iam.yml
   parameters:
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: pipelineUser
       ParameterValue: !env PIPELINE_USER
 
@@ -35,7 +37,7 @@ Innolab-RepoStack:
   template: repo.yml
   parameters: 
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: github
       ParameterValue: "false"
 
@@ -43,9 +45,9 @@ Innolab-DocStack:
   template: cloudfront.yml
   parameters:
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
+      ParameterValue: !env DOMAIN
     - ParameterKey: subdomainName
       ParameterValue: documentation
     - ParameterKey: certificateId
@@ -53,29 +55,19 @@ Innolab-DocStack:
     - ParameterKey: hostedZoneId
       ParameterValue: !env HOSTED_ZONE_ID
 
-Innolab-CognitoStack-Dev:
-  template: cognito.yml
-  parameters:
-    - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
-    - ParameterKey: applicationName
-      ParameterValue: innolab
-    - ParameterKey: environmentName
-      ParameterValue: Dev
-
 Innolab-VPCStack-Dev:
   template: vpc.yml
   parameters:
     - ParameterKey: applicationName 
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
-      ParameterValue: Dev
+      ParameterValue: !env ENVIRONMENT
     - ParameterKey: dbKeyName
       ParameterValue: innolab_tunnel_key_Dev
     - ParameterKey: bastionHost
       ParameterValue: "true"
     - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
+      ParameterValue: !env DOMAIN
     - ParameterKey: hostedZoneId
       ParameterValue: !env HOSTED_ZONE_ID
 
@@ -83,13 +75,13 @@ Innolab-Postgres-RDSStack-Dev:
   template: rds.yml
   parameters:
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
-      ParameterValue: Dev
+      ParameterValue: !env ENVIRONMENT
     - ParameterKey: type
       ParameterValue: postgres
     - ParameterKey: port
-      ParameterValue: "5432"
+      ParameterValue: !env POSTGRES_RDS_PORT
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
     - ParameterKey: iamStack
@@ -99,13 +91,13 @@ Innolab-Oracle-RDSStack-Dev:
   template: rds.yml
   parameters:
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
-      ParameterValue: Dev
+      ParameterValue: !env ENVIRONMENT
     - ParameterKey: type
       ParameterValue: oracle
     - ParameterKey: port
-      ParameterValue: "1521"
+      ParameterValue: !env ORACLE_RDS_PORT
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
     - ParameterKey: iamStack
@@ -115,9 +107,9 @@ Innolab-AlationStack:
   template: applications/alation.yml
   parameters:
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
-      ParameterValue: Dev 
+      ParameterValue: !env ENVIRONMENT
     - ParameterKey: alationKeyName
       ParameterValue: innolab_alation_key
     - ParameterKey: domainName
@@ -139,11 +131,11 @@ Innolab-LambdaStack-Dev:
     - ParameterKey: repoStack
       ParameterValue: Innolab-RepoStack
     - ParameterKey: environmentName
-      ParameterValue: Dev
+      ParameterValue: !env ENVIRONMENT
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
+      ParameterValue: !env DOMAIN
     - ParameterKey: hostedZoneId
       ParameterValue: !env HOSTED_ZONE_ID
     - ParameterKey: certificateId
@@ -153,9 +145,9 @@ Innolab-Doc-PipelineStack:
   template: pipelines/documentation.yml
   parameters:
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
+      ParameterValue: !env DOMAIN
     - ParameterKey: iamStack
       ParameterValue: Innolab-IAMStack
     - ParameterKey: repoStack
@@ -167,11 +159,11 @@ Innolab-Lambda-PipelineStack-Dev:
   template: pipelines/lambda.yml
   parameters:
     - ParameterKey: applicationName
-      ParameterValue: innolab
+      ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
-      ParameterValue: Dev
+      ParameterValue: !env ENVIRONMENT
     - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
+      ParameterValue: !env DOMAIN
     - ParameterKey: iamStack
       ParameterValue: Innolab-IAMStack
     - ParameterKey: repoStack
@@ -181,43 +173,43 @@ Innolab-Lambda-PipelineStack-Dev:
     - ParameterKey: cognitoStack
       ParameterValue: Innolab-CognitoStack-Dev
 
-Innolab-MigrationStack:
-  template: applications/migration.yml
-  parameters:
-    - ParameterKey: applicationName
-      ParameterValue: innolab
-    - ParameterKey: environmentName
-      ParameterValue: Dev
-    - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
-    - ParameterKey: hostedZoneId
-      ParameterValue: !env HOSTED_ZONE_ID
-    - ParameterKey: clientKeyName
-      ParameterValue: innolab_migration_client
-    - ParameterKey: dbSourceUsername
-      ParameterValue: !env ORACLE_RDS_USERNAME
-    - ParameterKey: dbSourcePassword
-      ParameterValue: !env ORACLE_RDS_PASSWORD
-    - ParameterKey: dbSourcePort
-      ParameterValue: "1521"
-    - ParameterKey: dbSourceDatabase
-      ParameterValue: ORCL
-    - ParameterKey: dbSourceEngine
-      ParameterValue: oracle
-    - ParameterKey: dbTargetUsername
-      ParameterValue: !env POSTGRES_RDS_USERNAME
-    - ParameterKey: dbTargetPassword
-      ParameterValue: !env POSTGRES_RDS_PASSWORD
-    - ParameterKey: dbTargetPort
-      ParameterValue: "5432"
-    - ParameterKey: dbTargetDatabase
-      ParameterValue: postgres
-    - ParameterKey: dbTargetEngine
-      ParameterValue: postgres
-    - ParameterKey: targetStack
-      ParameterValue: Innolab-Postgres-RDSStack-Dev
-    - ParameterKey: sourceStack
-      ParameterValue: Innolab-Oracle-RDSStack-Dev
-    - ParameterKey: vpcStack
-      ParameterValue: Innolab-VPCStack-Dev
+# Innolab-MigrationStack:
+#   template: applications/migration.yml
+#   parameters:
+#     - ParameterKey: applicationName
+#       ParameterValue: !env APPLICATION
+#     - ParameterKey: environmentName
+#       ParameterValue: !env ENVIRONMENT
+#     - ParameterKey: domainName
+#       ParameterValue: !env DOMAIN
+#     - ParameterKey: hostedZoneId
+#       ParameterValue: !env HOSTED_ZONE_ID
+#     - ParameterKey: clientKeyName
+#       ParameterValue: innolab_migration_client
+#     - ParameterKey: dbSourceUsername
+#       ParameterValue: !env ORACLE_RDS_USERNAME
+#     - ParameterKey: dbSourcePassword
+#       ParameterValue: !env ORACLE_RDS_PASSWORD
+#     - ParameterKey: dbSourcePort
+#       ParameterValue: !env ORACLE_RDS_PORT
+#     - ParameterKey: dbSourceDatabase
+#       ParameterValue: !env ORACLE_RDS_DB
+#     - ParameterKey: dbSourceEngine
+#       ParameterValue: oracle
+#     - ParameterKey: dbTargetUsername
+#       ParameterValue: !env POSTGRES_RDS_USERNAME
+#     - ParameterKey: dbTargetPassword
+#       ParameterValue: !env POSTGRES_RDS_PASSWORD
+#     - ParameterKey: dbTargetPort
+#       ParameterValue: !env POSTGRES_RDS_PORT
+#     - ParameterKey: dbTargetDatabase
+#       ParameterValue: !env POSTGRES_RDS_DB
+#     - ParameterKey: dbTargetEngine
+#       ParameterValue: postgres
+#     - ParameterKey: targetStack
+#       ParameterValue: Innolab-Postgres-RDSStack-Dev
+#     - ParameterKey: sourceStack
+#       ParameterValue: Innolab-Oracle-RDSStack-Dev
+#     - ParameterKey: vpcStack
+#       ParameterValue: Innolab-VPCStack-Dev
   

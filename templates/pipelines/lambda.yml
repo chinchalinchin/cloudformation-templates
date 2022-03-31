@@ -66,6 +66,11 @@ Resources:
                 - BranchMap
                 - !Ref environmentName
                 - branch
+        PublicAccessBlockConfiguration:
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+          BlockPublicPolicy: true
+          BlockPublicAcls: true
     
     CodeBuild:
       Type: AWS::CodeBuild::Project

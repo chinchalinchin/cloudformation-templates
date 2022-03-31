@@ -81,6 +81,11 @@ Resources:
               - branch
       VersioningConfiguration:
         Status: Enabled
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+        BlockPublicPolicy: true
+        BlockPublicAcls: true
       
   CodeBuild:
     Type: AWS::CodeBuild::Project
