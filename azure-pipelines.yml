@@ -15,6 +15,7 @@ jobs:
           snyk config set org=$SNYK_ORG_ID
           snyk auth $SNYK_TOKEN
           snyk --version
+          echo $SNYK_SEVERITY
           snyk iac test --help
         displayName: Install SNYK CLI scanner
         env:
