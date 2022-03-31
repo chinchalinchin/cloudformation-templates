@@ -2,8 +2,11 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 PROJECT_DIR=$SCRIPT_DIR/..
-source $PROJECT_DIR/env/.env
 
+if [ -f $PROJECT_DIR/env/.env ]
+then
+    source $PROJECT_DIR/env/.env
+fi
 
 snyk iac test $PROJECT_DIR/templates/** \
     --report \

@@ -11,8 +11,10 @@ jobs:
     steps:
       - script: |
           npm install snyk -g
+          npm -v
           snyk config set org=$SNYK_ORG_ID
           snyk auth $SNYK_TOKEN
+          snyk --version
         displayName: Install SNYK CLI scanner
         env:
           NODE_VERSION: 14.0.0
