@@ -1,5 +1,27 @@
 # Infrastructure
 
+The infrastructure supporting the Innovation Lab is provisioned using Infrastructure-as-Code through **CloudFormation**.
+
+```shell
+aws cloudformation create-stack
+    --stack-name <name>
+    --template-body <body>
+    --parameters ParameterKey=<key>,ParameterValue=<value> 
+                 ParameterKey=<key>,ParameterValue=<value>
+                 # ...
+```
+
+## Architecture
+
+The setup procedures in this section will provision the following architecture,
+
+![InnoLab Architecture](https://documentation.makpar-innovation.net/_images/innolab_architecture.png)
+
+
+TODO (@SELAH): description of architecture: VPC, public subnets, private subnets.
+
+# Infrastructure
+
 The infrastructure supporting the Innovation Lab is provisioned through an **Azure DevOps pipeline** hooked into this repository. Resources are configured using [Infrastructure-as-Code](https://en.wikipedia.org/wiki/Infrastructure_as_code). When changes are merged into the `master` branch, this pipeline will pull in the changes into the **Azure** build environment, and then deploy or update the resources defined in the *deployments.yml*. 
 
 ## Procedure For Provisioning
@@ -59,6 +81,16 @@ aws ec2 import-key-pair --key-name <name-of-key> --public-key-material fileb://<
 ```
 
 **NOTE**: Ensure you import the *public* key, not the *private* key. The *private* key is used to establish the identity of the person initiating an SSH connection.
+
+The bastion host acts as a gateway into the **InnoLab** VPC. After the key has been imported into the bastion host and added to the **SecretsManager**, you can pull the *private* SSH key for tunneling into the bastion host from the **SecretsManager** and initiate a connection with any of the instances in the **VPC** with,
+
+```shell
+eval $(ssh-agent -s)
+ssh-add ~/.ssh/$KEYNAME
+ssh -i $KEYNAME -f -N -L \
+      <LOCAL PORT>:<INTERNAL INSTANCE ADDRESS>:<INTERNAL INSTANCE PORT> \
+      ec2-user@<NAT BASTION HOST DNS URL> -v
+```
 
 2. Before provisioning the **RDSStack**, ensure secrets for the username and password have been created in the **SecretsManager**. See */templates/rds.yml* lines 77 -78 for the secret naming convention.
 

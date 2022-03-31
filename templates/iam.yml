@@ -678,6 +678,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodePipelineReadOnlyAccess
         - arn:aws:iam::aws:policy/AWSCodeBuildReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonVPCReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess
       Policies:
         - PolicyName: !Sub ${applicationName}-repository-branch-policy
           PolicyDocument:
@@ -695,6 +696,31 @@ Resources:
                       - "refs/heads/Prod"
                       - "refs/heads/Staging"
                       - "refs/heads/Dev"
+        # - PolicyName: !Sub "${applicationName}-data-migration-policy"
+        #   PolicyDocumnet:
+        #     Version: "2012-10-17"
+        #     Statement:
+        #       - Action:
+        #           - "dms:Describe*"
+        #         Effect: Allow
+        #         Resource: 
+        - PolicyName: !Sub "${applicationName}-secret-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "secretsmanager:*"
+                Effect: Allow
+                Resource: '*'
+                # TODO: deny putvalue
+              - Action:
+                  - "secretsmanager:Put*"
+                  - "secretsmanager:Remove*"
+                  - "secretsmanager:Rotate*"
+                  - "secretsmanager:Update*"
+                Effect: Deny
+                Resource: '*'
+
 
 Outputs:
   PipelineUserArn:

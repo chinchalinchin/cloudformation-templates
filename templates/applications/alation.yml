@@ -82,6 +82,10 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
 
   Alation:
     Type: "AWS::EC2::Instance"
@@ -111,7 +115,7 @@ Resources:
       EbsOptimized: true
       SourceDestCheck: true
       BlockDeviceMappings: 
-        - DeviceName: "/dev/xvda"
+        - DeviceName: "/dev/sda1"
           Ebs: 
             DeleteOnTermination: true
             Encrypted: true
