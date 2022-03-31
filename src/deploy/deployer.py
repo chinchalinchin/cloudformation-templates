@@ -35,6 +35,13 @@ IN_PROGRESS_STACKS=[
     'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS',
 ]
 
+def handle_boto_error(err: botocore.exceptions.ClientError):
+    log.warning("Client Response %s - %s: %s",
+                    err.response['ResponseMetadata']['HTTPStatusCode'], 
+                    err.response['Error']['Code'], 
+                    err.response['Error']['Message'])
+    return err
+
 def env_var_constructor(loader: yaml.SafeLoader, node: yaml.nodes.ScalarNode) -> str:
     """Pull YAML node reference from corresponding environment variable
 
@@ -129,8 +136,7 @@ def update_stack(stack: str, deployment: dict) -> dict:
             }]
         )
     except botocore.exceptions.ClientError as e:
-        log.warning(e)
-        return e
+        return handle_boto_error(e)
 
 def create_stack(stack: str, deployment: dict) -> dict:
     """Create the given `stack` with the given `deployment` configuration
@@ -169,8 +175,7 @@ def create_stack(stack: str, deployment: dict) -> dict:
             }]
         )
     except botocore.exceptions.ClientError as e:
-        log.warning(e)
-        return e
+        return handle_boto_error(e)
 
 def deploy():
     """Application entrypoint. This function orchestrates the deployment.
@@ -180,11 +185,9 @@ def deploy():
     if stack_deployments is not None:
         for stack, deployment in stack_deployments.items():
             if stack in stack_names:
-                result = update_stack(stack, deployment)
+                update_stack(stack, deployment)
             else:
-                result = create_stack(stack, deployment)
-
-            log.info(result)
+                create_stack(stack, deployment)
 
             while stack in get_stack_names(in_progress=True):
                 log.info('Waiting on %s...', stack)
