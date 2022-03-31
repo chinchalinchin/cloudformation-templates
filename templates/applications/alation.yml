@@ -165,6 +165,11 @@ Resources:
           curl -kLH "Authorization: Token $TOKEN" https://customerportal.alationdata.com/api/build_artifact/13195/download/ > alation-2022.1-11.2.2.159547.rpm
           rpm -i alation-2022.1-11.2.2.159547.rpm
   
+  AlationElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref Alation
+
   AlationRoute53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Properties:
@@ -173,6 +178,6 @@ Resources:
         - Name: !Sub "${applicationName}-alation.${domainName}"
           Type: A
           ResourceRecords: 
-            - !GetAtt Alation.PublicIp
+            - !Ref AlationElasticIP
           TTL: 900
 

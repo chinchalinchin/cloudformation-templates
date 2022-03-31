@@ -115,30 +115,6 @@ Resources:
     DependsOn:
       - CognitoUserPool
 
-  CognitoPeter:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "pcofrancesco@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email"
-          Value: "pcofrancesco@makpar.com"
-        - Name: "name"
-          Value: "Peter Cofrancesco"
-    DependsOn:
-      - CognitoUserPool
-
-  CognitoTariq:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "tislam@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email"
-          Value: "tislam@makpar.com"
-        - Name: "name"
-          Value: "Tariq Islam"
-
   CognitoGrant:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
@@ -151,71 +127,6 @@ Resources:
           Value: "Grant Moore"
     DependsOn:
         - CognitoUserPool
-
-  CognitoThomas:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "tklock@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email"
-          Value: "tklock@makpar.com"
-        - Name: "name"
-          Value: "Thomas Klock"
-    DependsOn:
-      - CognitoUserPool
-  
-  CognitoMatt:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "aukhan@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email"
-          Value: "aukhan@makpar.com"
-        - Name: "name"
-          Value: "Matt Pinardi"
-    DependsOn:
-      - CognitoUserPool
-  
-  CognitoPhung:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "pngo@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email"
-          Value: "pngo@makpar.com"
-        - Name: "name"
-          Value: "Phung Ngo"
-    DependsOn:
-      - CognitoUserPool
-
-  CognitoSelah:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "skonur@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email"
-          Value: "skonur@makpar.com"
-        - Name: "name"
-          Value: "Selah Konur"
-    DependsOn:
-      - CognitoUserPool
-  
-  CognitoAurora:
-    Type: "AWS::Cognito::UserPoolUser"
-    Properties:
-      Username: "apariseau@makpar.com"
-      UserPoolId: !Ref CognitoUserPool
-      UserAttributes:
-        - Name: "email"
-          Value: "apariseau@makpar.com"
-        - Name: "name"
-          Value: "Aurora Pariseau"
-    DependsOn:
-      - CognitoUserPool
 
 Outputs:
   CognitoUserPoolArn:

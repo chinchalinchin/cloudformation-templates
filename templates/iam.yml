@@ -616,8 +616,6 @@ Resources:
                   - iam:ListSigningCertificates
                   - iam:UpdateSigningCertificate
                   - iam:UploadSigningCertificate
-                  - iam:CreateVirtualMFADevice
-                  - iam:DeleteVirtualMFADevice
                   - iam:DeactivateMFADevice
                   - iam:EnableMFADevice
                   - iam:ListMFADevices
@@ -625,6 +623,11 @@ Resources:
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
               - Action:
+                  - iam:CreateVirtualMFADevice
+                  - iam:DeleteVirtualMFADevice
+                Effect: Allow
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:mfa/*"
+              - NotAction:
                   - iam:CreateVirtualMFADevice
                   - iam:EnableMFADevice
                   - iam:GetUser
