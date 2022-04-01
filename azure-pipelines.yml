@@ -5,7 +5,19 @@ variables:
 - group: Deploy
 
 jobs:
-  - job: ScanForVulnerabilities
+  - job: LintValidation
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: |
+          pip install -r requirements.txt
+        displayName: Install CloudFormation linter
+      - script: |
+          ./scripts/lint
+        displayName: Lint templates
+        
+  - job: VulnerabilityScan
+    dependsOn: LintValidation
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -27,8 +39,8 @@ jobs:
           ./scripts/scan
         displayName: Scan templates for vulnerabilities
 
-  - job: WaitForValidation
-    dependsOn: ScanForVulnerabilities
+  - job: ManualApproval
+    dependsOn: VulnerabilityScan
     pool: server
     steps:
     - task: ManualValidation@0
@@ -42,8 +54,8 @@ jobs:
         onTimeout: 'reject'
 
   - deployment: DeployInnoLab
-    dependsOn: WaitForValidation
-    displayName: DeployCloudResources
+    dependsOn: ManualApproval
+    displayName: DeployResources
     pool:
       vmImage: 'ubuntu-latest'
     environment: 'AWS'

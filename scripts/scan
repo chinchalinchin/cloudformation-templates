@@ -8,6 +8,11 @@ then
     source $PROJECT_DIR/env/.env
 fi
 
+if ! command -v snyk &> /dev/null
+then
+    npm install --global snyk
+fi
+
 snyk iac test $PROJECT_DIR/templates/** \
     --severity-threshold="$SNYK_SEVERITY" \
     --json-file-output=$PROJECT_DIR/reports/"$(date +'%m-%d-%Y')_report.json"
