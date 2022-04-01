@@ -30,10 +30,9 @@ jobs:
           NODE_VERSION: 14.0.0
           SNYK_TOKEN: $(SNYK_TOKEN)
           SNYK_ORG_ID: $(SNYK_ORG_ID)
-          SNYK_SEVERITY: high
       - script: |
           snyk iac test ./templates/** \
-                          --severity-threshold="$SNYK_SEVERITY"
+                          --severity-threshold="high"
         displayName: Scan templates for vulnerabilities
 
   - job: ManualApproval
