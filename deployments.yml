@@ -78,7 +78,7 @@ Innolab-Postgres-RDSStack-Dev:
       ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
       ParameterValue: !env ENVIRONMENT
-    - ParameterKey: type
+    - ParameterKey: typeName
       ParameterValue: postgres
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
@@ -92,7 +92,7 @@ Innolab-Oracle-RDSStack-Dev:
       ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
       ParameterValue: !env ENVIRONMENT
-    - ParameterKey: type
+    - ParameterKey: typeName
       ParameterValue: oracle
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
@@ -169,43 +169,35 @@ Innolab-Lambda-PipelineStack-Dev:
     - ParameterKey: cognitoStack
       ParameterValue: Innolab-CognitoStack-Dev
 
-# Innolab-MigrationStack:
-#   template: applications/migration.yml
-#   parameters:
-#     - ParameterKey: applicationName
-#       ParameterValue: !env APPLICATION
-#     - ParameterKey: environmentName
-#       ParameterValue: !env ENVIRONMENT
-#     - ParameterKey: domainName
-#       ParameterValue: !env DOMAIN
-#     - ParameterKey: hostedZoneId
-#       ParameterValue: !env HOSTED_ZONE_ID
-#     - ParameterKey: clientKeyName
-#       ParameterValue: innolab_migration_client
-#     - ParameterKey: dbSourceUsername
-#       ParameterValue: !env ORACLE_RDS_USERNAME
-#     - ParameterKey: dbSourcePassword
-#       ParameterValue: !env ORACLE_RDS_PASSWORD
-#     - ParameterKey: dbSourcePort
-#       ParameterValue: !env ORACLE_RDS_PORT
-#     - ParameterKey: dbSourceDatabase
-#       ParameterValue: !env ORACLE_RDS_DB
-#     - ParameterKey: dbSourceEngine
-#       ParameterValue: oracle
-#     - ParameterKey: dbTargetUsername
-#       ParameterValue: !env POSTGRES_RDS_USERNAME
-#     - ParameterKey: dbTargetPassword
-#       ParameterValue: !env POSTGRES_RDS_PASSWORD
-#     - ParameterKey: dbTargetPort
-#       ParameterValue: !env POSTGRES_RDS_PORT
-#     - ParameterKey: dbTargetDatabase
-#       ParameterValue: !env POSTGRES_RDS_DB
-#     - ParameterKey: dbTargetEngine
-#       ParameterValue: postgres
-#     - ParameterKey: targetStack
-#       ParameterValue: Innolab-Postgres-RDSStack-Dev
-#     - ParameterKey: sourceStack
-#       ParameterValue: Innolab-Oracle-RDSStack-Dev
-#     - ParameterKey: vpcStack
-#       ParameterValue: Innolab-VPCStack-Dev
+Innolab-MigrationStack:
+  template: applications/migration.yml
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: !env APPLICATION
+    - ParameterKey: environmentName
+      ParameterValue: !env ENVIRONMENT
+    - ParameterKey: domainName
+      ParameterValue: !env DOMAIN
+    - ParameterKey: hostedZoneId
+      ParameterValue: !env HOSTED_ZONE_ID
+    - ParameterKey: clientKeyName
+      ParameterValue: innolab_migration_client
+    - ParameterKey: dbSourceUsername
+      ParameterValue: !env ORACLE_RDS_USERNAME
+    - ParameterKey: dbSourcePassword
+      ParameterValue: !env ORACLE_RDS_PASSWORD
+    - ParameterKey: dbSourceEngine
+      ParameterValue: oracle
+    - ParameterKey: dbTargetUsername
+      ParameterValue: !env POSTGRES_RDS_USERNAME
+    - ParameterKey: dbTargetPassword
+      ParameterValue: !env POSTGRES_RDS_PASSWORD
+    - ParameterKey: dbTargetEngine
+      ParameterValue: postgres
+    - ParameterKey: targetStack
+      ParameterValue: Innolab-Postgres-RDSStack-Dev
+    - ParameterKey: sourceStack
+      ParameterValue: Innolab-Oracle-RDSStack-Dev
+    - ParameterKey: vpcStack
+      ParameterValue: Innolab-VPCStack-Dev
   

@@ -49,11 +49,6 @@ Resources:
         LogFilePrefix: 'log/'
       WebsiteConfiguration:
         IndexDocument: 'index.html'
-      PublicAccessBlockConfiguration:
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-        BlockPublicPolicy: true
-        BlockPublicAcls: true
 
   WebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy

@@ -94,6 +94,23 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
       RoleName: !Sub ${applicationName}-rds-monitor
+  
+  MigrationMonitoringRole:
+    Type: AWS::IAM::Role
+    Description: Role to allow monitoring of RDS
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "dms.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole
+      RoleName: !Sub ${applicationName}-dms-monitor
 
   ECSRole:
     Type: AWS::IAM::Role
@@ -355,7 +372,6 @@ Resources:
                 Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
       RoleName: !Sub ${applicationName}-codepipeline-executor
         
-  # CODEBUILD SERVICE ROLE
   CodeBuildRole:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Pipeline's CodeBuild stage to access other AWS Services
@@ -471,7 +487,6 @@ Resources:
                   - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
       RoleName: !Sub ${applicationName}-codebuild-executor
 
-  # LAMBDA FUNCTION ROLE
   LambdaExecutorRole:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Lambdas to access other AWS Services

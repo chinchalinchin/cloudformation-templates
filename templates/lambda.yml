@@ -15,7 +15,7 @@ Parameters:
   domainName: 
     Type: String
     Default: makpar-innovation.net
-    Domain: Domain hosting the resources. Must be purchased before use.
+    Description: Domain hosting the resources. Must be purchased before use.
   hostedZoneId:
     Type: String
     Description: Physical ID of the hosted zone where the domain is being served.

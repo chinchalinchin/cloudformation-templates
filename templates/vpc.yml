@@ -12,7 +12,7 @@ Parameters:
   domainName: 
     Type: String
     Default: makpar-innovation.net
-    Domain: Domain hosting the resources. Must be purchased before use.
+    Description: Domain hosting the resources. Must be purchased before use.
   environmentName:
     Type: String
     Default: Dev

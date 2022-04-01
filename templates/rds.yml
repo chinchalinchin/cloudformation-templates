@@ -45,10 +45,8 @@ Resources:
   RDS:
     Type: AWS::RDS::DBInstance
     Properties:
-      AllocatedStorage: 100
-      AutoMinorVersionUpgrade: true
-      BackupRetentionPeriod: 7
-      CopyTagsToSnapshot: false
+      AllocatedStorage: 10
+      BackupRetentionPeriod: 0
       DBInstanceClass: db.t3.micro
       DBInstanceIdentifier: !Sub ${applicationName}-${environmentName}-${typeName}-database
       EnableIAMDatabaseAuthentication: 
@@ -56,7 +54,6 @@ Resources:
           - ConfigMap
           - !Ref typeName
           - iamAuthentication
-      EnablePerformanceInsights: true
       Engine: 
         Fn::FindInMap:
           - ConfigMap
@@ -79,18 +76,17 @@ Resources:
       PubliclyAccessible: false
       StorageEncrypted: true
       StorageType: gp2
-      PerformanceInsightsRetentionPeriod: 7
       DeletionProtection: false
       Port: 
         Fn::FindInMap:
           - ConfigMap
-          - !Ref type
+          - !Ref typeName
           - port
       DBSubnetGroupName: 
         Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
       VPCSecurityGroups: 
         - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
-      MaxAllocatedStorage: 1000
+      MaxAllocatedStorage: 20
       MonitoringRoleArn:
         Fn::ImportValue: !Sub ${iamStack}-RDSMonitorRoleARN
       Tags: 
@@ -105,17 +101,18 @@ Resources:
       GroupId: 
         Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
       IpProtocol: tcp
+      Description: !Sub "Bastion Host ${typeName} Ingress"
       SourceSecurityGroupId:
         Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup"
       FromPort:
         Fn::FindInMap:
           - ConfigMap
-          - !Ref type
+          - !Ref typeName
           - port
       ToPort:
         Fn::FindInMap:
           - ConfigMap
-          - !Ref type
+          - !Ref typeName
           - port
 
 Outputs:
