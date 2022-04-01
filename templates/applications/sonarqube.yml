@@ -47,7 +47,7 @@ Resources:
       - Key: Name
         Value: !Sub ${applicationName}-sonarqube
       - Key: Application
-        Value: ${applicationName}
+        Value: !Sub ${applicationName}
       - Key: Environment
         Value: Dev
       ImageId: ami-0922553b7b0369273
@@ -60,7 +60,7 @@ Resources:
         SubnetId: 
           Fn::ImportValue: !Sub ${vpcStack}-PublicSubnetA
       UserData:
-        'Fn::Base64': !Sub |
+        'Fn::Base64': |
           #!/bin/bash -ex
           yum update -y
           wget -O /etc/yum.repos.d/sonar.repo http://downloads.sourceforge.net/project/sonar-pkg/rpm/sonar.repo

@@ -8,10 +8,6 @@ Parameters:
     Type: String
     Default: Innolab-IAMStack
     Description: Name of the IAM Cross Stack reference
-  repoStack:
-    Type: String
-    Default: Innolab-RepoStack
-    Description: Name of the Repo Cross Stack reference
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
@@ -19,6 +15,7 @@ Parameters:
   clusterStack:
     Type: String
     Default: Innolab-ClusterStack-Dev
+    Description: Name of the Cluster Stack reference
   ## APPLICATION CONFIGURATION
   applicationName:
     Type: String
@@ -29,33 +26,14 @@ Parameters:
     Default: Dev
     Description: The environment into which the application is being deployed.
   ## SERVICE CONFIGURATION
-  domain:
+  domainName:
     Type: String
     Default: makpar-innovation.net
     Description: Domain for the application cluster
   port:
     Type: Number
     Default: 8080 
-    Description: Port mapping for frontend service 
-  tag:
-    Type: String
-    Default: Dev
-    Description: Image tag for the front service ECR
-
-Mappings:
-  BranchMap:
-    Dev: 
-      branch:  "dev"
-      subdomain: "-dev"
-    Test: 
-      branch: "test"
-      subdomain: "-test"
-    Staging: 
-      branch: "staging"
-      subdomain: "-staging"
-    Prod: 
-      branch: "prod"
-      subdomain: ""
+    Description: Port mapping for service
 
 Resources:
   AlationLogGroup:
@@ -136,14 +114,13 @@ Resources:
         - Field: host-header
           HostHeaderConfig:
             Values:
-              - !Sub "alation.${domain}"
+              - !Sub "alation.${domainName}"
       Actions:
         - Type: forward
           TargetGroupArn: !Ref AlationTargetGroup
 
   AlationTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: AlationLogGroup
     Properties:
       Family: !Sub "${applicationName}-${environmentName}-alation-task-definition"
       NetworkMode: awsvpc

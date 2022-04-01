@@ -20,10 +20,6 @@ Parameters:
     Type: String
     Default: Innolab-RepoStack
     Description: Cross-stack reference to stack containing repository resources
-  docStack:
-    Type: String
-    Default: Innolab-DocStack
-    Description: Cross-stack reference to stack containing documentation resources
 
 Resources:
   PipelineArtifacts:
@@ -126,6 +122,3 @@ Resources:
                 EnvironmentVariables: !Sub 
                   - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
-
-    DependsOn:
-      - CodeBuild

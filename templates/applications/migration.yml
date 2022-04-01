@@ -23,8 +23,10 @@ Parameters:
         Default: makpar-innovation.net
     dbSourceUsername: 
         Type: String
+        NoEcho: true
     dbSourcePassword:
         Type: String
+        NoEcho: true
     dbSourceDatabase:
         Type: String
     dbSourcePort:
@@ -36,8 +38,10 @@ Parameters:
             - oracle
     dbTargetUsername:
         Type: String
+        NoEcho: true
     dbTargetPassword:
         Type: String
+        NoEcho: true
     dbTargetDatabase:
         Type: String
     dbTargetPort:
@@ -278,7 +282,7 @@ Resources:
                         Fn::ImportValue: !Sub "${vpcStack}-PublicSubnetA"
                     AssociatePublicIpAddress: true
                     GroupSet: [Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup", Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"]  
-            IamInstanceProfile: !Ref ClientRole
+            IamInstanceProfile: !Ref ClientProfile
             Tags: 
                 -   Key: Name
                     Value: !Sub ${applicationName}-${environmentName}-migration

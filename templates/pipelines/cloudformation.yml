@@ -8,14 +8,6 @@ Parameters:
     Type: String
     Default: innolab
     Description: Tag appended to application resources
-  environmentName:
-    Type: String
-    Default: Dev
-    Description: Environment into which resources are being deployed
-  domainName:
-    Type: String
-    Default: makpar-innovation.net
-    Description: Domain name over which the appplication is served.
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -24,18 +16,6 @@ Parameters:
     Type: String
     Default: Innolab-RepoStack
     Description: Cross-stack reference to stack containing repository resources
-  cognitoStack:
-    Type: String
-    Default: Innolab-CognitoStack
-    Description: Cross-stack reference to stack containing Cognito resources
-  coverageStack:
-    Type: String
-    Default: Innolab-CoverageStack
-    Description: Cross-stack reference to stack containing coverage (documentation) resources
-  clusterStack:
-    Type: String
-    Default: Innolab-ClusterStack
-    Description: Cross-stack reference to stack containing Fargate ECS resources
 
 Resources:
     PipelineArtifacts:
@@ -138,5 +118,3 @@ Resources:
                   EnvironmentVariables: !Sub 
                     - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
                     - app: !Ref applicationName
-      DependsOn:
-        - CodeBuild

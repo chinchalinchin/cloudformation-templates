@@ -29,19 +29,10 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
-  ## SERVICE CONFIGURATION
-  domain:
-    Type: String
-    Default: makpar-innovation.net
-    Description: Domain for the application cluster
   port:
     Type: Number
     Default: 8000
     Description: Port mapping for backend service
-  tag:
-    Type: String
-    Default: Dev-v0.0.0
-    Description: Image tag for the backend service ECR
 
 Mappings:
   BranchMap:
@@ -141,7 +132,6 @@ Resources:
 
   BackendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: BackendLogGroup
     Properties:
       Family: !Sub "${applicationName}-${environmentName}-backend-task-definition"
       NetworkMode: awsvpc
@@ -157,7 +147,7 @@ Resources:
             - "${imageUri}:${whichTag}"
             - imageUri:  
                 Fn::ImportValue: !Sub "${repoStack}-BackendImageRepository"
-              whichTag: !Ref tag
+              whichTag: !Ref environmentName
           PortMappings:
             - ContainerPort: !Ref port
           EnvironmentFiles:

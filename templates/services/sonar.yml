@@ -8,10 +8,6 @@ Parameters:
     Type: String
     Default: Innolab-IAMStack
     Description: Name of the IAM Cross Stack reference
-  repoStack:
-    Type: String
-    Default: Innolab-RepoStack
-    Description: Name of the Repo Cross Stack reference
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
@@ -37,25 +33,6 @@ Parameters:
     Type: Number
     Default: 9000
     Description: Port mapping for sonar service 
-  tag:
-    Type: String
-    Default: Dev
-    Description: Image tag for the front service ECR
-
-Mappings:
-  BranchMap:
-    Dev: 
-      branch:  "dev"
-      subdomain: "-dev"
-    Test: 
-      branch: "test"
-      subdomain: "-test"
-    Staging: 
-      branch: "staging"
-      subdomain: "-staging"
-    Prod: 
-      branch: "prod"
-      subdomain: ""
 
 Resources:
   SonarLogGroup:
@@ -124,7 +101,6 @@ Resources:
 
   SonarTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: SonarLogGroup
     Properties:
       Family: !Sub "${applicationName}-${environmentName}-sonar-task-definition"
       NetworkMode: awsvpc

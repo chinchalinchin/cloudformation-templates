@@ -28,8 +28,7 @@ Parameters:
     Type: String
     Default: Dev
     Description: The environment into which the application is being deployed.
-  ## SERVICE CONFIGURATION
-  domain:
+  domainName:
     Type: String
     Default: makpar-innovation.net
     Description: Domain for the application cluster
@@ -37,10 +36,6 @@ Parameters:
     Type: Number
     Default: 8080 
     Description: Port mapping for frontend service 
-  tag:
-    Type: String
-    Default: Dev-v0.0.0
-    Description: Image tag for the front service ECR
 
 Mappings:
   BranchMap:
@@ -139,7 +134,7 @@ Resources:
               - !Sub
                 - "${subdomain}${subdomainEnv}.${domainName}"
                 - subdomain: !Ref applicationName
-                  domainName: !Ref domain
+                  domainName: !Ref domainName
                   subdomainEnv: 
                     Fn::FindInMap:
                       - BranchMap
@@ -151,7 +146,6 @@ Resources:
 
   FrontendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: FrontendLogGroup
     Properties:
       Family: !Sub "${applicationName}-${environmentName}-frontend-task-definition"
       NetworkMode: awsvpc
@@ -167,7 +161,7 @@ Resources:
             - "${imageUri}:${whichTag}"
             - imageUri:  
                 Fn::ImportValue: !Sub "${repoStack}-FrontendImageRepository"
-              whichTag: !Ref tag
+              whichTag: !Ref environmentName
           PortMappings:
             - ContainerPort: !Ref port
           EnvironmentFiles:

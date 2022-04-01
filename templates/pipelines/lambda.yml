@@ -28,10 +28,6 @@ Parameters:
     Type: String
     Default: Innolab-CognitoStack
     Description: Cross-stack reference to stack containing Cognito resources
-  docStack:
-    Type: String
-    Default: Innolab-DocStack
-    Description: Cross-stack reference to stack containing documentation resources
 
 Conditions:
   DevResources: !Equals
@@ -188,6 +184,3 @@ Resources:
                         Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
                       pool:
                         Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-                      
-      DependsOn:
-        - CodeBuild

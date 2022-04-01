@@ -133,7 +133,7 @@ Resources:
             Encrypted: true
             VolumeSize: 200
             VolumeType: "gp2"
-      IamInstanceProfile: !Ref AlationRole
+      IamInstanceProfile: !Ref AlationInstanceProfile
       Tags: 
         - Key: Name
           Value: !Sub ${applicationName}-${environmentName}-alation 
@@ -153,7 +153,7 @@ Resources:
       EnclaveOptions: 
         Enabled: false
       UserData: 
-        Fn::Base64: !Sub |
+        Fn::Base64: |
           #!/bin/bash
           yum install unzip -y
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"

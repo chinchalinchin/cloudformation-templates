@@ -4,13 +4,6 @@ Description: "The top of the DevOps stackset. This stack creates the CI/CD pipel
 
 # NOTE: All pipeline stacks ingest the same parameters, even if they don't use them. This is done so the script that stands up the pipelines can be generalized to stand up any of the pipeline stacks, instead of having a script for each type of pipeline.
 Parameters:
-  github:
-    Type: String
-    Default: false
-    AllowedValues:
-      - true
-      - false
-    Description: Flag to signal CodePipeline should hook into Github repository instead of CodeCommit. A work in progress.
   applicationName:
     Type: String
     Default: innolab
@@ -35,25 +28,15 @@ Parameters:
     Type: String
     Default: Innolab-CognitoStack
     Description: Cross-stack reference to stack containing Cognito resources
-  coverageStack:
+  docStack:
     Type: String
-    Default: Innolab-CoverageStack
+    Default: Innolab-DocStack
     Description: Cross-stack reference to stack containing coverage (documentation) resources
-  clusterStack:
-    Type: String
-    Default: Innolab-ClusterStack
-    Description: Cross-stack reference to stack containing Fargate ECS resources
 
 Conditions:
   DevResources: !Equals
     - !Ref environmentName
     - Dev
-  GitHubSource: !Equals
-    - !Ref github
-    - true
-  CodeCommitSource: !Equals
-    - !Ref github
-    - false
 
 Mappings:
   BranchMap:
@@ -298,9 +281,7 @@ Resources:
                         - branch
                     app: !Ref applicationName
                     covDistro:
-                      Fn::ImportValue: !Sub ${coverageStack}-CoverageDistributionID
-    DependsOn:
-      - CodeBuild
+                      Fn::ImportValue: !Sub ${docStack}-WebsiteDistributionID
 
   # FrontendDeployPipeline:
   #   Type: AWS::CodePipeline::Pipeline
@@ -517,14 +498,11 @@ Resources:
                         - branch
                     app: !Ref applicationName
                     covDistro:
-                      Fn::ImportValue: !Sub ${coverageStack}-CoverageDistributionID
+                      Fn::ImportValue: !Sub ${docStack}-WebsiteDistributionID
                     cognitoClient:
                       Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
                     userPool:
                       Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-                    
-    DependsOn:
-      - CodeBuild
 
   # BackendDeployPipeline:
   #   Type: AWS::CodePipeline::Pipeline
