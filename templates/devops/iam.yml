@@ -76,7 +76,7 @@ Resources:
               - !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
       Users: 
         - !Ref BitbucketPipelineUser
-
+  
   ## SERVICE ROLES
   RDSMonitoringRole:
     Type: AWS::IAM::Role
@@ -285,7 +285,62 @@ Resources:
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Staging"
                   - !Sub  "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${applicationName}-*-Prod"
       RoleName: !Sub ${applicationName}-lambda-executor
-      
+  
+  # Beta LAMBDA FUNCTION ROLE AND POLICY
+  LambdaExecutorEC2:
+    Type: AWS::IAM::Role
+    Description: Role to allow Innolab Lambdas to access other AWS Services
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: !Sub "${applicationName}-cognito-token-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: TokenPermissions
+                Effect: Allow
+                Action:
+                  - "cognito-idp:AdminInitiateAuth"
+                Resource: 
+                  - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+        - PolicyName: !Sub ${applicationName}-ec2-management-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: LambdaStartStopEc2
+                Effect: Allow
+                Action: 
+                  - "ec2:StartInstances"
+                  - "ec2:StopInstances"
+                Resource:
+                  - !Sub  "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+              - Sid: LambdaStartStopRds
+                Effect: Allow
+                Action: 
+                  - "rds:StartDBInstance"
+                  - "rds:StopDBInstance"
+                Resource:
+                  - !Sub  "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:db/*"
+              - Sid: DescribeInstances
+                Effect: Allow
+                Action: 
+                  - "rds:DescribeDBInstances"
+                  - "ec2:DescribeInstances"
+                Resource:
+                  - "*"
+      RoleName: !Sub ${applicationName}-lambda-executor-instances
+          
   # GATEWAY LOG ROLE
   APILoggerRole:
     Type: AWS::IAM::Role
@@ -543,6 +598,11 @@ Outputs:
     Description: ARN for Lambda Execution Role
     Export:
       Name: !Sub ${AWS::StackName}-LambdaExecutorArn
+  LambdaExecutorArnEC2:
+    Value: !GetAtt LambdaExecutorEC2.Arn
+    Description: ARN for Lambda Execution Role for EC2 Management
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaExecutorEC2Arn
   CodePipelineRoleArn:
     Value: !GetAtt CodePipelineRole.Arn
     Description: ARN for CodePipeline role
