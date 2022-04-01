@@ -6,12 +6,14 @@ Parameters:
   applicationName:
     Type: String
     Default: innolab
+    Description: Namespace of the application resources
   github:
     Type: String
     Default: false
     AllowedValues:
       - true
       - false
+    Description: Flag to stop the provisioning of CodeCommit resources and provision a CodeStar connection to Github instead.
 
 Conditions:
   GitHubSource: !Equals

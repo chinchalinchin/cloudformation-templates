@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "The first stack of the DevOps stackset; this stack should always be stood up before the rest of the stacks. It creates all the necessary IAM permissions on which the application will build. It contains a dummy account for a Bitbucket pipeline, an execution role for Lambda, services roles for CodeBuild and CodePipeline and other various roles necessary for the application to function. NOTE: This stack contains resources for both a Bitbucket and a CodePipeline CI/CD pipeline. If using the CodePipeline, the ${applicationName}-RepoStack and ${applicationName}-PipelineStack stacks will need stood up in addition to the other stacks."
+Description: "The first stack of applicationName. This stack should always be stood up before the rest of the stacks. It creates all the necessary IAM permissions on which the application will build. It contains a dummy account for a Bitbucket pipeline, an execution role for Lambda, services roles for CodeBuild and CodePipeline and other various roles necessary for the application to function. NOTE: This stack contains resources for both a third party and a CodePipeline CI/CD pipeline. If using the CodePipeline, the applicationName-RepoStack and applicationName-PipelineStack stacks will need stood up in addition to the other stacks."
 
 Parameters:
   applicationName:

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "The first stack of the ${applicationName} application. It will provision all the necessary resources for a Cognito OAUTH authentication flow, such as UserPool, UserPoolClients, UserPoolDomain, etc. It will also provision user accounts for the development team and send them emails to reset their Cognito IDP passwords."
+Description: "The first stack of the applicationName application. It will provision all the necessary resources for a Cognito OAUTH authentication flow, such as UserPool, UserPoolClients, UserPoolDomain, etc. It will also provision user accounts for the development team and send them emails to reset their Cognito IDP passwords."
 
 Parameters:
   domainName:

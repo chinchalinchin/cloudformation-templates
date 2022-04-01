@@ -1,33 +1,29 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Provisions a DB instances with credentials resolved from the SecretManager and deploys it into a private subnet in the ${applicationName}-VPCStack-${environmentName}. A policy is created to allow users to connect to the RDS through IAM"
+Description: "Provisions a DB instances with credentials resolved from the SecretManager and deploys it into a private subnet of the applicationName-VPCStack-environmentName and adds a ingress rule to the appropriate security group"
 
 Parameters:
   applicationName:
     Type: String
     Default: innoLab
+    Description: Namespace of application resources
   environmentName:
     Type: String
     Default: Dev
-  type:
+    Description: Environment into which resources are deploying
+  typeName:
     Type: String
     AllowedValues:
       - postgres
       - oracle
-  port:
-    Type: Number
-    Default: 5432
-  # Stack Dependencies
-  vpcStack:
-    Type: String
-    Default: Innolab-VPCStack-Dev
+    Description: SQL Engine type of the relational database service
   iamStack:
     Type: String
     Default: Innolab-IAMStack
-
-  ## NOTE: see note below for ``DatabaseConnectPolicy`` resource.
-  # iamStack:
-    # Type: String
-    # Default: InnoLab-IAMStack
+    Description: Cross-stack reference to applicationName-IAMStack
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack-Dev
+    Description: Cross-stack reference to applicationName-VPCStack-environmentName
 
 Mappings:
   # Engine specific configuration goes here
@@ -37,11 +33,13 @@ Mappings:
       engineVersion: 14.1
       licenseModel: postgresql-license
       iamAuthentication: true
+      port: 5432
     oracle: 
       engine: oracle-se2
       engineVersion: 12.1.0.2.v26
       licenseModel: license-included
       iamAuthentication: false
+      port: 1521
 
 Resources:
   RDS:
@@ -52,30 +50,30 @@ Resources:
       BackupRetentionPeriod: 7
       CopyTagsToSnapshot: false
       DBInstanceClass: db.t3.micro
-      DBInstanceIdentifier: !Sub ${applicationName}-${environmentName}-${type}-database
+      DBInstanceIdentifier: !Sub ${applicationName}-${environmentName}-${typeName}-database
       EnableIAMDatabaseAuthentication: 
         Fn::FindInMap:
           - ConfigMap
-          - !Ref type
+          - !Ref typeName
           - iamAuthentication
       EnablePerformanceInsights: true
       Engine: 
         Fn::FindInMap:
           - ConfigMap
-          - !Ref type
+          - !Ref typeName
           - engine
       EngineVersion:
         Fn::FindInMap:
           - ConfigMap
-          - !Ref type
+          - !Ref typeName
           - engineVersion
       LicenseModel:
         Fn::FindInMap:
           - ConfigMap
-          - !Ref type
+          - !Ref typeName
           - licenseModel
-      MasterUsername: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
-      MasterUserPassword: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}"
+      MasterUsername: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-${typeName}-dbUsername:SecretString}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${applicationName}-${environmentName}-${typeName}-dbPassword:SecretString}}"
       MonitoringInterval: 60
       MultiAZ: false
       PubliclyAccessible: false
@@ -83,7 +81,11 @@ Resources:
       StorageType: gp2
       PerformanceInsightsRetentionPeriod: 7
       DeletionProtection: false
-      Port: !Ref port
+      Port: 
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - port
       DBSubnetGroupName: 
         Fn::ImportValue: !Sub ${vpcStack}-DatabaseSubnetGroup
       VPCSecurityGroups: 
@@ -97,32 +99,24 @@ Resources:
         - Key: Application
           Value: !Ref applicationName
   
-  ## NOTE: The following policy should theoretically allow IAM users to which it is attached to access
-  #        the RDS through IAM authentication. However, since the RDS is in a private subnet, I am not 
-  #        sure this policy will work...
-  # DatabaseConnectPolicy:
-    # Type: AWS::IAM::Policy
-    # Description: Policy to allow users to connect via AWS CLI
-    # Properties:
-      # PolicyName: !Sub ${applicationName}-${environmentName}-db-connect-policy
-      # PolicyDocument:
-        # Version: "2012-10-17"
-        # Statement:
-          # - Sid: RepositoryPermissions
-            # Effect: Allow
-            # Action:
-              # - "rds-db:connect"
-            # Resource: 
-              # NOTE: db-QJLKM6XPHWPIA2MO6QTDQAGNHQ is a regional variable and does not change unless the region is changed.
-              # - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:db-QJLKM6XPHWPIA2MO6QTDQAGNHQ/{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}"
-      # Users:
-        # - Fn::ImportValue: !Sub "${iamStack}-Ian"
-        # - Fn::ImportValue: !Sub "${iamStack}-Grant"
-        # - Fn::ImportValue: !Sub "${iamStack}-Thomas"
-        # - Fn::ImportValue: !Sub "${iamStack}-Peter"
-        # - Fn::ImportValue: !Sub "${iamStack}-Tariq"
-    # DependsOn:
-      # - PostgresRDS
+  DatabaseSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: 
+        Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
+      IpProtocol: tcp
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup"
+      FromPort:
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - port
+      ToPort:
+        Fn::FindInMap:
+          - ConfigMap
+          - !Ref type
+          - port
 
 Outputs:
   RDSEndpoint:

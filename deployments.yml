@@ -80,8 +80,6 @@ Innolab-Postgres-RDSStack-Dev:
       ParameterValue: !env ENVIRONMENT
     - ParameterKey: type
       ParameterValue: postgres
-    - ParameterKey: port
-      ParameterValue: !env POSTGRES_RDS_PORT
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
     - ParameterKey: iamStack
@@ -96,8 +94,6 @@ Innolab-Oracle-RDSStack-Dev:
       ParameterValue: !env ENVIRONMENT
     - ParameterKey: type
       ParameterValue: oracle
-    - ParameterKey: port
-      ParameterValue: !env ORACLE_RDS_PORT
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
     - ParameterKey: iamStack

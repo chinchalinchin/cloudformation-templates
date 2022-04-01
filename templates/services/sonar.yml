@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for the Sonar service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with the official SonarQube iamge. The task definition is used to spin up a service instance of SonarQube.'
+Description: 'Provisions resources for the Sonar service deployed into applicationName-ClusterStack-environmentName. A task definition is created with the official SonarQube iamge. The task definition is used to spin up a service instance of SonarQube.'
 
 Parameters:
   ## CROSS STACK REFERENCES

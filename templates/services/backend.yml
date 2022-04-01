@@ -1,7 +1,7 @@
 
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions resources for the backendend service deployed into ${applicationName}-ClusterStack-${environmentName}. A task definition is created with a cross stack reference to the RepoStack frontend ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created. Note: the backend service needs stood up before the frontend service.'
+Description: 'Provisions resources for the backendend service deployed into applicationName-ClusterStack-environmentName. A task definition is created with a cross stack reference to the RepoStack frontend ECR image repository output. All the necessary resources to route traffic and initiate blue green deployments are provisioned, such as a load balancer, target groups, scaling policies. Finally, the service itself is created. Note: the backend service needs stood up before the frontend service.'
 
 Parameters:
   ## CROSS STACK REFERENCES

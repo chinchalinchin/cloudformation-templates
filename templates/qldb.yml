@@ -4,12 +4,16 @@ Description: "Stack for a serverless QLDB ledger"
 Parameters:
     ledgerName:
       Type: String
-    applicationName:
-      Type: String
-      Default: innolab
+      Default: laboratory
+      Description: Name of the QLDB Ledger provisioned
     environmentName:
       Type: String
       Default: Dev
+      Description: Environment into which the resources are deploying
+    applicationName:
+      Type: String
+      Default: innolab
+      Description: Namespace of the application resources
 
 Resources:
   QLDBLedger:

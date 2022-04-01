@@ -13,4 +13,5 @@ then
     pip install -r $PROJECT_DIR/requirements.txt
 fi
 
-cfn-lint $PROJECT_DIR/templates/**/*.yml
+cfn-lint $PROJECT_DIR/templates/**/*.yml \
+            --output-file $PROJECT_DIR/reports/cfn-lint/"$(date +'%m-%d-%Y')_report.json"

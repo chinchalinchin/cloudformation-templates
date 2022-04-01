@@ -25,7 +25,7 @@ Parameters:
     Type: String
     Description: Physical ID of the AWS Hosted Zone where the domain is served.
 
-Description: "A stack of configuration and resources for deploying Alation service into either a private or public subnet in ${applicationName}-VPCStack-Dev VPC."
+Description: "A stack of configuration and resources for deploying Alation service into either a private or public subnet in applicationName-VPCStack-Dev VPC."
 
 Resources:
   AlationRole:

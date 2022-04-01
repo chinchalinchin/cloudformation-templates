@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "A stack for a standalone SonarQube instance deployed into a public subnet of the ${application}-VPCStack-Dev VPC."
+Description: "A stack for a standalone SonarQube instance deployed into a public subnet of the applicationName-VPCStack-Dev VPC."
 
 Parameters:
   applicationName:

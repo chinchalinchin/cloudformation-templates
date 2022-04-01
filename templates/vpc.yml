@@ -12,6 +12,7 @@ Parameters:
   domainName: 
     Type: String
     Default: makpar-innovation.net
+    Domain: Domain hosting the resources. Must be purchased before use.
   environmentName:
     Type: String
     Default: Dev
@@ -266,15 +267,6 @@ Resources:
       VpcId: !Ref VPC
     DependsOn:
       - NATSecurityGroup
-
-  PostgresSecurityGroupIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref DatabaseSecurityGroup
-      IpProtocol: tcp
-      SourceSecurityGroupId: !GetAtt NATSecurityGroup.GroupId
-      FromPort: 5432
-      ToPort: 5432
 
   OracleSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress

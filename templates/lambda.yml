@@ -1,37 +1,44 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: 'Provisions a series of Lambda functions, gives them an execution role for the VPC from ${applicationName}-VPCStack-${environmentName} and attaches policies to update the function code to the pipeline role from the ${applicationName}-IAMStack. The execution images for the Lambdas are pulled from the repositores in ${applicationName}-RepoStack.'
+Description: 'Provisions a series of Lambda functions, gives them an execution role for the VPC from applicationName-VPCStack-environmentName and attaches policies to update the function code to the pipeline role from the applicationName-IAMStack. The execution images for the Lambdas are pulled from the repositores in applicationName-RepoStack.'
 
 Parameters:
-  ## CROSS STACK REFERENCES
-  iamStack:
-    Type: String
-    Default: Innolab-IAMStack
-  vpcStack:
-    Type: String
-    Default: Innolab-VPCStack-Dev
-  cognitoStack:
-    Type: String
-    Default: Innolab-CognitoStack-Dev
-  repoStack:
-    Type: String
-    Default: Innolab-RepoStack
   ## APPLICATION CONFIGURATION
   environmentName:
     Type: String
     Default: Dev
+    Description: Environment into which the stack is deploying
   applicationName:
     Type: String
     Default: innolab
+    Description: Namespace of the stack resources
   domainName: 
     Type: String
     Default: makpar-innovation.net
+    Domain: Domain hosting the resources. Must be purchased before use.
   hostedZoneId:
     Type: String
     Description: Physical ID of the hosted zone where the domain is being served.
   certificateId:
     Type: String
     Description: ARN of the ACM SSL Certificate used to sign requests to domain.
+  ## CROSS STACK REFERENCES
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+    Description: Cross-stack reference to applicationName-IAMStack
+  repoStack:
+    Type: String
+    Default: Innolab-RepoStack
+    Description: Cross-stack reference to applicationName-RepoStack
+  vpcStack:
+    Type: String
+    Default: Innolab-VPCStack-Dev
+    Description: Cross-stack reference to applicationName-VPCStack-environmentName
+  cognitoStack:
+    Type: String
+    Default: Innolab-CognitoStack-Dev
+    Description: Cross-stack reference to applicationName-CognitoStack-environmentName
 
 Conditions:
   DevResources: !Equals

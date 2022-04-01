@@ -15,4 +15,4 @@ fi
 
 snyk iac test $PROJECT_DIR/templates/** \
     --severity-threshold="$SNYK_SEVERITY" \
-    --json-file-output=$PROJECT_DIR/reports/"$(date +'%m-%d-%Y')_report.json"
+    --json-file-output=$PROJECT_DIR/reports/snyk/"$(date +'%m-%d-%Y')_report.json"
