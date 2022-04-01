@@ -13,7 +13,7 @@ jobs:
           pip install -r requirements.txt
         displayName: Install CloudFormation linter
       - script: |
-          ./scripts/lint
+          cfn-lint ./templates/**/*.yml
         displayName: Lint templates
         
   - job: VulnerabilityScan
@@ -23,12 +23,8 @@ jobs:
     steps:
       - script: |
           npm install snyk -g
-          npm -v
           snyk config set org=$SNYK_ORG_ID
           snyk auth $SNYK_TOKEN
-          snyk --version
-          echo $SNYK_SEVERITY
-          snyk iac test --help
         displayName: Install SNYK CLI scanner
         env:
           NODE_VERSION: 14.0.0
@@ -36,7 +32,8 @@ jobs:
           SNYK_ORG_ID: $(SNYK_ORG_ID)
           SNYK_SEVERITY: high
       - script: |
-          ./scripts/scan
+          snyk iac test ./templates/** \
+                          --severity-threshold="$SNYK_SEVERITY"
         displayName: Scan templates for vulnerabilities
 
   - job: ManualApproval
