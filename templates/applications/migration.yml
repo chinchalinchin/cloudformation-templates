@@ -60,7 +60,6 @@ Mappings:
       port: 1521
       database: ORCL
 
-
 Resources:
     SourceDMSEndpoint:
         Type: "AWS::DMS::Endpoint"

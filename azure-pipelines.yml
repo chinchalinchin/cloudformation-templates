@@ -57,6 +57,9 @@ jobs:
     environment: 'AWS'
     strategy: 
       runOnce:
+        predeploy:
+          steps: 
+          - script: checkout
         deploy:
           steps:
           - script: |
