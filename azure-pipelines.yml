@@ -57,11 +57,9 @@ jobs:
     environment: 'AWS'
     strategy: 
       runOnce:
-        preDeploy:
-          steps: 
-          - script: checkout
         deploy:
           steps:
+          - checkout
           - script: |
               pip install -r ./src/requirements.txt
             displayName: Install deployment dependencies
