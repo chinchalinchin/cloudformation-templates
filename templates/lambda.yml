@@ -3,7 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: 'Provisions a series of Lambda functions, gives them an execution role for the VPC from applicationName-VPCStack-environmentName and attaches policies to update the function code to the pipeline role from the applicationName-IAMStack. The execution images for the Lambdas are pulled from the repositores in applicationName-RepoStack.'
 
 Parameters:
-  ## APPLICATION CONFIGURATION
   environmentName:
     Type: String
     Default: Dev
@@ -22,7 +21,6 @@ Parameters:
   certificateId:
     Type: String
     Description: ARN of the ACM SSL Certificate used to sign requests to domain.
-  ## CROSS STACK REFERENCES
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -61,7 +59,6 @@ Mappings:
       subdomain: ""
 
 Resources:
-  # API Gateway Path Lambda
   LambdaAlpha: 
     Type: AWS::Lambda::Function
     Properties:
@@ -248,7 +245,6 @@ Resources:
     DependsOn:
       - CloudWatch
       - CloudWatchLogGroup
-      - InnoLabImageVersionResourceMethod
 
   ## NOTE: Add these two lines to the AWS::ApiGateway::Method properties to attach an authorizer
   ##        to a Gateway endpoint

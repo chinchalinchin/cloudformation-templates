@@ -73,6 +73,12 @@ Resources:
               - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset*"
               - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset-target"
               - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:type"
+          - Sid: ReadPermissions
+            Effect: Allow
+            Action:
+              - "ec2:Describe*"
+              - "ec2:List*"
+            Resource: 
       Users: 
         - !Ref PipelineUser
 

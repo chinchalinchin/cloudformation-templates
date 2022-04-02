@@ -431,7 +431,7 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-DatabaseSubnetGroup
   VPCCIDRBlock:
-    Value: !Ref VPC.CidrBlock
+    Value: !GetAtt VPC.CidrBlock
     Description: Internal CIDR IP range of the VPC
     Export:
       Name: !Sub ${AWS::StackName}-CidrBlock

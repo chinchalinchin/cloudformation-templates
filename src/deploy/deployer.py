@@ -47,8 +47,9 @@ def handle_boto_error(err: botocore.exceptions.ClientError):
                     err.response['ResponseMetadata']['HTTPStatusCode'], 
                     err.response['Error']['Code'], 
                     err.response['Error']['Message'])
-    if err.response['Error']['Code'] == "ValidationError: Parameters":
-        sys.exit()
+    if err.response['Error']['Code'] == "ValidationError: Parameters" or \
+        err.response['Error']['Code'] == "ValidationError: Template format error":
+        sys.exit(1)
     return err
 
 def env_var_constructor(loader: yaml.SafeLoader, node: yaml.nodes.ScalarNode) -> str:
