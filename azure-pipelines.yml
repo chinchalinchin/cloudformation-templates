@@ -32,7 +32,7 @@ jobs:
           SNYK_ORG_ID: $(SNYK_ORG_ID)
       - script: |
           snyk iac test ./templates/** \
-                          --severity-threshold="high"
+                          --severity-threshold="critical"
         displayName: Scan templates for vulnerabilities
 
   - job: ManualApproval
@@ -70,3 +70,7 @@ jobs:
               AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
               HOSTED_ZONE_ID: $(HOSTED_ZONE_ID)
               CERTIFICATE_ID: $(CERTIFICATE_ID)
+              ORACLE_RDS_USERNAME: $(ORACLE_RDS_USERNAME)
+              ORACLE_RDS_PASSWORD: $(ORACLE_RDS_PASSWORD)
+              POSTGRES_RDS_USERNAME: $(POSTGRES_RDS_USERNAME)
+              POSTGRES_RDS_PASSWORD: $(POSTGRES_RDS_PASSWORD)

@@ -135,25 +135,17 @@ Resources:
             AutoMinorVersionUpgrade: true
             PubliclyAccessible: false
 
-    # ReplicationPostgresSecurityGroupIngress:
-    #     Type: AWS::EC2::SecurityGroupIngress
-    #     Properties:
-    #     GroupId: 
-    #         Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
-    #     IpProtocol: tcp
-    #     SourceSecurityGroupId: !GetAtt NATSecurityGroup.GroupId
-    #     FromPort: 5432
-    #     ToPort: 5432
-
-    # ReplicationPostgresSecurityGroupIngress:
-    #     Type: AWS::EC2::SecurityGroupIngress
-    #     Properties:
-    #     GroupId: 
-    #         Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
-    #     IpProtocol: tcp
-    #     SourceSecurityGroupId: !GetAtt NATSecurityGroup.GroupId
-    #     FromPort: 1521
-    #     ToPort: 1521
+    ReplicationVPCSecurityGroupIngress:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Ingress from all VPC IPs
+            GroupId: 
+                Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"
+            IpProtocol: tcp
+            CidrIp:
+                Fn::ImportValue: !Sub "${vpcStack}-CidrBlock"
+            FromPort: '0'
+            ToPort: '65535'
 
     ClientRole:
         Type: "AWS::IAM::Role"

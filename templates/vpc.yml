@@ -430,3 +430,8 @@ Outputs:
     Value: !Ref RDSDBSubnetGroup
     Export:
       Name: !Sub ${AWS::StackName}-DatabaseSubnetGroup
+  VPCCIDRBlock:
+    Value: !Ref VPC.CidrBlock
+    Description: Internal CIDR IP range of the VPC
+    Export:
+      Name: !Sub ${AWS::StackName}-CidrBlock

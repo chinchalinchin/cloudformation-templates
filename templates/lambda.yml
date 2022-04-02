@@ -81,16 +81,6 @@ Resources:
         SubnetIds:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-      Environment:
-        Variables:
-          CLIENT_ID: 
-            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-          POOL_ID:
-            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          # POSTGRES_DB: !Ref applicationName
-          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   LambdaBeta: 
@@ -108,20 +98,10 @@ Resources:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorEC2RoleArn
       VpcConfig:
         SecurityGroupIds: 
-          - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
+          - Fn::ImportValue: !Sub ${vpcStack}-NATSecurityGroup
         SubnetIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-      Environment:
-        Variables:
-          CLIENT_ID: 
-            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-          POOL_ID:
-            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          # POSTGRES_DB: !Ref applicationName
-          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   LambdaGamma:
@@ -150,10 +130,6 @@ Resources:
             Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
           POOL_ID:
             Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          # POSTGRES_DB: !Ref applicationName
-          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   LambdaDelta:
@@ -175,16 +151,6 @@ Resources:
         SubnetIds: 
             - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
             - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-      Environment:
-        Variables:
-          CLIENT_ID: 
-            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-          POOL_ID:
-            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          # POSTGRES_DB: !Ref applicationName
-          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 90
 
   LambdaEpsilon:
@@ -206,16 +172,6 @@ Resources:
         SubnetIds:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-      Environment:
-        Variables:
-          CLIENT_ID: 
-            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-          POOL_ID:
-            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          # POSTGRES_DB: !Ref applicationName
-          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
 
   LambdaEta:
@@ -237,19 +193,8 @@ Resources:
         SubnetIds:
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-      Environment:
-        Variables:
-          CLIENT_ID: 
-            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-          POOL_ID:
-            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
-          # POSTGRES_DB: !Ref applicationName
-          # POSTGRES_HOST: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbHost:SecretString}}'
-          # POSTGRES_USER: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbUsername:SecretString}}'
-          # POSTGRES_PASSWORD: !Sub '{{resolve:secretsmanager:${applicationName}-${environmentName}-dbPassword:SecretString}}'
       Timeout: 180
   
-  # JIRA Integration Lambda
   LambdaZeta: 
     Type: AWS::Lambda::Function
     Properties: 
@@ -263,10 +208,6 @@ Resources:
       PackageType: Image
       Role:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
-      Environment:
-        Variables:
-          NEW_VARIABLE: hard-code
-          ATLASSIAN_TOKEN: !Sub '{{resolve:secretsmanager:${applicationName}-atlassianToken:SecretString}}'
       Timeout: 180
 
   ### LAMBDA INTEGRATIONS
@@ -341,256 +282,6 @@ Resources:
       PathPart: lambdas
     DependsOn:
       - InnoLabRootResource
-
-  InnoLabImageResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !Ref InnoLabLambdaResource
-      PathPart: images
-    DependsOn:
-      - InnoLabRootResource
-  
-  InnoLabOAuthResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !Ref InnoLabLambdaResource
-      PathPart: oauth-hook
-    DependsOn:
-      - InnoLabRootResource
-
-  InnoLabImageVersionResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !Ref InnoLabImageResource
-      PathPart: "{repo}"
-    DependsOn:
-      - InnoLabImageResource
-
-  InnoLabImageVersionResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref InnoLabImageVersionResource
-      HttpMethod: GET
-      RequestParameters:
-        "method.request.path.repo": true
-      AuthorizationType: None
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateway transforms all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaAlpha.Arn}/invocations"
-    DependsOn:
-      - InnoLabImageVersionResource
-
-  InnoLabImageVersionResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref InnoLabImageVersionResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            # method.response.header.Access-Control-Allow-Methods: "'*'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - InnoLabImageVersionResource
-
-  InnoLabOAuthResourceMethod:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref InnoLabOAuthResource
-      HttpMethod: ANY
-      AuthorizationType: None
-      Integration:
-        Type: AWS_PROXY
-        # INTEGRATION HTTP METHOD MUST BE POST
-        #   NOTE: API Gateway transforms all incoming requests into POSTS
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaEpsilon.Arn}/invocations"
-    DependsOn:
-      - InnoLabOAuthResource
-
-  InnoLabOAuthResourceCORS:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref RestAPI
-      ResourceId: !Ref InnoLabOAuthResource
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            # method.response.header.Access-Control-Allow-Methods: "'*'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-          ResponseTemplates:
-            application/json: ''
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        Type: MOCK
-      MethodResponses:
-      - StatusCode: 200
-        ResponseModels:
-          application/json: 'Empty'
-        ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: false
-            method.response.header.Access-Control-Allow-Methods: false
-            method.response.header.Access-Control-Allow-Origin: false
-    DependsOn:
-      - InnoLabOAuthResource
-
-  ## API GATEWAY LAMBDA PERMISSIONS
-  ##  NOTE: the arn is of the form arn:aws:execute-api:region:account-id:api-name/env-name/{METHOD}/{ENDPOINT_PATH}
-  ##        where METHOD is the HTTP method API gateway is using to invoke Lambda and ENDPOINT_PATH is the URI of 
-  ##        the API gateway endpoint invoking. 
-  LambdaAlphaApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaAlpha.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/innolab/lambdas/images/*
-    DependsOn:
-      - RestAPIDeployment
-
-  LambdaEpsilonApiGatewayInvoke:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaEpsilon.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn: 
-        !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*/innolab/lambdas/oauth-hook
-    DependsOn:
-      - RestAPIDeployment
-
-  ## CLOUDWATCH EVENT INTEGRATIONS
-  ### MULTIPLE ENVIRONMENT RULES
-  EnvironmentEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
-          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
-          - Fn::ImportValue: !Sub "${repoStack}-LambdaRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - !Ref environmentName
-      Targets:
-        - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-${environmentName}"
-        - Arn: !GetAtt LambdaGamma.Arn
-          Id: !Sub "${applicationName}-lambda-gamma-cloudwatch-${environmentName}"
-
-  ### SINGLE ENVIRONMENT RULES (note Condition!)
-  MasterEventRule:
-    Type: AWS::Events::Rule
-    Condition: DevResources
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - Fn::ImportValue: !Sub "${repoStack}-CloudFormationRepositoryARN"
-          - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
-          - Fn::ImportValue: !Sub "${repoStack}-MigrationRepositoryARN"
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - master
-      Targets:
-        - Arn: !GetAtt LambdaZeta.Arn
-          Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-master"
-  
-
-  ### MULTIPLE ENVIRONMENT INVOCATIONS        
-  LambdaZetaCloudWatchEnvironmentInvoke: 
-    Type: AWS::Lambda::Permission
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt EnvironmentEventRule.Arn
-    DependsOn:
-      - EnvironmentEventRule
-  
-  LambdaGammaCloudWatchEnvironmentInvoke: 
-    Type: AWS::Lambda::Permission
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-gamma-${environmentName}
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt EnvironmentEventRule.Arn
-    DependsOn:
-      - EnvironmentEventRule
-
-  ### SINGLE ENVIROMENT INVOCATIONS (note Condition!)
-  LambdaGammaCloudWatchMasterInvoke:
-    Type: AWS::Lambda::Permission
-    Condition: DevResources
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-gamma-Dev
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt MasterEventRule.Arn
-    DependsOn:
-      - MasterEventRule
-
-  LambdaZetaCloudMasterInvoke: 
-    Type: AWS::Lambda::Permission
-    Condition: DevResources
-    Properties: 
-      FunctionName: !Sub ${applicationName}-lambda-zeta-Dev
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt MasterEventRule.Arn
-    DependsOn:
-      - MasterEventRule
 
   ## DNS CONFIGURATION
   RestAPIDomainName:
@@ -676,6 +367,54 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-RestAPIID
 
+
+  ## EXAMPLE CLOUDWATCH INTEGRATION
+  ### CODECOMMIT INTEGRATION
+  # EventRule:
+  #   Type: AWS::Events::Rule
+  #   Properties:
+  #     EventPattern:
+  #       source:
+  #         - aws.codecommit
+  #       detail-type:
+  #         - 'CodeCommit Repository State Change'
+  #       resources:
+  #         - Fn::ImportValue: !Sub "${repoStack}-BackendRepositoryARN"
+  #         - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
+  #         - Fn::ImportValue: !Sub "${repoStack}-LambdaRepositoryARN"
+  #       detail:
+  #         event:
+  #           - referenceCreated
+  #           - referenceUpdated
+  #         referenceType:
+  #           - branch
+  #         referenceName:
+  #           - !Ref environmentName
+  #     Targets:
+  #       - Arn: !GetAtt LambdaZeta.Arn
+  #         Id: !Sub "${applicationName}-lambda-zeta-cloudwatch-${environmentName}"
+  #       - Arn: !GetAtt LambdaGamma.Arn
+  #         Id: !Sub "${applicationName}-lambda-gamma-cloudwatch-${environmentName}"
+
+  # LambdaZetaCloudWatchEnvironmentInvoke: 
+  #   Type: AWS::Lambda::Permission
+  #   Properties: 
+  #     FunctionName: !Sub ${applicationName}-lambda-zeta-${environmentName}
+  #     Action: lambda:InvokeFunction
+  #     Principal: events.amazonaws.com
+  #     SourceArn: !GetAtt EnvironmentEventRule.Arn
+  #   DependsOn:
+  #     - EnvironmentEventRule
+  
+  # LambdaGammaCloudWatchEnvironmentInvoke: 
+  #   Type: AWS::Lambda::Permission
+  #   Properties: 
+  #     FunctionName: !Sub ${applicationName}-lambda-gamma-${environmentName}
+  #     Action: lambda:InvokeFunction
+  #     Principal: events.amazonaws.com
+  #     SourceArn: !GetAtt EnvironmentEventRule.Arn
+  #   DependsOn:
+  #     - EnvironmentEventRule
 
   ## EXAMPLE PATH INTEGRATIONS
   ### PATH INTEGRATION
@@ -800,3 +539,14 @@ Outputs:
   #           method.response.header.Access-Control-Allow-Origin: false
   #   DependsOn:
   #     - PathParamResource
+  #### API GATEWAY INVOCATION PERMISSION 
+  # LambdaAlphaApiGatewayInvoke:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !GetAtt LambdaAlpha.Arn
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: 
+  #       !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPI}/${environmentName}/*
+  #   DependsOn:
+  #     - RestAPIDeployment
