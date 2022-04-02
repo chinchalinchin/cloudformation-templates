@@ -60,6 +60,7 @@ Mappings:
       port: 1521
       database: ORCL
 
+
 Resources:
     SourceDMSEndpoint:
         Type: "AWS::DMS::Endpoint"
@@ -153,6 +154,87 @@ Resources:
     #     SourceSecurityGroupId: !GetAtt NATSecurityGroup.GroupId
     #     FromPort: 1521
     #     ToPort: 1521
+
+    ClientRole:
+        Type: "AWS::IAM::Role"
+        Properties:
+            Path: !Sub "/${applicationName}/"
+            RoleName: !Sub "${applicationName}-migration-executor"
+            AssumeRolePolicyDocument: 
+                Version: "2012-10-17"
+                Statement:
+                    -   Effect: Allow
+                        Principal: 
+                            Service:
+                                - ec2.amazonaws.com
+                        Action:
+                            - "sts:AssumeRole"
+            MaxSessionDuration: 3600
+            ManagedPolicyArns: 
+                - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+            Policies:
+                -   PolicyName: !Sub ${applicationName}-migration-secret-policy
+                    PolicyDocument:
+                        Version: "2012-10-17"
+                        Statement:
+                        -   Sid: SecretManagerPermissions
+                            Action: 
+                                - secretsmanager:GetSecretValue
+                            Effect: Allow
+                            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+                        -   Sid: EC2Permissions
+                            Action:
+                                - ec2:Describe*
+                            Effect: Allow
+                            Resource: '*'
+
+            Description: "Role for Migration EC2 to access other services"
+            Tags:
+                -   Key: "Application"
+                    Value: !Ref applicationName
+                -   Key: "Environment"
+                    Value: !Ref environmentName
+
+    ClientProfile:
+        Type: "AWS::IAM::InstanceProfile"
+        Properties:
+            Path: "/"
+            InstanceProfileName: !Ref ClientRole
+            Roles: 
+                - !Ref ClientRole
+
+    MigrationClient:
+        Type: AWS::EC2::Instance
+        Properties:
+            ImageId: "ami-0728c171aa8e41159"
+            InstanceType: "t2.large"
+            KeyName: !Ref clientKeyName
+            NetworkInterfaces:
+                -   DeviceIndex: '0'
+                    SubnetId: 
+                        Fn::ImportValue: !Sub "${vpcStack}-PublicSubnetA"
+                    AssociatePublicIpAddress: true
+                    GroupSet: [Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup", Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"]  
+            IamInstanceProfile: !Ref ClientProfile
+            Tags: 
+                -   Key: Name
+                    Value: !Sub ${applicationName}-${environmentName}-migration
+                -   Key: "Environment"
+                    Value: !Ref environmentName
+                -   Key: "Application"
+                    Value: !Ref applicationName
+                -   Key: "AutoStop"
+                    Value: True
+                -   Key: "AutoStart"
+                    Value: True
+            UserData: 
+                Fn::Base64: |
+                    #!/bin/bash
+                    yum install xdg-utils -y 
+                    cd /home/
+                    wget https://s3.amazonaws.com/publicsctdownload/Fedora/aws-schema-conversion-tool-1.0.latest.zip
+                    unzip aws-schema-conversion-tool-1.0.latest.zip
+                    rpm -i aws-schema-conversion-tool-1.0.660-1.x86_64.rpm
 
     MigrationElasticIP:
         Type: AWS::EC2::EIP

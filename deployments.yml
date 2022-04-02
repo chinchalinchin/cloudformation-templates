@@ -148,9 +148,7 @@ Innolab-Doc-PipelineStack:
       ParameterValue: Innolab-IAMStack
     - ParameterKey: repoStack
       ParameterValue: Innolab-RepoStack
-    - ParameterKey: docStack
-      ParameterValue: Innolab-DocStack
-
+      
 Innolab-Lambda-PipelineStack-Dev:
   template: pipelines/lambda.yml
   parameters:
@@ -164,8 +162,6 @@ Innolab-Lambda-PipelineStack-Dev:
       ParameterValue: Innolab-IAMStack
     - ParameterKey: repoStack
       ParameterValue: Innolab-RepoStack
-    - ParameterKey: docStack
-      ParameterValue: Innolab-DocStack
     - ParameterKey: cognitoStack
       ParameterValue: Innolab-CognitoStack-Dev
 

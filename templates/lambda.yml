@@ -105,7 +105,7 @@ Resources:
             environment: !Ref environmentName
       PackageType: Image
       Role: 
-        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
+        Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorEC2RoleArn
       VpcConfig:
         SecurityGroupIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-DatabaseSecurityGroup
