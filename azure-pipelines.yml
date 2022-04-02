@@ -59,7 +59,7 @@ jobs:
       runOnce:
         deploy:
           steps:
-          - checkout
+          - checkout: self
           - script: |
               pip install -r ./src/requirements.txt
             displayName: Install deployment dependencies
