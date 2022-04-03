@@ -73,6 +73,12 @@ Resources:
               - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset*"
               - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset-target"
               - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:type"
+          - Sid: CloudFrontPermissions
+            Effect: Allow
+            Action: 
+              - "cloudfront:*"
+            # TODO: scope to applicationName resourcess
+            Resource: '*'
           - Sid: EC2Permissions
             Effect: Allow
             Action:
