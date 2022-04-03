@@ -77,13 +77,7 @@ Resources:
           - Sid: EC2Permissions
             Effect: Allow
             Action:
-              - "ec2:Describe*"
-              - "ec2:List*"
-              - "ec2:AuthorizeSecurityGroup*"
-              - "ec2:AssociateAddress"
-              - "ec2:StopInstances"
-              - "ec2:StartInstances"
-              - "ec2:ModifyInstance*"
+              - "ec2:*"
             Resource: '*'
           - Sid: SecretManagerPermissions
             Effect: Allow
@@ -95,7 +89,7 @@ Resources:
           - Sid: IAMPermissions
             Effect: Allow
             Action:
-              - iam:PutUserPolicy
+              - iam:*
             Resource: '*'
           - Sid: APIGatewayPermissions
             Effect: Allow
