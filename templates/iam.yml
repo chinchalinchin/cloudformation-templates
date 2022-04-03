@@ -30,6 +30,7 @@ Resources:
           - Sid: LambdaPermissions
             Effect: Allow
             Action: 
+              - "lambda:GetFunction"
               - "lambda:UpdateFunctionCode"
             Resource:
               - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*"
@@ -78,6 +79,10 @@ Resources:
             Action:
               - "ec2:Describe*"
               - "ec2:List*"
+              - "ec2:AuthorizeSecurityGroupIngress"
+              - "ec2:AssociateAddress"
+              - "ec2:StopInstances"
+              - "ec2:StartInstances"
             Resource: '*'
           - Sid: SecretManagerPermissions
             Effect: Allow
@@ -91,10 +96,15 @@ Resources:
             Action:
               - iam:PutUserPolicy
             Resource: '*'
+          - Sid: APIGatewayPermissions
+            Effect: Allow
+            Action:
+              - apigateway:*
+            Resource: '*'
           - Sid: LogPermissions
             Effect: Allow
             Action:
-              - logs:Describe*
+              - logs:*
             Resource: '*'
           
       Users: 
