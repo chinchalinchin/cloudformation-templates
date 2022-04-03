@@ -42,13 +42,11 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
-      # TODO!
-      # BucketEncryption: 
-      #   ServerSideEncryptionConfiguration: 
-      #   - ServerSideEncryptionByDefault:
-      #       SSEAlgorithm: aws:kms
-      #       KMSMasterKeyID: "YOUR KMS KEY ARN" 
-      BucketName: !Sub "${applicationName}-env"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub "${applicationName}-env-files"
   
   TaskBucket:
     Type: AWS::S3::Bucket
@@ -60,32 +58,43 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
-      # TODO!
-      # BucketEncryption: 
-      #   ServerSideEncryptionConfiguration: 
-      #   - ServerSideEncryptionByDefault:
-      #       SSEAlgorithm: aws:kms
-      #       KMSMasterKeyID: "YOUR KMS KEY ARN" 
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256 
       BucketName: !Sub "${applicationName}-cluster-task-definitions"
 
-  # TODO
-  # DataBucket:
-  #   Type: AWS::S3::Bucket
-  #   DeletionPolicy: Delete
-  #   Properties:
-  #     AccessControl: Private
-  #     PublicAccessBlockConfiguration:
-  #       BlockPublicAcls: true
-  #       BlockPublicPolicy: true
-  #       IgnorePublicAcls: true
-  #       RestrictPublicBuckets: true
-  #     # TODO!
-  #     # BucketEncryption: 
-  #     #   ServerSideEncryptionConfiguration: 
-  #     #   - ServerSideEncryptionByDefault:
-  #     #       SSEAlgorithm: aws:kms
-  #     #       KMSMasterKeyID: "YOUR KMS KEY ARN" 
-  #     BucketName: !Sub "${applicationName}-data-files"
+  DataBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256 
+      BucketName: !Sub "${applicationName}-data-files"
+
+  ReportBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256 
+      BucketName: !Sub "${applicationName}-reports"
 
   MasterRepo:
     Type: AWS::CodeCommit::Repository
