@@ -47,10 +47,8 @@ def handle_boto_error(err: botocore.exceptions.ClientError):
                     err.response['ResponseMetadata']['HTTPStatusCode'], 
                     err.response['Error']['Code'], 
                     err.response['Error']['Message'])
-    if err.response['Error']['Code'] == "ValidationError: Parameters" or \
-        err.response['Error']['Code'] == "ValidationError: Template format error" or \
-        (err.response['Error']['Code'] == "ValidationError" and \
-            err.response['Error']['Message'] != "No updates are to be performed"):
+    if err.response['Error']['Code'] == "ValidationError" and \
+            err.response['Error']['Message'] != "No updates are to be performed.":
         sys.exit(1)
     return err
 
