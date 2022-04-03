@@ -14,6 +14,8 @@ SERVICES_DIR=os.path.join(TEMPLATE_DIR,'services')
 
 # DEPLOYMENT CONFIGURATION
 DEPLOYMENT_FILE = os.path.join(PROJECT_DIR, 'deployments.yml')
+PREDEPLOYMENT_FILE = os.path.join(PROJECT_DIR, 'predeployments.yml')
+
 # ENVIRONMENT CONFIGURATION
 
 if os.path.exists(os.path.join(ENV_DIR, '.env')):

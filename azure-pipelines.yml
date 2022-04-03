@@ -64,7 +64,7 @@ jobs:
               pip install -r ./src/requirements.txt
             displayName: Install deployment dependencies
           - script: |
-              python ./src/deploy/deployer.py
+              python ./src/deploy/deployer.py deploy
             displayName: Deploy cloud resources
             env:
               APPLICATION: $(APPLICATION)

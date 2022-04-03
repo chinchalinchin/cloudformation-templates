@@ -4,11 +4,11 @@
 # alternatively, use boto3 api wrapper around cloudformation directly:
 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html#CloudFormation.Client.update_stack
 
+import argparse
 import boto3
 import botocore
 import os
 import sys
-import pprint
 import yaml
 import settings
 import time
@@ -73,14 +73,21 @@ def get_loader() -> yaml.SafeLoader:
     loader.add_constructor("!env", env_var_constructor)
     return loader
 
-def get_deployment() -> dict:
+def get_stage(stage: str = 'deploy') -> dict:
     """Parse *deployments.yml*
 
     :return: deployment configuratio
     :rtype: dict
     """
-    if os.path.exists(settings.DEPLOYMENT_FILE):
-        with open(settings.DEPLOYMENT_FILE, 'r') as infile:
+    if stage == 'predeploy':
+        configuration_file = settings.PREDEPLOYMENT_FILE
+    elif stage == 'deploy':
+        configuration_file = settings.DEPLOYMENT_FILE
+    else:
+        raise ValueError(f'{stage} does not map to "predeploy" | "deploy"')
+
+    if os.path.exists(configuration_file):
+        with open(configuration_file, 'r') as infile:
             deployment = yaml.load(infile, Loader=get_loader())
         return deployment
     raise FileNotFoundError(f'{settings.DEPLOYMENT_FILE} does not exist')
@@ -190,7 +197,12 @@ def create_stack(stack: str, deployment: dict) -> dict:
 def deploy():
     """Application entrypoint. This function orchestrates the deployment.
     """
-    stack_deployments, stack_names = get_deployment(), get_stack_names()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('stage', type=str, help="predeploy | deploy")
+    args = parser.parse_args()
+
+    stack_deployments, stack_names = get_stage(args.stage), get_stack_names()
 
     if stack_deployments is not None:
         for stack, deployment in stack_deployments.items():

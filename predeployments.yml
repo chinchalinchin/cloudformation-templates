@@ -1,0 +1,33 @@
+## Innovation Lab Deployment Configuration
+#   This configuration YML is used before the pipeline hooks into the repository and deploys
+#   the resources in *deployments.yml*. These are stacks that need stood up outside of the 
+#   pipeline workflow to prevent giving too many permissions to the pipeline, namely the 
+#   ability to create users and modify policies.
+
+#   Each block in the YML represents a distinct stack. The *template* property determines
+#   which **CloudFormation** template is retrieved from the */templates/* directory. The 
+#   *parameters* property is an array of parameters corresponding to the parameters of the
+#   **CloudFormation** template. 
+
+## Syntax:
+#   StackName:
+#       template: <templateFile>
+#       parameters:
+#         - ParameterKey: <templateParameter> 
+#           ParameterValue: value | !env <environmentVariable>
+#         - ParameterKey: <templateParameter>
+#           ParameterValue: value | !env <environmentVariable>
+#         ...
+
+## NOTES
+# 1. The order of stacks *matters*! The stacks will be provisioned in the order they are listed.
+#     If a stack requires resources from another stack, make sure the independent stack is deployed
+#     before the dependent stack!
+
+Innolab-IAMStack:
+  template: iam.yml
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: !env APPLICATION
+    - ParameterKey: pipelineUser
+      ParameterValue: !env PIPELINE_USER

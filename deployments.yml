@@ -25,14 +25,6 @@
 #     If a stack requires resources from another stack, make sure the independent stack is deployed
 #     before the dependent stack!
 
-Innolab-IAMStack:
-  template: iam.yml
-  parameters:
-    - ParameterKey: applicationName
-      ParameterValue: !env APPLICATION
-    - ParameterKey: pipelineUser
-      ParameterValue: !env PIPELINE_USER
-
 Innolab-RepoStack:
   template: repo.yml
   parameters: 
