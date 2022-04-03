@@ -79,7 +79,7 @@ Resources:
             Action:
               - "ec2:Describe*"
               - "ec2:List*"
-              - "ec2:AuthorizeSecurityGroupIngress"
+              - "ec2:AuthorizeSecurityGroup*"
               - "ec2:AssociateAddress"
               - "ec2:StopInstances"
               - "ec2:StartInstances"
@@ -106,7 +106,6 @@ Resources:
             Action:
               - logs:*
             Resource: '*'
-          
       Users: 
         - !Ref PipelineUser
 

@@ -251,15 +251,15 @@ Resources:
   #  Properties:
   #     AuthorizationType: COGNITO_USER_POOL
   #     AuthorizerId: !Ref ApiAuthorizer
-  ApiGatewayAuthorizer:
-    Type: AWS::ApiGateway::Authorizer
-    Properties:
-      RestApiId: !Ref RestAPI
-      Name: !Sub ${AWS::StackName}-Authorizer
-      Type: COGNITO_USER_POOLS
-      IdentitySource: method.request.header.authorization
-      ProviderARNs:
-        - Fn::ImportValue: !Sub ${cognitoStack}-UserPoolArn
+  # ApiGatewayAuthorizer:
+  #   Type: AWS::ApiGateway::Authorizer
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     Name: !Sub ${AWS::StackName}-Authorizer
+  #     Type: COGNITO_USER_POOLS
+  #     IdentitySource: method.request.header.authorization
+  #     ProviderARNs:
+  #       - Fn::ImportValue: !Sub ${cognitoStack}-UserPoolArn
 
   InnoLabRootResource: 
     Type: 'AWS::ApiGateway::Resource'
