@@ -33,15 +33,6 @@ Parameters:
     Type: String
     Default: Innolab-VPCStack-Dev
     Description: Cross-stack reference to applicationName-VPCStack-environmentName
-  cognitoStack:
-    Type: String
-    Default: Innolab-CognitoStack-Dev
-    Description: Cross-stack reference to applicationName-CognitoStack-environmentName
-
-Conditions:
-  DevResources: !Equals
-    - !Ref environmentName
-    - Dev
 
 Mappings:
   BranchMap:
@@ -93,12 +84,6 @@ Resources:
       PackageType: Image
       Role: 
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorEC2RoleArn
-      VpcConfig:
-        SecurityGroupIds: 
-          - Fn::ImportValue: !Sub ${vpcStack}-NATSecurityGroup
-        SubnetIds: 
-          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
-          - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
       Timeout: 90
 
   LambdaGamma:
@@ -120,13 +105,6 @@ Resources:
         SubnetIds: 
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetA
           - Fn::ImportValue: !Sub ${vpcStack}-PrivateSubnetB
-      MemorySize: 4000 
-      Environment:
-        Variables:
-          CLIENT_ID: 
-            Fn::ImportValue: !Sub ${cognitoStack}-APIClientID
-          POOL_ID:
-            Fn::ImportValue: !Sub ${cognitoStack}-UserPoolID
       Timeout: 90
 
   LambdaDelta:

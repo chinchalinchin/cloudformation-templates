@@ -122,8 +122,6 @@ Innolab-LambdaStack-Dev:
       ParameterValue: Innolab-IAMStack
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
-    - ParameterKey: cognitoStack 
-      ParameterValue: Innolab-CognitoStack-Dev
     - ParameterKey: repoStack
       ParameterValue: Innolab-RepoStack
     - ParameterKey: environmentName
