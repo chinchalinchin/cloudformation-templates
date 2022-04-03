@@ -54,7 +54,6 @@ jobs:
     displayName: DeployResources
     pool:
       vmImage: 'ubuntu-latest'
-    environment: 'AWS'
     strategy: 
       runOnce:
         deploy:
