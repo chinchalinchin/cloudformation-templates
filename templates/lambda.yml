@@ -11,16 +11,6 @@ Parameters:
     Type: String
     Default: innolab
     Description: Namespace of the stack resources
-  domainName: 
-    Type: String
-    Default: makpar-innovation.net
-    Description: Domain hosting the resources. Must be purchased before use.
-  hostedZoneId:
-    Type: String
-    Description: Physical ID of the hosted zone where the domain is being served.
-  certificateId:
-    Type: String
-    Description: ARN of the ACM SSL Certificate used to sign requests to domain.
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -185,123 +175,6 @@ Resources:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       Timeout: 180
 
-  ### LAMBDA INTEGRATIONS
-  ## API GATEWAY INTEGRATION
-  RestAPI:
-    Type: AWS::ApiGateway::RestApi
-    Properties:
-      Name: !Sub ${applicationName}-${environmentName}-rest-api
-
-  CloudWatch:
-    Type: AWS::ApiGateway::Account
-    Properties:
-      CloudWatchRoleArn: 
-        Fn::ImportValue: !Sub ${iamStack}-LoggerArn
-  
-  CloudWatchLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties: 
-      LogGroupName: !Sub ${AWS::StackName}-LogGroup
-      RetentionInDays: 30
-
-  RestAPIDeployment:
-    Type: AWS::ApiGateway::Deployment
-    Properties:
-      RestApiId: !Ref RestAPI
-      Description: !Sub "${applicationName}'s RestAPI ${environmentName} deployment"
-      StageName: !Ref environmentName
-      StageDescription:
-        AccessLogSetting:
-          DestinationArn: !GetAtt CloudWatchLogGroup.Arn
-        LoggingLevel: INFO
-        MetricsEnabled: True
-        MethodSettings:
-          - ResourcePath: "/*"
-            HttpMethod: "*"
-            LoggingLevel: INFO
-            MetricsEnabled: True
-    DependsOn:
-      - CloudWatch
-      - CloudWatchLogGroup
-
-  ## NOTE: Add these two lines to the AWS::ApiGateway::Method properties to attach an authorizer
-  ##        to a Gateway endpoint
-  #  Properties:
-  #     AuthorizationType: COGNITO_USER_POOL
-  #     AuthorizerId: !Ref ApiAuthorizer
-  # ApiGatewayAuthorizer:
-  #   Type: AWS::ApiGateway::Authorizer
-  #   Properties:
-  #     RestApiId: !Ref RestAPI
-  #     Name: !Sub ${AWS::StackName}-Authorizer
-  #     Type: COGNITO_USER_POOLS
-  #     IdentitySource: method.request.header.authorization
-  #     ProviderARNs:
-  #       - Fn::ImportValue: !Sub ${cognitoStack}-UserPoolArn
-
-  InnoLabRootResource: 
-    Type: 'AWS::ApiGateway::Resource'
-    Properties: 
-      RestApiId: !Ref RestAPI
-      ParentId: !GetAtt RestAPI.RootResourceId
-      PathPart: innolab
-    DependsOn:
-      - RestAPI
-
-  InnoLabLambdaResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref RestAPI
-      ParentId: !Ref InnoLabRootResource
-      PathPart: lambdas
-    DependsOn:
-      - InnoLabRootResource
-
-  ## DNS CONFIGURATION
-  RestAPIDomainName:
-    Type: 'AWS::ApiGateway::DomainName'
-    Properties:
-      CertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${certificateId}"
-      DomainName: !Sub 
-        - "apigateway${subdomainEnv}.${domain}"
-        - subdomainEnv: 
-            Fn::FindInMap:
-              - BranchMap
-              - !Ref environmentName
-              - subdomain
-          domain: !Ref domainName
-      EndpointConfiguration:
-        Types:
-          - EDGE
-
-  RestAPIBasePathMapping:
-    Type: 'AWS::ApiGateway::BasePathMapping'
-    Properties:
-      DomainName: !Ref RestAPIDomainName
-      RestApiId: !Ref RestAPI
-      Stage: !Ref environmentName
-    DependsOn: RestAPIDeployment
-
-  RestAPIRoute53RecordSetGroup:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !Ref hostedZoneId
-      RecordSets:
-        - Name: !Sub 
-            - "apigateway${subdomainEnv}.${domain}"
-            - subdomainEnv: 
-                Fn::FindInMap:
-                  - BranchMap
-                  - !Ref environmentName
-                  - subdomain
-              domain: !Ref domainName
-          Type: A
-          AliasTarget:
-            HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
-            DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
-    DependsOn:
-      - RestAPIDomainName
-
 Outputs:
   LambdaAlphaArn:
     Value: !GetAtt LambdaAlpha.Arn
@@ -332,14 +205,14 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-LambdaZetaARN
 
-  GatewayEndpoint:
-    Value: !Sub https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/${environmentName}
-    Export:
-      Name: !Sub ${AWS::StackName}-GatewayEndpoint
-  RestAPIID: 
-    Value: !Ref RestAPI
-    Export:
-      Name: !Sub ${AWS::StackName}-RestAPIID
+  # GatewayEndpoint:
+  #   Value: !Sub https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/${environmentName}
+  #   Export:
+  #     Name: !Sub ${AWS::StackName}-GatewayEndpoint
+  # RestAPIID: 
+  #   Value: !Ref RestAPI
+  #   Export:
+  #     Name: !Sub ${AWS::StackName}-RestAPIID
 
 
   ## EXAMPLE CLOUDWATCH INTEGRATION
@@ -389,6 +262,122 @@ Outputs:
   #     SourceArn: !GetAtt EnvironmentEventRule.Arn
   #   DependsOn:
   #     - EnvironmentEventRule
+
+  ## API GATEWAY INTEGRATION
+  # RestAPI:
+  #   Type: AWS::ApiGateway::RestApi
+  #   Properties:
+  #     Name: !Sub ${applicationName}-${environmentName}-rest-api
+
+  # CloudWatch:
+  #   Type: AWS::ApiGateway::Account
+  #   Properties:
+  #     CloudWatchRoleArn: 
+  #       Fn::ImportValue: !Sub ${iamStack}-LoggerArn
+  
+  # CloudWatchLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties: 
+  #     LogGroupName: !Sub ${AWS::StackName}-LogGroup
+  #     RetentionInDays: 30
+
+  # RestAPIDeployment:
+  #   Type: AWS::ApiGateway::Deployment
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     Description: !Sub "${applicationName}'s RestAPI ${environmentName} deployment"
+  #     StageName: !Ref environmentName
+  #     StageDescription:
+  #       AccessLogSetting:
+  #         DestinationArn: !GetAtt CloudWatchLogGroup.Arn
+  #       LoggingLevel: INFO
+  #       MetricsEnabled: True
+  #       MethodSettings:
+  #         - ResourcePath: "/*"
+  #           HttpMethod: "*"
+  #           LoggingLevel: INFO
+  #           MetricsEnabled: True
+  #   DependsOn:
+  #     - CloudWatch
+  #     - CloudWatchLogGroup
+
+  ## NOTE: Add these two lines to the AWS::ApiGateway::Method properties to attach an authorizer
+  ##        to a Gateway endpoint
+  #  Properties:
+  #     AuthorizationType: COGNITO_USER_POOL
+  #     AuthorizerId: !Ref ApiAuthorizer
+  # ApiGatewayAuthorizer:
+  #   Type: AWS::ApiGateway::Authorizer
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     Name: !Sub ${AWS::StackName}-Authorizer
+  #     Type: COGNITO_USER_POOLS
+  #     IdentitySource: method.request.header.authorization
+  #     ProviderARNs:
+  #       - Fn::ImportValue: !Sub ${cognitoStack}-UserPoolArn
+
+  # InnoLabRootResource: 
+  #   Type: 'AWS::ApiGateway::Resource'
+  #   Properties: 
+  #     RestApiId: !Ref RestAPI
+  #     ParentId: !GetAtt RestAPI.RootResourceId
+  #     PathPart: innolab
+  #   DependsOn:
+  #     - RestAPI
+
+  # InnoLabLambdaResource:
+  #   Type: AWS::ApiGateway::Resource
+  #   Properties:
+  #     RestApiId: !Ref RestAPI
+  #     ParentId: !Ref InnoLabRootResource
+  #     PathPart: lambdas
+  #   DependsOn:
+  #     - InnoLabRootResource
+
+  # ## DNS CONFIGURATION
+  # RestAPIDomainName:
+  #   Type: 'AWS::ApiGateway::DomainName'
+  #   Properties:
+  #     CertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${certificateId}"
+  #     DomainName: !Sub 
+  #       - "apigateway${subdomainEnv}.${domain}"
+  #       - subdomainEnv: 
+  #           Fn::FindInMap:
+  #             - BranchMap
+  #             - !Ref environmentName
+  #             - subdomain
+  #         domain: !Ref domainName
+  #     EndpointConfiguration:
+  #       Types:
+  #         - EDGE
+
+  # RestAPIBasePathMapping:
+  #   Type: 'AWS::ApiGateway::BasePathMapping'
+  #   Properties:
+  #     DomainName: !Ref RestAPIDomainName
+  #     RestApiId: !Ref RestAPI
+  #     Stage: !Ref environmentName
+  #   DependsOn: RestAPIDeployment
+
+  # RestAPIRoute53RecordSetGroup:
+  #   Type: AWS::Route53::RecordSetGroup
+  #   Properties:
+  #     HostedZoneId: !Ref hostedZoneId
+  #     RecordSets:
+  #       - Name: !Sub 
+  #           - "apigateway${subdomainEnv}.${domain}"
+  #           - subdomainEnv: 
+  #               Fn::FindInMap:
+  #                 - BranchMap
+  #                 - !Ref environmentName
+  #                 - subdomain
+  #             domain: !Ref domainName
+  #         Type: A
+  #         AliasTarget:
+  #           HostedZoneId: !GetAtt RestAPIDomainName.DistributionHostedZoneId
+  #           DNSName: !GetAtt RestAPIDomainName.DistributionDomainName
+  #   DependsOn:
+  #     - RestAPIDomainName
 
   ## EXAMPLE PATH INTEGRATIONS
   ### PATH INTEGRATION

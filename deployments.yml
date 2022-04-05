@@ -47,6 +47,20 @@ Innolab-DocStack:
     - ParameterKey: hostedZoneId
       ParameterValue: !env HOSTED_ZONE_ID
 
+Innolab-FrontendStack-Dev:
+  template: cloudfront.yml
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: !env APPLICATION
+    - ParameterKey: domainName
+      ParameterValue: !env DOMAIN
+    - ParameterKey: subdomainName
+      ParameterValue: frontend-dev
+    - ParameterKey: certificateId
+      ParameterValue: !env CERTIFICATE_ID
+    - ParameterKey: hostedZoneId
+      ParameterValue: !env HOSTED_ZONE_ID
+
 Innolab-VPCStack-Dev:
   template: vpc.yml
   parameters:
@@ -120,18 +134,26 @@ Innolab-LambdaStack-Dev:
       ParameterValue: !env ENVIRONMENT
     - ParameterKey: applicationName
       ParameterValue: !env APPLICATION
-    - ParameterKey: domainName
-      ParameterValue: !env DOMAIN
-    - ParameterKey: hostedZoneId
-      ParameterValue: !env HOSTED_ZONE_ID
-    - ParameterKey: certificateId
-      ParameterValue: !env CERTIFICATE_ID
 
 Innolab-Doc-PipelineStack:
   template: pipelines/documentation.yml
   parameters:
     - ParameterKey: applicationName
       ParameterValue: !env APPLICATION
+    - ParameterKey: domainName
+      ParameterValue: !env DOMAIN
+    - ParameterKey: iamStack
+      ParameterValue: Innolab-IAMStack
+    - ParameterKey: repoStack
+      ParameterValue: Innolab-RepoStack
+
+Innolab-Frontend-PipelineStack-Dev:
+  template: pipelines/documentation.yml
+  parameters:
+    - ParameterKey: applicationName
+      ParameterValue: !env APPLICATION
+    - ParameterKey: environmentName
+      ParameterValue: !env ENVIRONMENT
     - ParameterKey: domainName
       ParameterValue: !env DOMAIN
     - ParameterKey: iamStack
@@ -146,14 +168,10 @@ Innolab-Lambda-PipelineStack-Dev:
       ParameterValue: !env APPLICATION
     - ParameterKey: environmentName
       ParameterValue: !env ENVIRONMENT
-    - ParameterKey: domainName
-      ParameterValue: !env DOMAIN
     - ParameterKey: iamStack
       ParameterValue: Innolab-IAMStack
     - ParameterKey: repoStack
       ParameterValue: Innolab-RepoStack
-    - ParameterKey: cognitoStack
-      ParameterValue: Innolab-CognitoStack-Dev
 
 Innolab-MigrationStack:
   template: applications/migration.yml

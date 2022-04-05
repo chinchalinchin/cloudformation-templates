@@ -98,6 +98,12 @@ Resources:
               - apigateway:*
             # TODO: scope to applicationName resources
             Resource: '*'
+          - Sid: RDSPermissions
+            Effect: Allow
+            Action: 
+              - rds:*
+            # TODO: scope to applicationName resources
+            Resource: '*'
           - Sid: LogPermissions
             Effect: Allow
             Action:

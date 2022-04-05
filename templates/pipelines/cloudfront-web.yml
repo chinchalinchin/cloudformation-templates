@@ -7,6 +7,10 @@ Parameters:
     Type: String
     Default: innolab
     Description: Tag appended to application resources
+  environmentName: 
+    Type: String
+    Default: Dev
+    Description: Environment into which the resources are deploying
   domainName:
     Type: String
     Default: makpar-innovation.net
@@ -20,12 +24,27 @@ Parameters:
     Default: Innolab-RepoStack
     Description: Cross-stack reference to stack containing repository resources
 
+Mappings:
+  BranchMap:
+    Dev: 
+      branch:  "dev"
+      suffix: "-dev"
+    Test: 
+      branch: "test"
+      suffix: "-test"
+    Staging: 
+      branch: "staging"
+      suffix: "-staging"
+    Prod: 
+      branch: "prod"
+      suffix: ""
+
 Resources:
   PipelineArtifacts:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub "${applicationName}-documenation-pipeline-artifacts"
+      BucketName: !Sub "${applicationName}-${environmentName}-web-pipeline-artifacts"
       PublicAccessBlockConfiguration:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
@@ -35,7 +54,7 @@ Resources:
   CodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "${applicationName}-documentation-codebuild"
+      Name: !Sub "${applicationName}-${environmentName}-web-codebuild"
       Artifacts:
         Type: CODEPIPELINE
       ServiceRole:
@@ -63,7 +82,7 @@ Resources:
         detail-type:
           - 'CodeCommit Repository State Change'
         resources:
-          - Fn::ImportValue: !Sub "${repoStack}-MasterRepositoryARN"
+          - Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
         detail:
           event:
             - referenceCreated
@@ -71,9 +90,9 @@ Resources:
           referenceType:
             - branch
           referenceName:
-            - master
+            - !Ref environmentName
       Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-documentation-pipeline"
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}-${environmentName}-web-pipeline"
           RoleArn: 
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
           Id: !Sub ${applicationName}-codepipeline-documentation
@@ -81,7 +100,7 @@ Resources:
   MasterPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${applicationName}-documentation-pipeline"
+      Name: !Sub "${applicationName}-${environmentName}-web-pipeline"
       RoleArn:
         Fn::ImportValue: !Sub "${iamStack}-CodePipelineRoleArn"
       ArtifactStore: 
@@ -98,11 +117,11 @@ Resources:
                 Version: 1
                 Provider: CodeCommit
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-documentation-source"    
+                - Name: !Sub "${applicationName}-${environmentName}-web-source"    
               Configuration:
                 RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-MasterRepository"
-                BranchName: master
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
+                BranchName: !Ref environmentName
                 PollForSourceChanges: false
         - Name: Build   
           Actions:
@@ -113,11 +132,12 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               InputArtifacts:
-                - Name: !Sub "${applicationName}-documentation-source"
+                - Name: !Sub "${applicationName}-${environmentName}-web-source"
               OutputArtifacts:
-                - Name: !Sub "${applicationName}-documentation-build"
+                - Name: !Sub "${applicationName}-${environmentName}-web-build"
               Configuration: 
                 ProjectName: !Ref CodeBuild
                 EnvironmentVariables: !Sub 
-                  - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}]'
+                  - '[{"name":"BRANCH","value":"master","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" }, { "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "DOMAIN", "value": "${domain}", "type": "PLAINTEXT"}]'
                   - app: !Ref applicationName
+                    domain: !Ref domainName

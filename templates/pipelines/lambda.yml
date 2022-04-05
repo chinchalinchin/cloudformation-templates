@@ -2,7 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: "The top of the DevOps stackset. This stack creates the CI/CD pipelines for the applicationName lambda function, hooks them into a CodeBuild project configured to use the Amazon Linux Standard 5.0 as a build environment. CloudWatch event rules are used to trigger the pipeline anytime a commit is made to the applicationName-lambda repository on the environment branches: Dev, Staging, Prod. "
 
-# NOTE: All pipeline stacks ingest the same parameters, even if they don't use them. This is done so the script that stands up the pipelines can be generalized to stand up any of the pipeline stacks, instead of having a script for each type of pipeline.
 Parameters:
   applicationName:
     Type: String
@@ -12,10 +11,6 @@ Parameters:
     Type: String
     Default: Dev
     Description: Environment into which resources are being deployed
-  domainName:
-    Type: String
-    Default: makpar-innovation.net
-    Description: Domain name over which the appplication is served.
   iamStack:
     Type: String
     Default: Innolab-IAMStack
@@ -24,10 +19,6 @@ Parameters:
     Type: String
     Default: Innolab-RepoStack
     Description: Cross-stack reference to stack containing repository resources
-  cognitoStack:
-    Type: String
-    Default: Innolab-CognitoStack
-    Description: Cross-stack reference to stack containing Cognito resources
 
 Conditions:
   DevResources: !Equals
@@ -173,10 +164,6 @@ Resources:
                 Configuration: 
                   ProjectName: !Ref CodeBuild
                   EnvironmentVariables: !Sub 
-                    - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" },{ "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"},{"name": "DOMAIN", "value": "${domainName}", "type": "PLAINTEXT"}]'
-                    - env: 
-                        Fn::FindInMap:
-                          - BranchMap
-                          - !Ref environmentName
-                          - branch
+                    - '[{"name":"BRANCH","value":"${env}","type":"PLAINTEXT"},{"name":"APPLICATION","value":"${app}","type":"PLAINTEXT"},{"name":"AWS_DEFAULT_REGION","value":"${AWS::Region}","type":"PLAINTEXT" },{ "name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}", "type": "PLAINTEXT"}]'
+                    - env: !Ref environmentName
                       app: !Ref applicationName
