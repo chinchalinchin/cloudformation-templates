@@ -55,7 +55,7 @@ Innolab-FrontendStack-Dev:
     - ParameterKey: domainName
       ParameterValue: !env DOMAIN
     - ParameterKey: subdomainName
-      ParameterValue: laboratory
+      ParameterValue: laboratory-dev
     - ParameterKey: certificateId
       ParameterValue: !env CERTIFICATE_ID
     - ParameterKey: hostedZoneId
