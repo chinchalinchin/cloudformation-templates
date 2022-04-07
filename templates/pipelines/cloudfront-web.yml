@@ -101,7 +101,7 @@ Resources:
             Fn::ImportValue: !Sub "${iamStack}-CloudWatchEventRoleArn"
           Id: !Sub ${applicationName}-codepipeline-documentation
 
-  MasterPipeline:
+  FrontendPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       Name: !Sub "${applicationName}-${environmentName}-web-pipeline"
@@ -124,7 +124,7 @@ Resources:
                 - Name: !Sub "${applicationName}-${environmentName}-web-source"    
               Configuration:
                 RepositoryName: 
-                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepositoryARN"
+                  Fn::ImportValue: !Sub "${repoStack}-FrontendRepository"
                 BranchName: !Ref environmentName
                 PollForSourceChanges: false
         - Name: Build   
