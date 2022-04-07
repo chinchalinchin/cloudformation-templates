@@ -36,7 +36,7 @@ jobs:
         displayName: Scan templates for vulnerabilities
 
   - job: ManualApproval
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     dependsOn: VulnerabilityScan
     pool: server
     steps:
@@ -51,7 +51,7 @@ jobs:
         onTimeout: 'reject'
 
   - deployment: DeployInnoLab
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     dependsOn: ManualApproval
     displayName: DeployResources
     pool:
