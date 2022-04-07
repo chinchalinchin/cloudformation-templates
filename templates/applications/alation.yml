@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Parameters:
+  iamStack:
+    Type: String
+    Default: Innolab-IAMStack
+    Description: Cross-stack reference to stack containing IAM resources
   vpcStack:
     Type: String
     Default: Innolab-VPCStack-Dev
@@ -28,47 +32,13 @@ Parameters:
 Description: "A stack of configuration and resources for deploying Alation service into either a private or public subnet in applicationName-VPCStack-Dev VPC."
 
 Resources:
-  AlationRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      Path: !Sub "/${applicationName}/"
-      RoleName: !Sub "${applicationName}-alation-executor"
-      AssumeRolePolicyDocument: 
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal: 
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
-      MaxSessionDuration: 3600
-      ManagedPolicyArns: 
-        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-      Policies:
-        - PolicyName: !Sub ${applicationName}-alation-secret-policy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Sid: SecretManagerPermissions
-                Action: 
-                  - secretsmanager:GetSecretValue
-                Effect: Allow
-                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-      Description: "Role for Alation EC2 to access other services"
-      Tags:
-        - Key: "Application"
-          Value: !Ref applicationName
-        - Key: "Environment"
-          Value: !Ref environmentName
-
   AlationInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
       Path: "/"
-      InstanceProfileName: !Ref AlationRole
+      InstanceProfileName: !Sub ${applicationName}--alation-profile
       Roles: 
-        - !Ref AlationRole
+        - Fn::ImportValue: !Sub ${iamStack}-AlationRole
 
   AlationSecurityGroup:
     Type: AWS::EC2::SecurityGroup

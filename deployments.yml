@@ -120,6 +120,8 @@ Innolab-AlationStack:
       ParameterValue: !env HOSTED_ZONE_ID
     - ParameterKey: vpcStack
       ParameterValue: Innolab-VPCStack-Dev
+    - ParameterKey: iamStack
+      ParameterValue: Innolab-IAMStack
       
 Innolab-LambdaStack-Dev:
   template: lambda.yml

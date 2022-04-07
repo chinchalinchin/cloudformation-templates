@@ -173,6 +173,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role to allow monitoring of RDS
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -190,6 +191,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role to allow monitoring of RDS
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -206,6 +208,7 @@ Resources:
   ECSRole:
     Type: AWS::IAM::Role
     Properties:
+      # Path: !Sub "/${applicationName}/"
       RoleName: !Sub "${applicationName}-ecs-role"
       AssumeRolePolicyDocument:
         Statement:
@@ -242,6 +245,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role for the Backend ECS Task execution
     Properties:
+      # Path: !Sub "/${applicationName}/"
       RoleName: !Sub ${applicationName}-ecs-backend-task-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -257,6 +261,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role for the Frontend ECS Task execution
     Properties:
+      # Path: !Sub "/${applicationName}/"
       RoleName: !Sub ${applicationName}-ecs-frontend-task-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -271,6 +276,7 @@ Resources:
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
+      # Path: !Sub "/${applicationName}/"
       RoleName: !Sub "${applicationName}-ecs-task-execution-role"
       AssumeRolePolicyDocument:
         Statement:
@@ -320,6 +326,7 @@ Resources:
   ECSScalingRole:
     Type: AWS::IAM::Role
     Properties:
+      # Path: !Sub "/${applicationName}/"
       RoleName: !Sub "${applicationName}-ecs-scaling-role"
       AssumeRolePolicyDocument:
         Statement:
@@ -332,8 +339,9 @@ Resources:
 
   CodeDeployRole:
     Type: AWS::IAM::Role
-    Description: Role to allow CodeDeploy access to other AWS Services
+    Description: Role to allow CodeDeploy access to other AWS 
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -362,6 +370,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Pipeline access to other AWS Services
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -467,6 +476,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Pipeline's CodeBuild stage to access other AWS Services
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -582,6 +592,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role to allow Innolab Lambdas to access other AWS Services
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -653,8 +664,9 @@ Resources:
   
   LambdaExecutorEC2Role:
     Type: AWS::IAM::Role
-    Description: Role to allow Innolab Lambdas to access other AWS Services
+    Description: Role to allow Innolab Lambdas to access EC2 and RDS instances
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -666,7 +678,6 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Policies:
         - PolicyName: !Sub ${applicationName}-ec2-management-policy
           PolicyDocument:
@@ -699,6 +710,7 @@ Resources:
     Type: AWS::IAM::Role
     Description: Role to allow API Gateway to push logs to CloudWatch
     Properties:
+      # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -715,6 +727,7 @@ Resources:
   CloudWatchEventRole:
     Type: AWS::IAM::Role
     Properties:
+    # Path: !Sub "/${applicationName}/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -733,6 +746,35 @@ Resources:
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
       RoleName: !Sub ${applicationName}-cloudwatch-executor
+
+  AlationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      # Path: !Sub "/${applicationName}/"
+      RoleName: !Sub "${applicationName}-alation-executor"
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: 
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-alation-secret-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SecretManagerPermissions
+                Action: 
+                  - secretsmanager:GetSecretValue
+                Effect: Allow
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+      Description: "Role for Alation EC2 to access other services"
 
   ############################################################################### GROUPS
 
@@ -942,3 +984,13 @@ Outputs:
     Description: ARN for CloudWatch Event roles
     Export:
       Name: !Sub ${AWS::StackName}-CloudWatchEventRoleArn
+  AlationRoleArn:
+    Value: !GetAtt AlationRole.Arn
+    Description: ARN for the Alation role
+    Export:
+      Name: !Sub ${AWS::StackName}-AlationRoleARN
+  AlationRole:
+    Value: !Ref AlationRole
+    Description: Name of the Alation role
+    Export:
+      Name: !Sub ${AWS::StackName}-AlationRole
