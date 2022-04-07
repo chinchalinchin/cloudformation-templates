@@ -163,6 +163,8 @@ Resources:
               - iam:Describe*
               - iam:PassRole
               - iam:CreateInstanceProfile
+              - iam:AddRoleToInstanceProfile
+              - iam:RemoveRoleFromInstanceProfile
             Resource: 
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/*"
               - !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
