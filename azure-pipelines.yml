@@ -47,6 +47,8 @@ jobs:
       inputs:
         notifyUsers: |
           gmoore@makpar.com
+          pcofrancesco@makpar.com
+          skonur@makpar.com
         instructions: 'Validate and approve infrastructure configuration before deployment'
         onTimeout: 'reject'
 
