@@ -988,4 +988,9 @@ Outputs:
     Value: !GetAtt AlationRole.Arn
     Description: ARN for the Alation role
     Export:
+      Name: !Sub ${AWS::StackName}-AlationRoleARN
+  AlationRole:
+    Value: !Ref AlationRole
+    Description: Name of the Alation role
+    Export:
       Name: !Sub ${AWS::StackName}-AlationRole

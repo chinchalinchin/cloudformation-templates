@@ -36,10 +36,9 @@ Resources:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
       Path: "/"
-      InstanceProfileName: 
-         Fn::ImportValue: !Sub ${iamStack}-AlationRole
+      InstanceProfileName: !Sub ${applicationName}--alation-profile
       Roles: 
-        - !Ref AlationRole
+        - Fn::ImportValue: !Sub ${iamStack}-AlationRole
 
   AlationSecurityGroup:
     Type: AWS::EC2::SecurityGroup
