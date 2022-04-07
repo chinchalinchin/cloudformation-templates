@@ -81,9 +81,12 @@ Resources:
           - Sid: CodePipelinePermissions
             Effect: Allow
             Action: 
-              - "codebuild:CreateProject"
+              - "codebuild:*"
+              - "codepipeline:*"
             Resource:
               - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${applicationName}*"
+              - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:stage*"
+              - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:action*"
               - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
 
 
@@ -159,6 +162,7 @@ Resources:
               - iam:List*
               - iam:Describe*
               - iam:PassRole
+              - iam:CreateInstanceProfile
             Resource: 
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/*"
               - !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
