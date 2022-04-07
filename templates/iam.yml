@@ -78,6 +78,14 @@ Resources:
               - "cloudfront:*"
             # TODO: scope to applicationName resourcess
             Resource: '*'
+          - Sid: CodePipelinePermissions
+            Effect: Allow
+            Action: 
+              - "codebuild:CreateProject"
+            Resource:
+              - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${applicationName}*"
+              - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
+
 
   PipelineStackPolicy: 
     Type: AWS::IAM::Policy
@@ -150,10 +158,12 @@ Resources:
               - iam:Get*
               - iam:List*
               - iam:Describe*
+              - iam:PassRole
             Resource: 
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/*"
               - !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
               - !Sub "arn:aws:iam::${AWS::AccountId}:group/*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:instance-profile/*"
           - Sid: SecretManagerPermissions
             Effect: Allow
             Action:

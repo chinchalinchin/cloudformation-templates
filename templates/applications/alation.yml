@@ -138,7 +138,17 @@ Resources:
           echo "Token $TOKEN"
           curl -kLH "Authorization: Token $TOKEN" https://customerportal.alationdata.com/api/build_artifact/13195/download/ > alation-2022.1-11.2.2.159547.rpm
           rpm -i alation-2022.1-11.2.2.159547.rpm
-  
+          mkfs.ext4 -L alation-data /dev/xvdd
+          mkfs.ext4 -L alation-backup dev/xvdb
+          mkdir -p /data /backup
+          echo "LABEL=alation-data /data ext4 defaults,nofail 0 0" >> /etc/fstab
+          echo "LABEL=alation-backup /backup ext4 defaults,nofail 0 0" >> /etc/fstab
+          mount -a
+          mount
+          /etc/init.d/alation init /data /backup
+          /etc/init.d/alation start
+          yum update -y
+          
   AlationElasticIP:
     Type: AWS::EC2::EIP
     Properties:
