@@ -42,7 +42,7 @@ Resources:
     Properties:
       BucketName: !Sub 
         - "${app}-${env}-web-pipeline-artifacts"
-        - app: !Ref ApplicationName
+        - app: !Ref applicationName
           env: 
             Fn::FindInMap:
               - BranchMap
