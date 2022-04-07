@@ -192,6 +192,7 @@ Resources:
   FrontendEventRule:
     Type: AWS::Events::Rule
     Properties:
+      EventBusName: !Sub ${applicationName}-${environmentName}-ecs-frontend-codecommit
       EventPattern:
         source:
           - aws.codecommit
@@ -387,6 +388,7 @@ Resources:
   BackendEventRule:
     Type: AWS::Events::Rule
     Properties:
+      EventBusName: !Sub ${applicationName}-${environmentName}-ecs-backend-codecommit
       EventPattern:
         source:
           - aws.codecommit

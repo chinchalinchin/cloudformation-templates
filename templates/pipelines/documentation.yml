@@ -57,6 +57,7 @@ Resources:
   MasterEventRule:
     Type: AWS::Events::Rule
     Properties:
+      EventBusName: !Sub ${applicationName}-documentation-codecommit
       EventPattern:
         source:
           - aws.codecommit
