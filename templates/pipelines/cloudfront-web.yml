@@ -24,21 +24,6 @@ Parameters:
     Default: Innolab-RepoStack
     Description: Cross-stack reference to stack containing repository resources
 
-Mappings:
-  BranchMap:
-    Dev: 
-      branch:  "dev"
-      suffix: "-dev"
-    Test: 
-      branch: "test"
-      suffix: "-test"
-    Staging: 
-      branch: "staging"
-      suffix: "-staging"
-    Prod: 
-      branch: "prod"
-      suffix: ""
-
 Resources:
   PipelineArtifacts:
     Type: AWS::S3::Bucket
