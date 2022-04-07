@@ -84,7 +84,7 @@ Resources:
             Action:
               - iam:Get*
               - iam:List*
-              - iam:Describe
+              - iam:Describe*
             Resource: 
               - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:*/${applicationName}*"
           - Sid: EC2Permissions
