@@ -148,7 +148,7 @@ Innolab-Doc-PipelineStack:
       ParameterValue: Innolab-RepoStack
 
 Innolab-Frontend-PipelineStack-Dev:
-  template: pipelines/documentation.yml
+  template: pipelines/cloudfront-web.yml
   parameters:
     - ParameterKey: applicationName
       ParameterValue: !env APPLICATION
