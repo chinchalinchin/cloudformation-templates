@@ -36,6 +36,7 @@ jobs:
         displayName: Scan templates for vulnerabilities
 
   - job: ManualApproval
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     dependsOn: VulnerabilityScan
     pool: server
     steps:
@@ -46,10 +47,13 @@ jobs:
       inputs:
         notifyUsers: |
           gmoore@makpar.com
+          pcofrancesco@makpar.com
+          skonur@makpar.com
         instructions: 'Validate and approve infrastructure configuration before deployment'
         onTimeout: 'reject'
 
   - deployment: DeployInnoLab
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     dependsOn: ManualApproval
     displayName: DeployResources
     pool:
