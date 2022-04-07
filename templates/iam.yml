@@ -14,16 +14,96 @@ Parameters:
   
 Resources:
   ############################################################################### PIPELINE ACCOUNT
+  DeploymentGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: deployment-group
+  
   PipelineUser:
     Type: AWS::IAM::User
     Description: User account for Innolab pipeline to perform all the necessary deployment operations
     Properties:
       UserName: !Ref pipelineUser
+      Groups: 
+        - !Ref DeploymentGroup
 
-  PipelinePolicy:
+  PipelineServicePolicy: 
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub ${applicationName}-pipeline-policy
+      Groups:
+        - !Ref DeploymentGroup
+      PolicyName: !Sub ${applicationName}-pipeline-service-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EC2Permissions
+            Effect: Allow
+            Action:
+              - "ec2:*"
+            # TODO: scope to applicationName resources
+            Resource: '*'
+          - Sid: APIGatewayPermissions
+            Effect: Allow
+            Action:
+              - apigateway:*
+            # TODO: scope to applicationName resources
+            Resource: '*'
+          - Sid: RDSPermissions
+            Effect: Allow
+            Action: 
+              - rds:*
+            # TODO: scope to applicationName resources
+            Resource: '*'
+          - Sid: LogPermissions
+            Effect: Allow
+            Action:
+              - logs:*
+            # TODO: scope to applicationName resources
+            Resource: '*'
+          - Sid: Route53Permissions
+            Effect: Allow
+            Action: 
+              - route53:*
+            # TODO: scope to applicationName resources
+            Resource: '*'
+          - Sid: CloudWatchPermissions
+            Effect: Allow
+            Action: 
+              - events:*
+            Resource: 
+              - !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/${applicationName}*"
+          - Sid: CloudFrontPermissions
+            Effect: Allow
+            Action: 
+              - "cloudfront:*"
+            # TODO: scope to applicationName resourcess
+            Resource: '*'
+
+  PipelineStackPolicy: 
+    Type: AWS::IAM::Policy
+    Properties:
+      Groups:
+        - !Ref DeploymentGroup
+      PolicyName: !Sub ${applicationName}-pipeline-stack-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: CloudFormationPermissions
+            Effect: Allow
+            Action:
+              - "cloudformation:*"
+            Resource:
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset*"
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset-target"
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:type"
+
+  PipelineBasePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Groups:
+        - !Ref DeploymentGroup
+      PolicyName: !Sub ${applicationName}-pipeline-base-policy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -57,28 +137,13 @@ Resources:
             Action:
               - "s3:*"
             Resource: 
-                - !Sub "arn:aws:s3:::${applicationName}-*/*"
+              - !Sub "arn:aws:s3:::${applicationName}-*/*"
           - Sid: S3BucketPermissions
             Effect: Allow
             Action:
               - "s3:*"
             Resource: 
               - !Sub "arn:aws:s3:::${applicationName}-*"
-          - Sid: CloudFormationPermissions
-            Effect: Allow
-            Action:
-              - "cloudformation:*"
-            Resource:
-              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
-              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset*"
-              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset-target"
-              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:type"
-          - Sid: CloudFrontPermissions
-            Effect: Allow
-            Action: 
-              - "cloudfront:*"
-            # TODO: scope to applicationName resourcess
-            Resource: '*'
           - Sid: IAMPermissions
             Effect: Allow
             Action:
@@ -86,45 +151,21 @@ Resources:
               - iam:List*
               - iam:Describe*
             Resource: 
-              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:*/${applicationName}*"
-          - Sid: EC2Permissions
-            Effect: Allow
-            Action:
-              - "ec2:*"
-            # TODO: scope to applicationName resources
-            Resource: '*'
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:group/*"
           - Sid: SecretManagerPermissions
             Effect: Allow
             Action:
               - secretsmanager:*
             Resource:
               - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}*"
-          - Sid: APIGatewayPermissions
-            Effect: Allow
-            Action:
-              - apigateway:*
-            # TODO: scope to applicationName resources
-            Resource: '*'
-          - Sid: RDSPermissions
-            Effect: Allow
-            Action: 
-              - rds:*
-            # TODO: scope to applicationName resources
-            Resource: '*'
           - Sid: LogPermissions
             Effect: Allow
             Action:
               - logs:*
             # TODO: scope to applicationName resources
             Resource: '*'
-          - Sid: Route53Permissions
-            Effect: Allow
-            Action: 
-              - route53:*
-            # TODO: scope to applicationName resources
-            Resource: '*'
-      Users: 
-        - !Ref PipelineUser
 
   ############################################################################### SERVICE ROLES
 
