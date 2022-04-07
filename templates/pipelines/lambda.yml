@@ -102,7 +102,7 @@ Resources:
     LambdaEventRule:
       Type: AWS::Events::Rule
       Properties:
-        EventBusName: !Sub ${applicationName}-${environmentName}-lambda-codecommit
+        Name: !Sub ${applicationName}-${environmentName}-lambda-codecommit
         EventPattern:
           source:
             - aws.codecommit

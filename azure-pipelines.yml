@@ -6,6 +6,7 @@ variables:
 
 jobs:
   - job: LintValidation
+    condition: not(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -17,6 +18,7 @@ jobs:
         displayName: Lint templates
         
   - job: VulnerabilityScan
+    condition: not(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     dependsOn: LintValidation
     pool:
       vmImage: 'ubuntu-latest'
