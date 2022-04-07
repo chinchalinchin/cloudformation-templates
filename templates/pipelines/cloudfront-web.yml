@@ -24,12 +24,30 @@ Parameters:
     Default: Innolab-RepoStack
     Description: Cross-stack reference to stack containing repository resources
 
+Mappings:
+  BranchMap:
+    Dev: 
+      lower:  "dev"
+    Test: 
+      lower: "test"
+    Staging: 
+      lower: "staging"
+    Prod: 
+      lower: "prod"
+
 Resources:
   PipelineArtifacts:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub "${applicationName}-${environmentName}-web-pipeline-artifacts"
+      BucketName: !Sub 
+        - "${app}-${env}-web-pipeline-artifacts"
+        - app: !Ref applicationName
+          env: 
+            Fn::FindInMap:
+              - BranchMap
+              - !Ref environmentName
+              - lower
       PublicAccessBlockConfiguration:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
@@ -58,7 +76,7 @@ Resources:
           - LOCAL_DOCKER_LAYER_CACHE
           - LOCAL_SOURCE_CACHE
 
-  MasterEventRule:
+  EnvironmentEventRule:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub ${applicationName}-${environmentName}-web-codecommit

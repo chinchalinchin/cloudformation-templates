@@ -163,6 +163,8 @@ Resources:
               - iam:Describe*
               - iam:PassRole
               - iam:CreateInstanceProfile
+              - iam:AddRoleToInstanceProfile
+              - iam:RemoveRoleFromInstanceProfile
             Resource: 
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/*"
               - !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
@@ -788,6 +790,14 @@ Resources:
                   - secretsmanager:GetSecretValue
                 Effect: Allow
                 Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+              - Sid: S3BucketPermissions
+                Effect: Allow
+                Action:
+                  - "s3:Get*"
+                  - "s3:Describe*"
+                Resource: 
+                  - !Sub "arn:aws:s3:::${applicationName}-*"
+                  - !Sub "arn:aws:s3:::${applicationName}-*/*"
       Description: "Role for Alation EC2 to access other services"
 
   ############################################################################### GROUPS
