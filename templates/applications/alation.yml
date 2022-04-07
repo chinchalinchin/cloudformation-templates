@@ -145,10 +145,14 @@ Resources:
           echo "LABEL=alation-backup /backup ext4 defaults,nofail 0 0" >> /etc/fstab
           mount -a
           mount
+          cd /opt/alation/alation/data1/site_data/ssl/
+          openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ssl.key -out ssl.crt
+          chown alation:alation /opt/alation/alation/data1/site_data/ssl/ssl.*
+          chmod 600 /opt/alation/alation/data1/site_data/ssl/ssl.*
           /etc/init.d/alation init /data /backup
           /etc/init.d/alation start
           yum update -y
-          
+
   AlationElasticIP:
     Type: AWS::EC2::EIP
     Properties:
