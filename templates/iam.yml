@@ -79,6 +79,14 @@ Resources:
               - "cloudfront:*"
             # TODO: scope to applicationName resourcess
             Resource: '*'
+          - Sid: IAMPermissions
+            Effect: Allow
+            Action:
+              - iam:Get*
+              - iam:List*
+              - iam:Describe*
+            Resource: 
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:*/${applicationName}*"
           - Sid: EC2Permissions
             Effect: Allow
             Action:
@@ -107,6 +115,12 @@ Resources:
             Effect: Allow
             Action:
               - logs:*
+            # TODO: scope to applicationName resources
+            Resource: '*'
+          - Sid: Route53Permissions
+            Effect: Allow
+            Action: 
+              - route53:*
             # TODO: scope to applicationName resources
             Resource: '*'
       Users: 
