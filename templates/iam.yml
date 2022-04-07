@@ -88,8 +88,7 @@ Resources:
           - Sid: SecretManagerPermissions
             Effect: Allow
             Action:
-              - secretsmanager:GetSecretValue
-              - secretsmanager:UpdateSecret
+              - secretsmanager:*
             Resource:
               - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}*"
           - Sid: APIGatewayPermissions
