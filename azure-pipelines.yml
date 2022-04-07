@@ -52,6 +52,7 @@ jobs:
   - deployment: DeployInnoLab
     dependsOn: ManualApproval
     displayName: DeployResources
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     pool:
       vmImage: 'ubuntu-latest'
     environment: 'AWS'
