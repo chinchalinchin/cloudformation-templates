@@ -125,8 +125,9 @@ The following tables detail the cross stack dependencies between different stack
 | IAMStack | None |
 | RepoStack | None |
 | DNSStack | None |
-| PipelineStack-@env | RepoStack, IAMStack, CoverageStack, CognitoStack-@env, ClusterStack-@env |
-
+| Doc-PipelineStack | IAMStack, RepoStack |
+| Frontend-PipelineStack-@env | IAMStack, RepoStack |
+| Lambda-PipelineStack-@env | IAMStack, RepoStack |
 
 ### Core Stacks
 
