@@ -89,7 +89,6 @@ Resources:
               - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:action*"
               - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
 
-
   PipelineStackPolicy: 
     Type: AWS::IAM::Policy
     Properties:
@@ -202,6 +201,9 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
       RoleName: !Sub ${applicationName}-rds-monitor
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
   
   MigrationMonitoringRole:
     Type: AWS::IAM::Role
@@ -220,6 +222,9 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole
       RoleName: !Sub ${applicationName}-dms-monitor
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
 
   ECSRole:
     Type: AWS::IAM::Role
@@ -256,6 +261,9 @@ Resources:
               - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
               - 'elasticloadbalancing:RegisterTargets'
             Resource: '*'
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
 
   ECSBackendTaskRole:
     Type: AWS::IAM::Role
@@ -272,6 +280,9 @@ Resources:
             Action:
               - "sts:AssumeRole"
       # Policies: TODO!
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
 
   ECSFrontendTaskRole:
     Type: AWS::IAM::Role
@@ -288,6 +299,9 @@ Resources:
             Action:
               - "sts:AssumeRole"
       # Policies: TODO!
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
   
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -338,7 +352,10 @@ Resources:
                   - s3:GetBucketLocation
                 Effect: Allow
                 Resource: !Sub "arn:aws:s3:::${applicationName}-env"
-                
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
+
   ECSScalingRole:
     Type: AWS::IAM::Role
     Properties:
@@ -352,6 +369,9 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
 
   CodeDeployRole:
     Type: AWS::IAM::Role
@@ -381,6 +401,9 @@ Resources:
                 Resource: 
                   - !Sub "arn:aws:s3:::${applicationName}-*"
       RoleName: !Sub ${applicationName}-codedeploy-executor
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
 
   CodePipelineRole:
     Type: AWS::IAM::Role
@@ -487,6 +510,9 @@ Resources:
                 Effect: Allow
                 Resource: '*' # TODO: scope this to...cluster? or whereever task definitions are stored? 
       RoleName: !Sub ${applicationName}-codepipeline-executor
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
         
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -603,6 +629,9 @@ Resources:
                 Resource: 
                   - !Sub  "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*"
       RoleName: !Sub ${applicationName}-codebuild-executor
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
 
   LambdaExecutorRole:
     Type: AWS::IAM::Role
@@ -677,6 +706,9 @@ Resources:
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${applicationName}-*"
 
       RoleName: !Sub ${applicationName}-lambda-executor
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
   
   LambdaExecutorEC2Role:
     Type: AWS::IAM::Role
@@ -721,6 +753,9 @@ Resources:
                 Resource:
                   - "*"
       RoleName: !Sub ${applicationName}-lambda-executor-instances
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
  
   APILoggerRole:
     Type: AWS::IAM::Role
@@ -739,6 +774,9 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       RoleName: !Sub ${applicationName}-apigateway-executor
+      Tags:
+        - Key: "Application"
+          Value: !Ref applicationName
 
   CloudWatchEventRole:
     Type: AWS::IAM::Role
@@ -762,6 +800,9 @@ Resources:
                 Action: codepipeline:StartPipelineExecution
                 Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${applicationName}*"
       RoleName: !Sub ${applicationName}-cloudwatch-executor
+      Tags:
+          - Key: "Application"
+            Value: !Ref applicationName
 
   AlationRole:
     Type: "AWS::IAM::Role"
@@ -799,6 +840,64 @@ Resources:
                   - !Sub "arn:aws:s3:::${applicationName}-*"
                   - !Sub "arn:aws:s3:::${applicationName}-*/*"
       Description: "Role for Alation EC2 to access other services"
+      Tags:
+          - Key: "Application"
+            Value: !Ref applicationName
+
+  MigrationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: !Sub "/${applicationName}/"
+      RoleName: !Sub "${applicationName}-data-migration-executor"
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: 
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      Policies:
+        - PolicyName: !Sub ${applicationName}-migration-secret-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SecretManagerPermissions
+                Action: 
+                  - secretsmanager:GetSecretValue
+                Effect: Allow
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
+              - Sid: EC2Permissions
+                Action:
+                  - ec2:Describe*
+                Effect: Allow
+                Resource: '*'
+      Description: "Role for Migration EC2 to access other services"
+      Tags:
+          - Key: "Application"
+            Value: !Ref applicationName
+
+  ############################################################################### INSTANCE PROFILES
+
+  AlationProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: !Sub "/${applicationName}/"
+      InstanceProfileName: !Sub ${applicationName}-alation-profile
+      Roles: 
+        - !Ref AlationRole
+
+  MigrationProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      InstanceProfileName: !Sub ${applicationName}-migration-profile
+      Roles: 
+        - !Ref MigrationRole
 
   ############################################################################### GROUPS
 
@@ -1018,3 +1117,23 @@ Outputs:
     Description: Name of the Alation role
     Export:
       Name: !Sub ${AWS::StackName}-AlationRole
+  AlationProfile:
+    Value: !Ref AlationProfile
+    Description: Name of the Alation Instance profile
+    Export:
+      Name: !Sub ${AWS::StackName}-AlationProfile
+  MigrationRoleArn:
+    Value: !GetAtt MigrationRole.Arn
+    Description: ARN for the Alation role
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRoleARN
+  MigrationRole:
+    Value: !Ref AlationRole
+    Description: Name of the Alation role
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationRole
+  MigrationProfile:
+    Value: !Ref AlationProfile
+    Description: Name of the Alation Instance profile
+    Export:
+      Name: !Sub ${AWS::StackName}-MigrationsProfile

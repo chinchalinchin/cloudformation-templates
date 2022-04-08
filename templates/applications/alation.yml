@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+Description: Deploys the resources necessary for standing up an instance of Alation within the applicationName-VPCStack-environmentName and routing traffic to it. UserData script that configures Alation on boot will pull a JWT token from the SecretsManager stored untder ${applicationName}-alationToken and use this to authenticate with the Alation download server. Before stack is deployed, ensure an EC2 keypair exists with name passed in for the value of the parameter alationKeyName. After the stack is deployed, you will need to SSH in and manually configure HTTPS. See Alation documentation for more information. Possible TODO - Parameter flag to signal provisioning of ALB load balancer to take care of HTTPS.
+
 Parameters:
   iamStack:
     Type: String
@@ -29,17 +31,7 @@ Parameters:
     Type: String
     Description: Physical ID of the AWS Hosted Zone where the domain is served.
 
-Description: "A stack of configuration and resources for deploying Alation service into either a private or public subnet in applicationName-VPCStack-Dev VPC."
-
 Resources:
-  AlationInstanceProfile:
-    Type: "AWS::IAM::InstanceProfile"
-    Properties:
-      Path: "/"
-      InstanceProfileName: !Sub ${applicationName}--alation-profile
-      Roles: 
-        - Fn::ImportValue: !Sub ${iamStack}-AlationRole
-
   AlationSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -103,7 +95,8 @@ Resources:
             Encrypted: true
             VolumeSize: 200
             VolumeType: "gp2"
-      IamInstanceProfile: !Ref AlationInstanceProfile
+      IamInstanceProfile: 
+        Fn::ImportValue: !Sub "${vpcStack}-AlationProfile"
       Tags: 
         - Key: Name
           Value: !Sub ${applicationName}-${environmentName}-alation 
@@ -123,13 +116,13 @@ Resources:
       EnclaveOptions: 
         Enabled: false
       UserData: 
-        Fn::Base64: |
+        Fn::Base64: !Sub |
           #!/bin/bash
           yum install unzip -y
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
           ./aws/install
-          TOKEN=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id innolab-alationToken --query SecretString --output text)
+          TOKEN=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id ${applicationName}-alationToken --query SecretString --output text)
           dnf install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
           dnf install -y https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
           systemctl enable amazon-ssm-agent
