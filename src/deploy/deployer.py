@@ -1,10 +1,5 @@
-# TODO: parse deployments yaml, pass arguments into subprocess
-# https://stackoverflow.com/questions/13745648/running-bash-script-from-within-python
-
-# alternatively, use boto3 api wrapper around cloudformation directly:
-# https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html#CloudFormation.Client.update_stack
-
 import argparse
+import enum
 import boto3
 import botocore
 import os
@@ -35,6 +30,13 @@ IN_PROGRESS_STACKS=[
     'UPDATE_IN_PROGRESS', 
     'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS',
 ]
+
+class Stage(enum.Enum):
+    deploy = 'deploy'
+    predeploy = 'predeploy'
+
+    def __str__(self):
+        return self.value
 
 def handle_boto_error(err: botocore.exceptions.ClientError):
     """Handle **boto3** client response errors.
@@ -79,9 +81,9 @@ def get_stage(stage: str = 'deploy') -> dict:
     :return: deployment configuratio
     :rtype: dict
     """
-    if stage == 'predeploy':
+    if stage == Stage.predeploy:
         configuration_file = settings.PREDEPLOYMENT_FILE
-    elif stage == 'deploy':
+    elif stage == Stage.deploy:
         configuration_file = settings.DEPLOYMENT_FILE
     else:
         raise ValueError(f'{stage} does not map to "predeploy" | "deploy"')
@@ -199,7 +201,7 @@ def deploy():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('stage', type=str, help="predeploy | deploy")
+    parser.add_argument('stage', type=Stage, choices=list(Stage), help="predeploy | deploy")
     args = parser.parse_args()
 
     stack_deployments, stack_names = get_stage(args.stage), get_stack_names()
