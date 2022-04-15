@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "The first stack of the applicationName application. It will provision all the necessary resources for a Cognito OAUTH authentication flow, such as UserPool, UserPoolClients, UserPoolDomain, etc. It will also provision user accounts for the development team and send them emails to reset their Cognito IDP passwords."
+
+Parameters:
+  environmentName:
+    Type: String
+    Default: Dev
+    Description: Environment into which the stack is deploying
+  applicationName:
+    Type: String
+    Default: innolab
+    Description: Namespace of the stack resources
+
+Resources:
+  StartEc2Rule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "StartEc2Rule"
+      ScheduleExpression: "cron(0 13 * * 1-5)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - !Sub ${applicationName}-lambda-beta-${environmentName}
+              - "Arn"
+          Id: ""
+  StopEc2Rule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "StopEc2Rule"
+      ScheduleExpression: "cron(0 21 * * 1-5)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - !Sub ${applicationName}-lambda-beta-${environmentName}
+              - "Arn"
+          Id: ""
+  PermissionForStartEventToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: 
+        Ref: !Sub ${applicationName}-lambda-beta-${environmentName}
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "StartEc2Rule"
+          - "Arn"
+  PermissionForStopEventToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: 
+        Ref: !Sub ${applicationName}-lambda-beta-${environmentName}
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "StopEc2Rule"
+          - "Arn"
