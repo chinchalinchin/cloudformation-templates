@@ -180,7 +180,7 @@ Resources:
     Properties: 
       Description: "StopEc2Rule"
       Name: !Sub "${applicationName}-${environmentName}-start-ec2-rule"
-      ScheduleExpression: "cron(0 13 * * MON-FRI *)"
+      ScheduleExpression: "cron(0 13 ? * MON-FRI *)"
       State: "ENABLED"
       Targets: 
         - 
@@ -192,7 +192,7 @@ Resources:
     Properties: 
       Description: "StopEc2Rule"
       Name: !Sub "${applicationName}-${environmentName}-stop-ec2-rule"
-      ScheduleExpression: "cron(0 21 * * MON-FRI *)"
+      ScheduleExpression: "cron(0 21 ? * MON-FRI *)"
       State: "ENABLED"
       Targets: 
         - 
