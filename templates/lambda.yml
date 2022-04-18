@@ -189,8 +189,7 @@ Resources:
   PermissionForStartEventToInvokeLambda: 
     Type: AWS::Lambda::Permission
     Properties: 
-      FunctionName: 
-        Ref: !Sub ${applicationName}-lambda-beta-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-beta-${environmentName}
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt StartEc2Rule.Arn
@@ -198,8 +197,7 @@ Resources:
   PermissionForStopEventToInvokeLambda: 
     Type: AWS::Lambda::Permission
     Properties: 
-      FunctionName: 
-        Ref: !Sub ${applicationName}-lambda-beta-${environmentName}
+      FunctionName: !Sub ${applicationName}-lambda-beta-${environmentName}
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt StopEc2Rule.Arn
