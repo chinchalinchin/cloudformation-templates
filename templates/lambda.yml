@@ -179,12 +179,13 @@ Resources:
     Type: AWS::Events::Rule
     Properties: 
       Description: "StopEc2Rule"
+      Name: !Sub "${applicationName}-${environmentName}-start-stop-ec2-rule"
       ScheduleExpression: "cron(0 13,21 * * 1-5)"
       State: "ENABLED"
       Targets: 
         - 
           Arn: !GetAtt LambdaBeta.Arn
-          Id: !Sub "${applicationName}-${environmentName}-start-stop-ec2-rule"
+          Id: !Sub "${applicationName}-${environmentName}-beta-rule-target"
 
   PermissionForStartEventToInvokeLambda: 
     Type: AWS::Lambda::Permission
