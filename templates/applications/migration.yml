@@ -1,6 +1,8 @@
 
 AWSTemplateFormatVersion: "2010-09-09"
 
+Description: Contains the necessary resources for initiating a data migration between a source database (oracle | postgres) and a target database (oracle | postgres). An EC2 client and a DMS replication instance will be deployed into the applicationName-VPCStack-environmentName to facilitate the migration. 
+
 Parameters:
     applicationName:
         Type: String
@@ -50,6 +52,9 @@ Parameters:
     vpcStack:
         Type: String
         Default: Innolab-VPCStack-Dev
+    iamStack:
+        Type: String
+        Default: Innolab-IAMStack
 
 Mappings:
   ConfigMap:
@@ -146,54 +151,6 @@ Resources:
             FromPort: '0'
             ToPort: '65535'
 
-    ClientRole:
-        Type: "AWS::IAM::Role"
-        Properties:
-            Path: !Sub "/${applicationName}/"
-            RoleName: !Sub "${applicationName}-migration-executor"
-            AssumeRolePolicyDocument: 
-                Version: "2012-10-17"
-                Statement:
-                    -   Effect: Allow
-                        Principal: 
-                            Service:
-                                - ec2.amazonaws.com
-                        Action:
-                            - "sts:AssumeRole"
-            MaxSessionDuration: 3600
-            ManagedPolicyArns: 
-                - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-            Policies:
-                -   PolicyName: !Sub ${applicationName}-migration-secret-policy
-                    PolicyDocument:
-                        Version: "2012-10-17"
-                        Statement:
-                        -   Sid: SecretManagerPermissions
-                            Action: 
-                                - secretsmanager:GetSecretValue
-                            Effect: Allow
-                            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${applicationName}-*"
-                        -   Sid: EC2Permissions
-                            Action:
-                                - ec2:Describe*
-                            Effect: Allow
-                            Resource: '*'
-
-            Description: "Role for Migration EC2 to access other services"
-            Tags:
-                -   Key: "Application"
-                    Value: !Ref applicationName
-                -   Key: "Environment"
-                    Value: !Ref environmentName
-
-    ClientProfile:
-        Type: "AWS::IAM::InstanceProfile"
-        Properties:
-            Path: "/"
-            InstanceProfileName: !Ref ClientRole
-            Roles: 
-                - !Ref ClientRole
-
     MigrationClient:
         Type: AWS::EC2::Instance
         Properties:
@@ -206,7 +163,8 @@ Resources:
                         Fn::ImportValue: !Sub "${vpcStack}-PublicSubnetA"
                     AssociatePublicIpAddress: true
                     GroupSet: [Fn::ImportValue: !Sub "${vpcStack}-NATSecurityGroup", Fn::ImportValue: !Sub "${vpcStack}-DatabaseSecurityGroup"]  
-            IamInstanceProfile: !Ref ClientProfile
+            IamInstanceProfile: 
+                Fn::ImportValue: !Sub "${iamStack}-MigrationProfile"
             Tags: 
                 -   Key: Name
                     Value: !Sub ${applicationName}-${environmentName}-migration

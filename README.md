@@ -67,10 +67,17 @@ In the above example, the template has a parameter `secretKey` in the `Parameter
 3. Invoke the python *deployer.py* script, which in turn will use the **boto3** python library to post the contents of *deployments.yml* to **CloudFormation**,
 
 ```shell
-python ./deploy/deployer.py
+python ./src/deploy/deployer.py deploy
 ```
 
 **NOTE**: In order for this script to succeed, you must have your **AWS CLI** authenticated with an **IAM** account that has permission to deploy resources through **CloudFormation**. Similarly, the **Azure DevOps** pipeline requires an **IAM** account with the appropriate policies attached. 
+
+## Predeployment
+
+To prevent the pipeline from having permission to edit its own permissions, the **IAM** resources for the **Innovation Lab** cloud environment are provisioned outside of the **Azure DevOps** pipeline. Similar to the actual deplyoments, resources that need provisioned before the pipeline takes over can be specified and configured in the *predeployments.yml*. This has a corresponding argument in the *deployer.py* script,
+
+```shell
+python ./src/deploy/deployer.py predepoloy
 
 ## Development
 
@@ -125,8 +132,9 @@ The following tables detail the cross stack dependencies between different stack
 | IAMStack | None |
 | RepoStack | None |
 | DNSStack | None |
-| PipelineStack-@env | RepoStack, IAMStack, CoverageStack, CognitoStack-@env, ClusterStack-@env |
-
+| Doc-PipelineStack | IAMStack, RepoStack |
+| Frontend-PipelineStack-@env | IAMStack, RepoStack |
+| Lambda-PipelineStack-@env | IAMStack, RepoStack |
 
 ### Core Stacks
 

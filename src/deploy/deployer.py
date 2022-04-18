@@ -1,10 +1,5 @@
-# TODO: parse deployments yaml, pass arguments into subprocess
-# https://stackoverflow.com/questions/13745648/running-bash-script-from-within-python
-
-# alternatively, use boto3 api wrapper around cloudformation directly:
-# https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html#CloudFormation.Client.update_stack
-
 import argparse
+import enum
 import boto3
 import botocore
 import os
@@ -35,6 +30,13 @@ IN_PROGRESS_STACKS=[
     'UPDATE_IN_PROGRESS', 
     'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS',
 ]
+
+class Stage(enum.Enum):
+    deploy = 'deploy'
+    predeploy = 'predeploy'
+
+    def __str__(self):
+        return self.value
 
 def handle_boto_error(err: botocore.exceptions.ClientError):
     """Handle **boto3** client response errors.
@@ -73,15 +75,17 @@ def get_loader() -> yaml.SafeLoader:
     loader.add_constructor("!env", env_var_constructor)
     return loader
 
-def get_stage(stage: str = 'deploy') -> dict:
+def get_stage(stage: Stage = Stage.deploy) -> dict:
     """Parse *deployments.yml*
 
+    :param stage: Deployment stage
+    :type stage: str
     :return: deployment configuratio
     :rtype: dict
     """
-    if stage == 'predeploy':
+    if stage == Stage.predeploy:
         configuration_file = settings.PREDEPLOYMENT_FILE
-    elif stage == 'deploy':
+    elif stage == Stage.deploy:
         configuration_file = settings.DEPLOYMENT_FILE
     else:
         raise ValueError(f'{stage} does not map to "predeploy" | "deploy"')
@@ -91,6 +95,19 @@ def get_stage(stage: str = 'deploy') -> dict:
             deployment = yaml.load(infile, Loader=get_loader())
         return deployment
     raise FileNotFoundError(f'{settings.DEPLOYMENT_FILE} does not exist')
+
+def get_capabilities(stage : Stage = Stage.deploy) -> list:
+    """ Return the permissions given to a particular deployment stage.
+    """
+    if stage == Stage.predeploy:
+        return [
+            'CAPABILITY_IAM',
+            'CAPABILITY_NAMED_IAM',
+            'CAPABILITY_AUTO_EXPAND',
+        ]
+    return [
+        'CAPABILITY_AUTO_EXPAND'
+    ]
 
 def get_client() -> boto3.client:
     """ Factory function for **boto3 CloudFormation** client
@@ -116,7 +133,7 @@ def get_stack_names(in_progress: bool = False) -> list:
     )['StackSummaries']
     return [ stack['StackName'] for stack in stacks]
 
-def update_stack(stack: str, deployment: dict) -> dict:
+def update_stack(stack: str, deployment: dict, capabilities: list) -> dict:
     """Update the given `stack` with the given `deployment` configuration
 
     :param stack: Name of the stack to be updated.
@@ -142,11 +159,7 @@ def update_stack(stack: str, deployment: dict) -> dict:
             StackName=stack,
             TemplateBody=template,
             Parameters=parameters,
-            Capabilities=[
-                'CAPABILITY_IAM',
-                'CAPABILITY_NAMED_IAM',
-                'CAPABILITY_AUTO_EXPAND',
-            ],
+            Capabilities=capabilities,
             Tags=[{
                 'Key': 'Application',
                 'Value': settings.APPLICATION
@@ -155,7 +168,7 @@ def update_stack(stack: str, deployment: dict) -> dict:
     except botocore.exceptions.ClientError as e:
         return handle_boto_error(e)
 
-def create_stack(stack: str, deployment: dict) -> dict:
+def create_stack(stack: str, deployment: dict, capabilities: list) -> dict:
     """Create the given `stack` with the given `deployment` configuration
 
     :param stack: Name of the stack to be updated.
@@ -181,11 +194,7 @@ def create_stack(stack: str, deployment: dict) -> dict:
             StackName=stack,
             TemplateBody=template,
             Parameters=parameters,
-            Capabilities=[
-                'CAPABILITY_IAM',
-                'CAPABILITY_NAMED_IAM',
-                'CAPABILITY_AUTO_EXPAND',
-            ],
+            Capabilities=capabilities,
             Tags=[{
                 'Key': 'Application',
                 'Value': settings.APPLICATION
@@ -199,17 +208,17 @@ def deploy():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('stage', type=str, help="predeploy | deploy")
+    parser.add_argument('stage', type=Stage, choices=list(Stage), help="predeploy | deploy")
     args = parser.parse_args()
 
-    stack_deployments, stack_names = get_stage(args.stage), get_stack_names()
+    stack_deployments, stack_names, capabilities = get_stage(args.stage), get_stack_names(), get_capabilities(args.stage)
 
     if stack_deployments is not None:
         for stack, deployment in stack_deployments.items():
             if stack in stack_names:
-                update_stack(stack, deployment)
+                update_stack(stack, deployment, capabilities)
             else:
-                create_stack(stack, deployment)
+                create_stack(stack, deployment, capabilities)
 
             while stack in get_stack_names(in_progress=True):
                 log.info('Waiting on %s...', stack)
