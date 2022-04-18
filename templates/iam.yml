@@ -936,6 +936,7 @@ Resources:
                   - iam:EnableMFADevice
                   - iam:ListMFADevices
                   - iam:ResyncMFADevice
+                  - iam:PassRole
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
               - Action:

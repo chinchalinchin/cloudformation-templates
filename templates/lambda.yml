@@ -175,17 +175,29 @@ Resources:
         Fn::ImportValue: !Sub ${iamStack}-LambdaExecutorRoleArn
       Timeout: 180
 
-  StartStopRule: 
+  StartRule: 
     Type: AWS::Events::Rule
     Properties: 
       Description: "StopEc2Rule"
-      Name: !Sub "${applicationName}-${environmentName}-start-stop-ec2-rule"
-      ScheduleExpression: "cron(0 13,21 * * 1-5)"
+      Name: !Sub "${applicationName}-${environmentName}-start-ec2-rule"
+      ScheduleExpression: "cron(0 13 * * 1-5)"
       State: "ENABLED"
       Targets: 
         - 
           Arn: !GetAtt LambdaBeta.Arn
-          Id: !Sub "${applicationName}-${environmentName}-beta-rule-target"
+          Id: !Sub "${applicationName}-${environmentName}-beta-start-rule-target"
+
+  StopRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "StopEc2Rule"
+      Name: !Sub "${applicationName}-${environmentName}-stop-ec2-rule"
+      ScheduleExpression: "cron(0 21 * * 1-5)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !GetAtt LambdaBeta.Arn
+          Id: !Sub "${applicationName}-${environmentName}-beta-stop-rule-target"
 
   PermissionForStartEventToInvokeLambda: 
     Type: AWS::Lambda::Permission
@@ -193,7 +205,16 @@ Resources:
       FunctionName: !Sub ${applicationName}-lambda-beta-${environmentName}
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
-      SourceArn: !GetAtt StartStopRule.Arn
+      SourceArn: !GetAtt StartRule.Arn
+
+  PermissionForStartEventToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Sub ${applicationName}-lambda-beta-${environmentName}
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt StopRule.Arn
+      
       
 Outputs:
   LambdaAlphaArn:
