@@ -1,7 +1,6 @@
-# cf-deploy
+# Infrastructure
 
-**cf-deploy** is CLI for automating the deployment of **CloudFormation** stacks through the Python library **boto3**. **cf-deploy** reads in a configuration YAML, parses it into a series of stacks and then posts the stacks to **CloudFormation**.
-
+The infrastructure supporting the Innovation Lab is provisioned using Infrastructure-as-Code through **CloudFormation**.
 
 ```shell
 aws cloudformation create-stack
@@ -12,19 +11,22 @@ aws cloudformation create-stack
                  # ...
 ```
 
-```python
-import boto3
+## Architecture
 
-client = boto3.client('cloudformation')
-client.create_stack(
-  StackName=stack,
-  TemplateBody=template,
-  Parameters=parameters,
-  Capabilities=capabilities
-)
-```
+The setup procedures in this section will provision the following architecture,
 
-# Provisioning
+![InnoLab Architecture](https://documentation.makpar-innovation.net/_images/innolab_architecture.png)
+
+
+TODO (@SELAH): description of architecture: VPC, public subnets, private subnets.
+
+# Infrastructure
+
+The infrastructure supporting the Innovation Lab is provisioned through an **Azure DevOps pipeline** hooked into this repository. Resources are configured using [Infrastructure-as-Code](https://en.wikipedia.org/wiki/Infrastructure_as_code). When changes are merged into the `master` branch, this pipeline will pull in the changes into the **Azure** build environment, and then deploy or update the resources defined in the *deployments.yml*. 
+
+## Procedure For Provisioning
+
+You can provision infrastructure locally with the following steps. The pipeline automates, essentially, the exact same steps.
 
 0. Copy the */env/.sample.env* environment file into a new environment file and configure the values. See notes in the sample file for more information on the purpose of each variable,
 
@@ -65,7 +67,7 @@ In the above example, the template has a parameter `secretKey` in the `Parameter
 3. Invoke the python *deployer.py* script, which in turn will use the **boto3** python library to post the contents of *deployments.yml* to **CloudFormation**,
 
 ```shell
-cf-deploy
+python ./src/deploy/deployer.py deploy
 ```
 
 **NOTE**: In order for this script to succeed, you must have your **AWS CLI** authenticated with an **IAM** account that has permission to deploy resources through **CloudFormation**. Similarly, the **Azure DevOps** pipeline requires an **IAM** account with the appropriate policies attached. 
@@ -76,7 +78,6 @@ To prevent the pipeline from having permission to edit its own permissions, the 
 
 ```shell
 python ./src/deploy/deployer.py predepoloy
-```
 
 ## Development
 
@@ -171,4 +172,5 @@ The following tables detail the cross stack dependencies between different stack
 ## References
 
 - [AWS CloudFormation Resource Reference](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+- [Azure DevOps Pipeline](https://docs.microsoft.com/en-us/azure/devops/pipelines/?view=azure-devops)
 - [boto3 CloudFormation Client](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html)
