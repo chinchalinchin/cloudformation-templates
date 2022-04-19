@@ -1,0 +1,2 @@
+[console_scripts]
+innolab = innolab.deploy.deployer:deploy

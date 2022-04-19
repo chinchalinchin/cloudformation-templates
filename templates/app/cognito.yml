@@ -1,0 +1,218 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "The first stack of the ${applicationName} application. It will provision all the necessary resources for a Cognito OAUTH authentication flow, such as UserPool, UserPoolClients, UserPoolDomain, etc. It will also provision user accounts for the development team and send them emails to reset their Cognito IDP passwords."
+
+Parameters:
+  domain:
+    Type: String
+    Default: makpar-innovation.com
+    Description: Domain used in the callback registered with the Cognito Auth clients.
+  subdomain:
+    Type: String
+    Default: laboratory
+    Description: Subdomain used in the callback registered with the Cognito Auth clients.
+  applicationName:
+    Type: String
+    Default: innolab
+    Description: Namespace for the application resources
+
+Resources:
+  AuthDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      Domain: !Ref applicationName
+    DependsOn:
+      - CognitoUserPool
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${applicationName}-userpool
+      UsernameConfiguration:
+        CaseSensitive: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 1
+      Schema:
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: email
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: name
+  
+  APIClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Sub ${applicationName}-api-client
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - !Sub "https://${subdomain}.${domain}"
+      ExplicitAuthFlows:
+        - "ALLOW_CUSTOM_AUTH"
+        - "ALLOW_REFRESH_TOKEN_AUTH"
+        - "ALLOW_USER_PASSWORD_AUTH"
+        - "ALLOW_USER_SRP_AUTH"
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: "minutes"
+        IdToken: "minutes"
+        RefreshToken: "days"
+      SupportedIdentityProviders:
+        - COGNITO
+    DependsOn:
+      - CognitoUserPool
+
+  WebClient: 
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Sub ${applicationName}-web-client
+      GenerateSecret: true
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: "minutes"
+        IdToken: "minutes"
+        RefreshToken: "days"
+    DependsOn:
+      - CognitoUserPool
+
+  CognitoPeter:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "pcofrancesco@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "pcofrancesco@makpar.com"
+        - Name: "name"
+          Value: "Peter Confrancesco"
+    DependsOn:
+      - CognitoUserPool
+
+  CognitoTariq:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "tislam@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "tislam@makpar.com"
+        - Name: "name"
+          Value: "Tariq Islam"
+
+  CognitoGrant:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "gmoore@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "gmoore@makpar.com"
+        - Name: "name"
+          Value: "Grant Moore"
+    DependsOn:
+        - CognitoUserPool
+
+  CognitoThomas:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "tklock@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "tklock@makpar.com"
+        - Name: "name"
+          Value: "Thomas Klock"
+    DependsOn:
+      - CognitoUserPool
+  
+  CognitoMatt:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "mpinardi@baosystems.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "mpinardi@baosystems.com"
+        - Name: "name"
+          Value: "Matt Pinardi"
+    DependsOn:
+      - CognitoUserPool
+  
+  CognitoPhung:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "pngo@makpar.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "pngo@makpar.com"
+        - Name: "name"
+          Value: "Phung Ngo"
+    DependsOn:
+      - CognitoUserPool
+
+  CognitoIan:
+    Type: "AWS::Cognito::UserPoolUser"
+    Properties:
+      Username: "ian.mcnutt@tripointsolutions.com"
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: "email_verified"
+          Value: "true"
+        - Name: "email"
+          Value: "ian.mcnutt@tripointsolutions.com"
+        - Name: "name"
+          Value: "Ian McNutt"
+    DependsOn:
+      - CognitoUserPool
+
+Outputs:
+  CognitoUserPoolArn:
+    Value: !GetAtt CognitoUserPool.Arn
+    Description: User Pool ARN for Cognito
+    Export:
+      Name: !Sub ${AWS::StackName}-UserPoolArn
+  CognitoUserPoolID:
+    Value: !Ref CognitoUserPool
+    Description: User Pool ID for Cognito
+    Export:
+      Name: !Sub ${AWS::StackName}-UserPoolID
+  CognitoClientID:
+    Value: !Ref APIClient
+    Description: Client ID for API Client
+    Export:
+      Name: !Sub ${AWS::StackName}-APIClientID

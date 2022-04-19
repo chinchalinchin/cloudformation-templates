@@ -1,5 +1,9 @@
 *.env
+<<<<<<< HEAD
 !.sample.env
 venv
 *.pyc
 reports
+=======
+!.sample.env
+>>>>>>> ab838fcb2362895e801e0efaa9a0a1c0aaf1d12f

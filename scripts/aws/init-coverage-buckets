@@ -1,0 +1,46 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_NAME="init-coverage-buckets"
+SCRIPT_DES=$''
+PROJECT_DIR=$SCRIPT_DIR/../..
+source $PROJECT_DIR/.env
+
+# Example Usage:
+# >$     init-coverage-buckets --environments Dev,Prod,Staging
+
+# NOTE: ``--environments`` is a comma separated list with no spaces.
+
+function log(){
+    echo -e "\e[92m$(date +"%r")\e[0m: \e[4;32m$SCRIPT_NAME\e[0m : >> $1"
+}
+
+function help(){
+    echo -e "\n\e[4m$SCRIPT_NAME\e[0m\n\n\t$SCRIPT_DES" 
+}
+
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        --environments)
+            IFS=',' read -ra ENVIRONMENTS <<< "$2"
+            shift
+            shift
+            ;;
+        *)
+            log "Input not understood. See \e[3m--help\e[0m for information on using this command."
+            exit 1
+            ;;
+    esac
+done
+
+for ENVIRONMENT in ${ENVIRONMENTS[@]}
+do
+    if [ $ENVIRONMENT == "Prod" ]
+    then
+        BUCKET_SUFFIX=""
+    else
+        BUCKET_SUFFIX="-${ENVIRONMENT}"
+    fi
+    aws s3 cp $SCRIPT_DIR/assets/ s3://${APPLICATION}-coverage${BUCKET_SUFFIX,,}/ --recursive
+done
