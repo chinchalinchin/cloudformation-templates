@@ -1,0 +1,23 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_NAME="install"
+SCRIPT_DES=$'Build and install the \e[3mrds-migrator\e[0m from source.'
+PROJECT_DIR=$SCRIPT_DIR/..
+
+if [ -d $PROJECT_DIR/src/dist ]
+then
+  rm -r $PROJECT_DIR/src/dist
+fi
+
+cd $PROJECT_DIR/python
+
+python -m build
+
+VERSION=$(cat $PROJECT_DIR/src/version.txt)
+
+cd $PROJECT_DIR/src/dist
+
+pip uninstall -y innolab-deployer
+
+pip install innolab_deployer-${VERSION}-py3-none-any.whl

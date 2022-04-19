@@ -4,10 +4,11 @@ import boto3
 import botocore
 import os
 import sys
+from setuptools import Command
 import yaml
-import settings
 import time
-import logger
+
+from innolab.deploy import logger, settings
 
 log = logger.get_logger('innolab-cloudformation.deploy.deployer')
 
@@ -30,13 +31,6 @@ IN_PROGRESS_STACKS=[
     'UPDATE_IN_PROGRESS', 
     'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS',
 ]
-
-class Stage(enum.Enum):
-    deploy = 'deploy'
-    predeploy = 'predeploy'
-
-    def __str__(self):
-        return self.value
 
 def handle_boto_error(err: botocore.exceptions.ClientError):
     """Handle **boto3** client response errors.
@@ -75,31 +69,28 @@ def get_loader() -> yaml.SafeLoader:
     loader.add_constructor("!env", env_var_constructor)
     return loader
 
-def get_stage(stage: Stage = Stage.deploy) -> dict:
-    """Parse *deployments.yml*
+def load_deployment(yaml_configuration_file: str) -> dict:
+    """Loads in the YAML specified on the command line.
 
-    :param stage: Deployment stage
-    :type stage: str
-    :return: deployment configuratio
+    :param yaml_configuration_file: Absolute path to the deployment YAML
+    :type yaml_configuration_file: str
+    :return: deployment configuration
     :rtype: dict
     """
-    if stage == Stage.predeploy:
-        configuration_file = settings.PREDEPLOYMENT_FILE
-    elif stage == Stage.deploy:
-        configuration_file = settings.DEPLOYMENT_FILE
-    else:
-        raise ValueError(f'{stage} does not map to "predeploy" | "deploy"')
-
-    if os.path.exists(configuration_file):
-        with open(configuration_file, 'r') as infile:
+    if os.path.exists(yaml_configuration_file):
+        with open(yaml_configuration_file, 'r') as infile:
             deployment = yaml.load(infile, Loader=get_loader())
         return deployment
-    raise FileNotFoundError(f'{settings.DEPLOYMENT_FILE} does not exist')
+    raise FileNotFoundError(f'{yaml_configuration_file} does not exist')
 
-def get_capabilities(stage : Stage = Stage.deploy) -> list:
-    """ Return the permissions given to a particular deployment stage.
+def get_capabilities(admin: bool = False) -> list:
+    """ Return the permissions given to the deployer script.
+    :param admin: flag for admin permissions
+    :type admin: bool
+    :return: capabilities allocated to the deployer script
+    :rtype: list 
     """
-    if stage == Stage.predeploy:
+    if admin:
         return [
             'CAPABILITY_IAM',
             'CAPABILITY_NAMED_IAM',
@@ -207,10 +198,6 @@ def deploy():
     """Application entrypoint. This function orchestrates the deployment.
     """
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('stage', type=Stage, choices=list(Stage), help="predeploy | deploy")
-    args = parser.parse_args()
-
     stack_deployments, stack_names, capabilities = get_stage(args.stage), get_stack_names(), get_capabilities(args.stage)
 
     if stack_deployments is not None:
@@ -225,7 +212,3 @@ def deploy():
                 time.sleep(10)
     else:
         log.info(stack_names)
-
-
-if __name__=="__main__":
-    deploy()

@@ -36,6 +36,16 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
+          - Sid: LambdaPermissions
+            Effect: Allow
+            Action: 
+              - "lambda:GetFunction"
+              - "lambda:UpdateFunctionCode"
+              - "lambda:DeleteFunction"
+              - "lambda:AddPermission"
+              - "lambda:DeletePermission"
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*"
           - Sid: EC2Permissions
             Effect: Allow
             Action:
@@ -83,7 +93,9 @@ Resources:
             Action: 
               - "codebuild:*"
               - "codepipeline:*"
+              - "codecommit:*"
             Resource:
+              - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${applicationName}-*"
               - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${applicationName}*"
               - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:stage*"
               - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:action*"
@@ -117,14 +129,6 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: LambdaPermissions
-            Effect: Allow
-            Action: 
-              - "lambda:GetFunction"
-              - "lambda:UpdateFunctionCode"
-              - "lambda:DeleteFunction"
-            Resource:
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${applicationName}-*"
           - Sid: ECRPermissions
             Effect: Allow
             Action:
@@ -936,9 +940,13 @@ Resources:
                   - iam:EnableMFADevice
                   - iam:ListMFADevices
                   - iam:ResyncMFADevice
-                  - iam:PassRole
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
+              - Sid: PassRolePermissions
+                Action: 
+                  - iam:PassRole
+                Effect: Allow
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${applicationName}-*"
               - Action:
                   - iam:CreateVirtualMFADevice
                   - iam:DeleteVirtualMFADevice
@@ -1137,4 +1145,4 @@ Outputs:
     Value: !Ref AlationProfile
     Description: Name of the Alation Instance profile
     Export:
-      Name: !Sub ${AWS::StackName}-MigrationsProfile
+      Name: !Sub ${AWS::StackName}-MigrationProfile
