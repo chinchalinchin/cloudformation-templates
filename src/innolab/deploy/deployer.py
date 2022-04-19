@@ -194,11 +194,11 @@ def create_stack(stack: str, deployment: dict, capabilities: list) -> dict:
     except botocore.exceptions.ClientError as e:
         return handle_boto_error(e)
 
-def deploy():
+def deploy(deployment_file: str, as_admin: bool = False):
     """Application entrypoint. This function orchestrates the deployment.
     """
 
-    stack_deployments, stack_names, capabilities = get_stage(args.stage), get_stack_names(), get_capabilities(args.stage)
+    stack_deployments, stack_names, capabilities = load_deployment(deployment_file), get_stack_names(), get_capabilities(as_admin)
 
     if stack_deployments is not None:
         for stack, deployment in stack_deployments.items():
