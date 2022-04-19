@@ -10,8 +10,8 @@ fi
 
 if ! command -v cfn-lint &> /dev/null
 then
-    pip install -r $PROJECT_DIR/requirements.txt
+    pip install -r $PROJECT_DIR/src/requirements-dev.txt
 fi
 
-cfn-lint $PROJECT_DIR/templates/**/*.yml \
+cfn-lint $PROJECT_DIR/src/innolab_deploy/templates/**/*.yml \
             --output-file $PROJECT_DIR/reports/cfn-lint/"$(date +'%m-%d-%Y')_report.json"

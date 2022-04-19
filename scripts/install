@@ -1,0 +1,23 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_NAME="install"
+SCRIPT_DES=$'Build and install the \e[3minnolab\e[0m CLI from source.'
+PROJECT_DIR=$SCRIPT_DIR/..
+
+if [ -d $PROJECT_DIR/src/dist ]
+then
+  rm -r $PROJECT_DIR/src/dist
+fi
+
+cd $PROJECT_DIR/src
+
+python -m build
+
+VERSION=$(cat $PROJECT_DIR/src/version.txt)
+
+cd $PROJECT_DIR/src/dist
+
+pip uninstall -y innolab
+
+pip install innolab-${VERSION}-py3-none-any.whl

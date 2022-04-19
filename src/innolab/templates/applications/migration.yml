@@ -53,7 +53,7 @@ Parameters:
         Type: String
         Default: Innolab-VPCStack-Dev
     iamStack:
-        Type:
+        Type: String
         Default: Innolab-IAMStack
 
 Mappings:

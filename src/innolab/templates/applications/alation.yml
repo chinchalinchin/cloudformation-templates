@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: Deploys the resources necessary for standing up an instance of Alation within the applicationName-VPCStack-environmentName and routing traffic to it. UserData script that configures Alation on boot will pull a JWT token from the SecretsManager stored untder ${applicationName}-alationToken and use this to authenticate with the Alation download server. Before stack is deployed, ensure an EC2 keypair exists with name passed in for the value of the parameter alationKeyName. After the stack is deployed, you will need to SSH in and manually configure HTTPS. See Alation documentation for more information. Possible TODO - Parameter flag to signal provisioning of ALB load balancer to take care of HTTPS.
+Description: Deploys the resources necessary for standing up an instance of Alation within the applicationName-VPCStack-environmentName and routing traffic to it. UserData script that configures Alation on boot will pull a JWT token from the SecretsManager stored under applicationName-alationToken and use this to authenticate with the Alation download server. Before stack is deployed, ensure an EC2 keypair exists with name passed in for the value of the parameter alationKeyName. After the stack is deployed, you will need to SSH in and manually configure HTTPS. See Alation documentation for more information. Possible TODO - Parameter flag to signal provisioning of ALB load balancer to take care of HTTPS.
 
 Parameters:
   iamStack:
@@ -96,7 +96,7 @@ Resources:
             VolumeSize: 200
             VolumeType: "gp2"
       IamInstanceProfile: 
-        Fn::ImportValue: !Sub "${vpcStack}-AlationProfile"
+        Fn::ImportValue: !Sub "${iamStack}-AlationProfile"
       Tags: 
         - Key: Name
           Value: !Sub ${applicationName}-${environmentName}-alation 
