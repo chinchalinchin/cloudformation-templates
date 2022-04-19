@@ -3,8 +3,8 @@ import enum
 import os
 import pprint
 import sys
-from innolab.deploy.deployer import deploy
 
+from deploy.deployer import deploy
 
 class Commands(enum.Enum):
     deploy = 'deploy'
@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('-iam', '--iam', 
                             action='store_true',
                             help="Deploy stack with IAM named capabilities")
-    args = parser.parse_args()
+    return parser.parse_args()
 
 def main():
     args = parse_args()

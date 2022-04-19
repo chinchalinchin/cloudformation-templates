@@ -947,12 +947,14 @@ Resources:
                   - iam:PassRole
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${applicationName}-*"
-              - Action:
+              - Sid: CreateMFAPermissions
+                Action:
                   - iam:CreateVirtualMFADevice
                   - iam:DeleteVirtualMFADevice
                 Effect: Allow
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:mfa/*"
-              - NotAction:
+              - Sid: DenyExceptListIfNoMFA
+                NotAction:
                   - iam:CreateVirtualMFADevice
                   - iam:EnableMFADevice
                   - iam:GetUser
@@ -960,6 +962,13 @@ Resources:
                   - iam:ListVirtualMFADevices
                   - iam:ResyncMFADevice
                   - sts:GetSessionToken
+                  - codecommit:GitPull
+                  - codecommit:GitPush
+                  - kms:Encrypt
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                  - kms:GenerateDataKeyWithoutPlaintext
+                  - kms:DescribeKey
                 Effect: Deny
                 Resource: '*'
                 Condition:

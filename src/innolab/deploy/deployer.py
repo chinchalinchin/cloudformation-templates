@@ -1,14 +1,12 @@
-import argparse
-import enum
 import boto3
 import botocore
 import os
 import sys
-from setuptools import Command
 import yaml
 import time
 
-from innolab.deploy import logger, settings
+from deploy import settings
+from util import logger
 
 log = logger.get_logger('innolab-cloudformation.deploy.deployer')
 
@@ -58,7 +56,13 @@ def env_var_constructor(loader: yaml.SafeLoader, node: yaml.nodes.ScalarNode) ->
     :return: Environment variable value with given `node` key.
     :rtype: str
     """
-    return os.getenv(loader.construct_scalar(node))
+    env_key = loader.construct_scalar(node)
+    env_var = os.getenv(env_key)
+
+    if env_var is not None:
+        return env_var
+
+    raise OSError(f'${env_key} environment variable not found. Export from session and then re-execute.')
 
 def get_loader() -> yaml.SafeLoader:
     """Add environment variable constructor to PyYAML loader.
@@ -150,11 +154,7 @@ def update_stack(stack: str, deployment: dict, capabilities: list) -> dict:
             StackName=stack,
             TemplateBody=template,
             Parameters=parameters,
-            Capabilities=capabilities,
-            Tags=[{
-                'Key': 'Application',
-                'Value': settings.APPLICATION
-            }]
+            Capabilities=capabilities
         )
     except botocore.exceptions.ClientError as e:
         return handle_boto_error(e)
@@ -186,10 +186,6 @@ def create_stack(stack: str, deployment: dict, capabilities: list) -> dict:
             TemplateBody=template,
             Parameters=parameters,
             Capabilities=capabilities,
-            Tags=[{
-                'Key': 'Application',
-                'Value': settings.APPLICATION
-            }]
         )
     except botocore.exceptions.ClientError as e:
         return handle_boto_error(e)

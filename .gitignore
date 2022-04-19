@@ -3,3 +3,5 @@
 venv
 *.pyc
 reports
+/src/dist/**
+/src/innolab/innolab.egg-info/**
