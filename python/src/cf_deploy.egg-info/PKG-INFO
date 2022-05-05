@@ -2,11 +2,11 @@ Metadata-Version: 2.1
 Name: cf-deploy
 Version: 1.0.0
 Summary: a command line utility for automating AWS CloudFormation deployments
-Home-page: https://github.com/chinchalinchin/qldb-orm
+Home-page: https://github.com/chinchalinchin/cf-deploy
 Author: Grant Moore
 Author-email: grant@cumberland-cloud.ccom
 License: UNKNOWN
-Project-URL: Source, https://github.com/chinchalinchin/qldb-orm
+Project-URL: Source, https://github.com/chinchalinchin/cf-deploy
 Keywords: aws,cloudformation,boto3,infrastructure-as-code,automated deployments,azure
 Platform: any
 Requires-Python: >=3.8

@@ -32,7 +32,7 @@ def parse_args():
                             help="Deploy stack with IAM named capabilities")
     return parser.parse_args()
 
-def main():
+def entrypoint():
     args = parse_args()
 
     if args.command == Commands.deploy:
@@ -41,4 +41,4 @@ def main():
     pprint.pprint(results)
 
 if __name__=="__main__":
-    main()
+    entrypoint()

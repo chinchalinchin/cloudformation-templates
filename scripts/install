@@ -10,13 +10,13 @@ then
   rm -r $PROJECT_DIR/src/dist
 fi
 
-cd $PROJECT_DIR/src
+cd $PROJECT_DIR/python
 
 python3 -m build
 
-VERSION=$(cat $PROJECT_DIR/src/version.txt)
+VERSION=$(cat $PROJECT_DIR/python/version.txt)
 
-cd $PROJECT_DIR/src/dist
+cd $PROJECT_DIR/python/dist
 
 pip uninstall -y cf-deploy
 
