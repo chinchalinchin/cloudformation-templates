@@ -104,24 +104,6 @@ Innolab-Oracle-RDSStack-Dev:
       ParameterValue: Innolab-VPCStack-Dev
     - ParameterKey: iamStack
       ParameterValue: Innolab-IAMStack
-
-Innolab-AlationStack:
-  template: applications/alation.yml
-  parameters:
-    - ParameterKey: applicationName
-      ParameterValue: !env APPLICATION
-    - ParameterKey: environmentName
-      ParameterValue: !env ENVIRONMENT
-    - ParameterKey: alationKeyName
-      ParameterValue: innolab_alation_key
-    - ParameterKey: domainName
-      ParameterValue: makpar-innovation.net
-    - ParameterKey: hostedZoneId
-      ParameterValue: !env HOSTED_ZONE_ID
-    - ParameterKey: vpcStack
-      ParameterValue: Innolab-VPCStack-Dev
-    - ParameterKey: iamStack
-      ParameterValue: Innolab-IAMStack
       
 Innolab-LambdaStack-Dev:
   template: lambda.yml
