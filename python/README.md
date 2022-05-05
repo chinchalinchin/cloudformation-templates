@@ -1,3 +1,3 @@
-# InnoLab Command Line Utility
+# CF Deploy Command Line Utility
 
 TODO

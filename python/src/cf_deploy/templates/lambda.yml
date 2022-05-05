@@ -215,7 +215,6 @@ Resources:
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt StopRule.Arn
       
-      
 Outputs:
   LambdaAlphaArn:
     Value: !GetAtt LambdaAlpha.Arn
