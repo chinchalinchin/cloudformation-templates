@@ -11,7 +11,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - script: |
-          pip install -r requirements.txt
+          pip install -r ./python/requirements-dev.txt
         displayName: Install CloudFormation linter
       - script: |
           cfn-lint ./templates/**/*.yml
@@ -65,10 +65,10 @@ jobs:
           steps:
           - checkout: self
           - script: |
-              pip install -r ./src/requirements.txt
+              pip install cf-deploy
             displayName: Install deployment dependencies
           - script: |
-              python ./src/deploy/deployer.py deploy
+              cf-deploy --yaml-file deployments.yml --iam
             displayName: Deploy cloud resources
             env:
               APPLICATION: $(APPLICATION)
