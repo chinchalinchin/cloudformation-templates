@@ -4,7 +4,7 @@ import os
 import pprint
 import sys
 
-from deploy.deployer import deploy
+from cf_deploy.deploy.deployer import deploy
 
 class Commands(enum.Enum):
     deploy = 'deploy'

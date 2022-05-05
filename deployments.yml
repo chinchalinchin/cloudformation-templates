@@ -1,4 +1,4 @@
-## Innovation Lab Deployment Configuration
+## Deployment Configuration
 #   This configuration YML is used by the python *deploy* module in the */src/* directory.
 #   The *deploy.deployer* script will parse this YML and pass the parameters specified into 
 #   the appropriate **CloudFormation** template in the */templates/* directory. It will then

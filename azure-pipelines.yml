@@ -48,9 +48,7 @@ jobs:
       timeoutInMinutes: 30
       inputs:
         notifyUsers: |
-          gmoore@makpar.com
-          pcofrancesco@makpar.com
-          skonur@makpar.com
+          grant@cumberland-cloud.com
         instructions: 'Validate and approve infrastructure configuration before deployment'
         onTimeout: 'reject'
 
@@ -80,8 +78,4 @@ jobs:
               AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
               HOSTED_ZONE_ID: $(HOSTED_ZONE_ID)
               CERTIFICATE_ID: $(CERTIFICATE_ID)
-              ORACLE_RDS_USERNAME: $(ORACLE_RDS_USERNAME)
-              ORACLE_RDS_PASSWORD: $(ORACLE_RDS_PASSWORD)
-              POSTGRES_RDS_USERNAME: $(POSTGRES_RDS_USERNAME)
-              POSTGRES_RDS_PASSWORD: $(POSTGRES_RDS_PASSWORD)
               PIPELINE_USER: $(PIPELINE_USER)

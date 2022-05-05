@@ -1,12 +1,12 @@
 Metadata-Version: 2.1
-Name: innolab
+Name: cf-deploy
 Version: 1.0.0
 Summary: a command line utility for automating AWS CloudFormation deployments
-Home-page: https://documentation.makpar-innovation.net
-Author: Makpar Innovation Laboratory
-Author-email: gmoore@makpar.com
+Home-page: https://github.com/chinchalinchin/qldb-orm
+Author: Grant Moore
+Author-email: grant@cumberland-cloud.ccom
 License: UNKNOWN
-Project-URL: Source, https://github.com/Makpar-Innovation-Laboratory/cloudformation
+Project-URL: Source, https://github.com/chinchalinchin/qldb-orm
 Keywords: aws,cloudformation,boto3,infrastructure-as-code,automated deployments,azure
 Platform: any
 Requires-Python: >=3.8

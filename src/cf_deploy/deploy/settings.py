@@ -1,6 +1,6 @@
 import os
 
-from util import logger
+from cf_deploy.util import logger
 
 log = logger.get_logger('innolab-deployer.deploy.settings')
 

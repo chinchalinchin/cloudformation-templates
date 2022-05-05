@@ -5,8 +5,8 @@ import sys
 import yaml
 import time
 
-from deploy import settings
-from util import logger
+from cf_deploy.deploy import settings
+from cf_deploy.util import logger
 
 log = logger.get_logger('innolab-cloudformation.deploy.deployer')
 

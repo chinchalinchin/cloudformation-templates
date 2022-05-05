@@ -5,3 +5,4 @@ venv
 reports
 /src/dist/**
 /src/innolab/innolab.egg-info/**
+.vscode/**
