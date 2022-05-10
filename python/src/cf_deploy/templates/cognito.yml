@@ -115,18 +115,16 @@ Resources:
     DependsOn:
       - CognitoUserPool
 
-  CognitoGrant:
+  CognitoAdmin:
     Type: "AWS::Cognito::UserPoolUser"
     Properties:
-      Username: "gmoore@makpar.com"
+      Username: "gmoore@cumberland-cloud.com"
       UserPoolId: !Ref CognitoUserPool
       UserAttributes:
         - Name: "email"
-          Value: "gmoore@makpar.com"
+          Value: "grant@cumberland-cloud.com"
         - Name: "name"
           Value: "Grant Moore"
-    DependsOn:
-        - CognitoUserPool
 
 Outputs:
   CognitoUserPoolArn:
